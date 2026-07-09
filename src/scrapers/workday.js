@@ -1,8 +1,7 @@
-import * as cheerio from 'cheerio';
 import { ATS_CONCURRENCY, WORKDAY_MAX_PAGES, CAMPUS_SITE } from '../config.js';
 import { isDevRole, matchCity } from './github.js';
 import { classifyPosting } from '../term.js';
-import { mapLimit, getJson, postJson } from './http.js';
+import { mapLimit, getJson, postJson, htmlToText } from './http.js';
 
 // Workday, via its public "CxS" JSON API. No key, no auth.
 //
@@ -49,11 +48,6 @@ export function harvestWorkdayTenants(postings) {
     if (!tenants.get(key)?.company) tenants.set(key, { tenant, pod, site, company });
   }
   return [...tenants.values()];
-}
-
-function htmlToText(html) {
-  if (!html) return '';
-  return cheerio.load(String(html)).text().replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 // Campus/student sites are internships by construction, exactly like the new-grad

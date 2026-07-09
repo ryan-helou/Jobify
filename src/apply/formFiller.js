@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import {
   APPLICANT,
-  RESUME_PATH,
   COVER_LETTER_PDF_PATH,
   DRY_RUN,
   coverLetterText,
 } from '../config.js';
+import { resolveResume } from '../resume.js';
 
 // Generic application form filler. Rules (per spec):
 //   - fill required fields we recognize (name, email, phone, resume)
@@ -93,6 +93,10 @@ export async function fillForm(page, job) {
   let coverAttached = false;
   let filled = 0;
 
+  // Resolved once per posting, not per file input: a form with two upload
+  // fields must not attach two different résumés.
+  const resume = resolveResume(job);
+
   for (const el of elements) {
     const desc = await describeField(el);
     if (desc.hidden || !desc.visible) continue;
@@ -105,9 +109,9 @@ export async function fillForm(page, job) {
       if (key === 'coverLetter' && fs.existsSync(COVER_LETTER_PDF_PATH)) {
         files.push(COVER_LETTER_PDF_PATH);
         coverAttached = true;
-      } else if (fs.existsSync(RESUME_PATH)) {
+      } else if (fs.existsSync(resume.path)) {
         // Default any other file input to the resume — it's what apply forms want.
-        files.push(RESUME_PATH);
+        files.push(resume.path);
         resumeAttached = true;
       }
       if (files.length) await el.setInputFiles(files).catch(() => {});
@@ -149,7 +153,14 @@ export async function fillForm(page, job) {
     }
   }
 
-  return { unknownRequired, resumeAttached, coverAttached, filled };
+  return {
+    unknownRequired,
+    resumeAttached,
+    coverAttached,
+    filled,
+    resumeVariant: resume.variant,
+    resumeReason: resume.reason,
+  };
 }
 
 export async function submitForm(page) {

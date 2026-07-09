@@ -8,9 +8,11 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
+        # Defaults ON for hand-triggered runs. A manual run is usually someone
+        # checking a change, and an application cannot be taken back.
         description: 'Fill forms but do not submit'
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: write
@@ -25,6 +27,37 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+
+      # Runs before anything expensive. Without it a repo missing its secrets
+      # installs node, deps and a browser, then dies on the last step — six times a
+      # day, with no Slack alert, because the webhook is one of the missing secrets.
+      - name: Preflight — required secrets and résumé
+        id: preflight
+        env:
+          APPLICANT_NAME: ${{ secrets.APPLICANT_NAME }}
+          APPLICANT_EMAIL: ${{ secrets.APPLICANT_EMAIL }}
+          APPLICANT_PHONE: ${{ secrets.APPLICANT_PHONE }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          missing=0
+          require() {
+            if [ -z "$2" ]; then
+              echo "::error title=Missing secret::$1 is not set. Run: gh secret set $1"
+              missing=1
+            fi
+          }
+          require APPLICANT_NAME  "$APPLICANT_NAME"
+          require APPLICANT_EMAIL "$APPLICANT_EMAIL"
+          require APPLICANT_PHONE "$APPLICANT_PHONE"
+
+          if [ ! -s assets/resume.pdf ]; then
+            echo "::error title=Missing résumé::assets/resume.pdf is absent or empty. Commit your résumé (this repo is private)."
+            missing=1
+          fi
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "::warning title=No Slack::SLACK_WEBHOOK_URL is not set — this run cannot notify you of anything, including its own failure."
+          fi
+          exit $missing
 
       - uses: actions/setup-node@v4
         with:
@@ -52,14 +85,21 @@ jobs:
           DRY_RUN: ${{ inputs.dry_run && 'true' || 'false' }}
         run: node src/index.js
 
+      # Runs even when Jobify exits non-zero, so a crash mid-apply still records
+      # what was already submitted. Skipped when preflight failed — there is
+      # nothing to commit and `git pull --rebase` would just add noise.
       - name: Commit applied_jobs.json
-        if: always()
+        if: always() && steps.preflight.conclusion != 'failure'
         run: |
           git config user.name "jobify-bot"
           git config user.email "actions@users.noreply.github.com"
           git add applied_jobs.json
           if ! git diff --cached --quiet; then
-            git commit -m "chore: update applied_jobs.json [skip ci]"
+            # No [skip ci] here. It suppresses *every* workflow for this push,
+            # which silently disabled the dashboard deploy that triggers on
+            # changes to applied_jobs.json. Nothing in this repo triggers on push
+            # to main except that deploy, so there is no loop to guard against.
+            git commit -m "chore: update applied_jobs.json"
             git pull --rebase origin ${{ github.ref_name }}
             git push
           fi

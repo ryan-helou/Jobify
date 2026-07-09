@@ -18,11 +18,12 @@ export async function slack(text) {
   }
 }
 
-export async function notifyApplied(job) {
+export async function notifyApplied(job, resumeVariant = '') {
   const s = job.scores;
   await slack(
     `:white_check_mark: Applied to *${job.title}* at *${job.company}* (${job.location})\n` +
       `<${job.url}|Job posting> — ${new Date().toISOString()}` +
+      (resumeVariant ? `\nRésumé: *${resumeVariant}*` : '') +
       (s ? `\n_${explainScore(s)}_` : '')
   );
 }

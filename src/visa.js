@@ -41,7 +41,10 @@ export async function fetchPostingText(context, url) {
       redirect: 'follow',
       signal: AbortSignal.timeout(20000),
     });
-    if (!res.ok) return '';
+    if (!res.ok) {
+      await res.body?.cancel().catch(() => {}); // an unread body wedges undici's parser
+      return '';
+    }
     const $ = cheerio.load(await res.text());
     $('script, style, noscript').remove();
     return $('body').text();

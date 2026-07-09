@@ -1,9 +1,27 @@
 import fs from 'node:fs';
-import { APPLIED_JOBS_PATH } from './config.js';
+import { APPLIED_JOBS_PATH, TERMINAL_STATUSES, STATUS_RETRY_DAYS, DEFAULT_RETRY_DAYS } from './config.js';
 
 // applied_jobs.json is the dedup ledger, committed back to the repo after each run.
-// Every job we've applied to, attempted, or flagged for manual review gets a record
-// so it is never touched again on later runs.
+//
+// A record blocks a job from being processed again, but only for as long as its
+// verdict can be trusted. An application is permanent; everything else expires.
+// See TERMINAL_STATUSES / STATUS_RETRY_DAYS in config.js for why.
+
+const DAY_MS = 86_400_000;
+
+// True while `record` still speaks for the posting. Unparseable or missing
+// timestamps are treated as expired: better to re-examine a job than to lose it to
+// a corrupt row.
+export function isBlocking(record, now = Date.now()) {
+  if (!record) return false;
+  if (TERMINAL_STATUSES.has(record.status)) return true;
+
+  const recordedAt = Date.parse(record.recordedAt);
+  if (Number.isNaN(recordedAt)) return false;
+
+  const days = STATUS_RETRY_DAYS[record.status] ?? DEFAULT_RETRY_DAYS;
+  return now - recordedAt < days * DAY_MS;
+}
 
 export function canonicalKey(url) {
   try {
@@ -42,31 +60,45 @@ export function loadTracker() {
   } catch {
     records = [];
   }
-  const keys = new Set(records.map((r) => r.key));
-  const identities = new Set(records.map((r) => r.identity || identityKey(r)));
+  // Indexed by both keys, because a posting is recognised either by its URL or by
+  // the company/title/city identity it shares with the same role on another board.
+  const byKey = new Map(records.map((r) => [r.key, r]));
+  const byIdentity = new Map(records.map((r) => [r.identity || identityKey(r), r]));
+
   return {
     records,
-    has(url) {
-      return keys.has(canonicalKey(url));
+    has(url, now = Date.now()) {
+      return isBlocking(byKey.get(canonicalKey(url)), now);
     },
-    hasIdentity(identity) {
-      return identities.has(identity);
+    hasIdentity(identity, now = Date.now()) {
+      return isBlocking(byIdentity.get(identity), now);
     },
     add(job, status, details = '') {
       const key = canonicalKey(job.url);
-      if (keys.has(key)) return;
-      keys.add(key);
-      identities.add(identityKey(job));
-      records.push({
+      const identity = identityKey(job);
+      const existing = byKey.get(key);
+
+      // A job we saw before and re-examined after its verdict expired. Overwrite
+      // the verdict rather than skipping the write, or the record would keep its
+      // original timestamp and expire again immediately on the next run.
+      if (existing) {
+        existing.status = status;
+        existing.details = details;
+        existing.recordedAt = new Date().toISOString();
+        existing.attempts = (existing.attempts || 1) + 1;
+        return;
+      }
+
+      const record = {
         key,
-        identity: identityKey(job),
+        identity,
         url: job.url,
         title: job.title,
         company: job.company,
         location: job.location,
         city: job.city,
         source: job.source,
-        status, // applied | submitted_unconfirmed | manual_review | skipped_unknown_required
+        status, // applied | submitted_unconfirmed | manual_review | skipped_*
         details,
         // Flattened from job.scores (see src/score.js) so the dashboard can sort
         // on them directly. Absent on records written before scoring existed —
@@ -78,8 +110,12 @@ export function loadTracker() {
           scoreConfidence: job.scores.confidence,
           scoreSignals: job.scores.signals,
         }),
+        attempts: 1,
         recordedAt: new Date().toISOString(),
-      });
+      };
+      byKey.set(key, record);
+      byIdentity.set(identity, record);
+      records.push(record);
     },
     save() {
       fs.writeFileSync(APPLIED_JOBS_PATH, JSON.stringify({ updatedAt: new Date().toISOString(), jobs: records }, null, 2) + '\n');

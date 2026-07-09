@@ -76,7 +76,7 @@ export const DEV_INCLUDE =
 // Engineering Intern" are the same role, but `\bmechanical engineer\b` only matches
 // the first — a word boundary can't sit between "engineer" and "ing".
 export const NON_DEV_EXCLUDE =
-  /\b(research scientist|quantitative research|quant research|go[\s-]?to[\s-]?market|gtm|sales|marketing|merchandising|recruit(?:ing|er|ment)?|talent|analyst|strategist|consultant|field application|solutions? architect|technical writer|product manage(?:r|ment)|product design|program manager|project manager|ux|ui\/ux|graphic|content|community|(?:mechanical|electrical|hardware|civil|chemical|industrial|aerospace) engineer(?:ing)?|biomedical|manufacturing|supply chain|accounting|legal|hr)\b/i;
+  /\b(research scientist|quantitative research|quant research|go[\s-]?to[\s-]?market|gtm|sales|marketing|merchandising|recruit(?:ing|er|ment)?|talent|analyst|strategist|consultant|field application|solutions? architect|technical writer|product manage(?:r|ment)|product design|program manager|project manager|ux|ui\/ux|graphic|content|community|(?:mechanical|electrical|hardware|civil|chemical|industrial|aerospace) engineer(?:ing)?|biomedical|manufacturing|supply chain|accounting|legal|hr|green infrastructure|environmental|geotechnical|structural|surveying|traffic)\b/i;
 
 // A title that names a non-summer season is off-cycle no matter which year it
 // gives — the target is Summer 2027 specifically. Guarded against "Spring Boot"
@@ -167,6 +167,24 @@ export const GITHUB_SOURCES = [
     url: 'https://raw.githubusercontent.com/speedyapply/2027-SWE-College-Jobs/main/README.md',
   },
   {
+    name: 'speedyapply/2027-AI-College-Jobs',
+    type: 'markdown',
+    kind: 'internship',
+    term: '2027',
+    url: 'https://raw.githubusercontent.com/speedyapply/2027-AI-College-Jobs/main/README.md',
+  },
+  {
+    // Writes apply links as markdown `[apply](url)` rather than <a href>, so this
+    // source only became readable once cellLink learned to fall back to markdown.
+    // Like speedyapply, it is 2027-scoped but mixes in off-season terms — the
+    // off-season title guard in termForSource is what keeps those out.
+    name: 'sndsh404/summer-2027-internships',
+    type: 'markdown',
+    kind: 'internship',
+    term: '2027',
+    url: 'https://raw.githubusercontent.com/sndsh404/summer-2027-internships/main/README.md',
+  },
+  {
     // Full-time new-grad roles, not internships. Mined for board tokens only.
     name: 'SimplifyJobs/New-Grad-Positions',
     type: 'listings',
@@ -233,6 +251,15 @@ export const DEV_CATEGORIES = new Set([
   'AI/ML/Data',
   'Data Science, AI & Machine Learning',
 ]);
+
+// Markdown boards encode visa status as emoji in the role title, and their READMEs
+// define them: 🛂 "Does NOT offer Sponsorship", 🇺🇸 "Requires U.S. Citizenship".
+// Mapping them onto the same vocabulary the JSON feeds use means the visa filter
+// can trust a markdown row without rendering the posting.
+export const SPONSORSHIP_MARKERS = [
+  { re: /\u{1F1FA}\u{1F1F8}/u, value: 'U.S. Citizenship is Required' },
+  { re: /\u{1F6C2}/u, value: 'Does Not Offer Sponsorship' },
+];
 
 // Authoritative sponsorship values used by the SimplifyJobs-style feeds.
 // 'Other' (and anything unknown) means "not stated" → fall back to reading the page.
@@ -316,7 +343,13 @@ export const SKILL_LEXICON = {
 // Role families, matched against the title. Order is load-bearing — "Full Stack"
 // also contains "stack" adjacent words, and a "Frontend Platform" role should
 // resolve as frontend, so the more specific patterns are tested first.
+//
+// `game` is tested before everything: a games posting names its domain in the
+// title and means it, and the alternatives would steal it. "Game AI Programmer"
+// contains \bai\b and would otherwise resolve to ml; "Full Stack Game Developer"
+// would resolve to fullstack. In both cases the games résumé is the right one.
 export const ROLE_FAMILIES = [
+  ['game', /\bgames?\b|\bgaming\b|\bgameplay\b|\bunity\b|\bunreal\b|\bgodot\b|game engine|\bgamedev\b|graphics (?:engineer|programmer)/i],
   ['fullstack', /full[\s-]?stack/i],
   ['ml', /machine learning|\bml\b|\bai\b|deep learning|\bnlp\b|computer vision|research engineer/i],
   ['data', /data (?:engineer|scien|analytic)|analytics/i],
@@ -452,10 +485,136 @@ export const APPLICANT = {
   website: process.env.APPLICANT_WEBSITE || '',
 };
 
-export const RESUME_PATH = path.join(ROOT, 'assets', 'resume.pdf');
+// --- Résumé routing --------------------------------------------------------
+//
+// One résumé per role shape, chosen per posting by src/resume.js. `base` is the
+// fallback and the only one that must exist: a missing variant degrades to base
+// rather than aborting the run, because attaching a slightly-off résumé beats
+// attaching none, and the alternative is a hard failure the night before a
+// deadline over a file you haven't exported yet.
+export const DEFAULT_RESUME_VARIANT = 'base';
+
+export const RESUME_VARIANT_FILES = {
+  base: 'resume-base.pdf',
+  backend: 'resume-backend.pdf',
+  frontend: 'resume-frontend.pdf',
+  ai: 'resume-ai.pdf',
+  game: 'resume-game.pdf',
+};
+
+export const RESUME_VARIANTS = Object.keys(RESUME_VARIANT_FILES);
+
+export function resumePath(variant) {
+  const file = RESUME_VARIANT_FILES[variant] || RESUME_VARIANT_FILES[DEFAULT_RESUME_VARIANT];
+  return path.join(ROOT, 'assets', file);
+}
+
+// Which résumé each role family wants. Families with no dedicated résumé fall to
+// base: `security` and `embedded` postings are rare here and the general résumé
+// is the honest answer, since there is no security or firmware work to show.
+export const RESUME_FAMILY_VARIANT = {
+  swe: 'base',
+  fullstack: 'base',
+  security: 'base',
+  embedded: 'base',
+  backend: 'backend',
+  infra: 'backend',
+  frontend: 'frontend',
+  mobile: 'frontend',
+  ml: 'ai',
+  data: 'ai',
+  game: 'game',
+};
+
+// Evidence found in the posting body, scored per variant. Deliberately NOT
+// SKILL_LEXICON: that lexicon answers "does the candidate know this?" and is
+// keyed to the profile. This answers a different question — "what shape of work
+// is this posting?" — so `sql` is weak evidence of a candidate skill but strong
+// evidence of a backend role, and the two lists disagree on purpose.
+//
+// `base` has no signals by design. It wins by being the fallback, not by
+// out-scoring anything; a generic posting should get the generic résumé.
+export const RESUME_SIGNALS = {
+  base: [],
+  backend: [
+    { label: 'distributed systems', re: /\bdistributed systems?\b|\bmicroservices\b/i, weight: 2 },
+    { label: 'databases', re: /\bpostgres(?:ql)?\b|\bmysql\b|\bdatabase schema\b|\bsql\b/i, weight: 2 },
+    { label: 'containers/infra', re: /\bkubernetes\b|\bk8s\b|\bdocker\b|\bterraform\b/i, weight: 2 },
+    { label: 'queues/streaming', re: /\bkafka\b|\brabbitmq\b|\bcelery\b|\bmessage queue\b|\bredis\b/i, weight: 2 },
+    { label: 'API design', re: /\bgrpc\b|\brest(?:ful)? apis?\b|\bapi design\b/i, weight: 1 },
+    { label: 'scale/latency', re: /\bthroughput\b|\blatency\b|\bhigh availability\b|\bscalab/i, weight: 1 },
+  ],
+  frontend: [
+    { label: 'React/Vue/Angular', re: /\breact\b|\bnext\.?js\b|\bvue\b|\bangular\b|\bsvelte\b/i, weight: 2 },
+    { label: 'CSS/design systems', re: /\bcss\b|\btailwind\b|\bdesign system\b|\bstyled-components\b/i, weight: 2 },
+    { label: 'accessibility', re: /\baccessibility\b|\bwcag\b|\ba11y\b/i, weight: 2 },
+    { label: 'browser/DOM', re: /\bbrowser\b|\bdom\b|\bsingle[\s-]page app/i, weight: 1 },
+    { label: 'TypeScript', re: /\btypescript\b/i, weight: 1 },
+  ],
+  ai: [
+    { label: 'LLM work', re: /\bllms?\b|\blarge language model|\bprompt engineering\b|\bretrieval[\s-]augmented\b/i, weight: 2 },
+    { label: 'ML frameworks', re: /\bpytorch\b|\btensorflow\b|\bscikit|\bjax\b/i, weight: 2 },
+    { label: 'machine learning', re: /\bmachine learning\b|\bdeep learning\b|\bneural network/i, weight: 2 },
+    { label: 'inference/serving', re: /\bmodel (?:serving|inference|training)\b|\bembeddings?\b|\bvector (?:database|search)\b/i, weight: 2 },
+    { label: 'data pipelines', re: /\bairflow\b|\bspark\b|\betl\b|\bdata pipeline/i, weight: 1 },
+  ],
+  game: [
+    { label: 'Unity/Unreal', re: /\bunity\b|\bunreal\b|\bgodot\b/i, weight: 2 },
+    { label: 'gameplay/engine', re: /\bgameplay\b|game engine|\bgamedev\b/i, weight: 2 },
+    { label: 'graphics/rendering', re: /\bshaders?\b|\brendering\b|\brasteriz|\bgraphics pipeline\b/i, weight: 2 },
+    { label: 'physics/simulation', re: /\bphysics (?:engine|simulation)\b|\bcollision detection\b/i, weight: 1 },
+    { label: 'C++', re: /\bc\+\+/i, weight: 1 },
+  ],
+};
+
+// Weak priors from the employer's name. Weight 1 on purpose: a games studio
+// hires backend, tools, and IT engineers too — the Ubisoft internship on this
+// résumé was Salesforce automation, not gameplay. A hint can tip a posting that
+// already leans somewhere; it can never carry one alone, because a variant must
+// win by RESUME_MIN_MARGIN (2) to displace what the title says.
+export const RESUME_COMPANY_HINTS = [
+  {
+    label: 'games studio',
+    variant: 'game',
+    weight: 1,
+    re: /\b(ubisoft|electronic arts|\bea\b|behaviour|warner bros\.? games|wb games|eidos|gameloft|epic games|riot games|activision|blizzard|rockstar|bungie|naughty dog|square enix|unity technologies|bethesda|cd projekt|larian|haven studios|ludia|amplitude studios)\b/i,
+  },
+  {
+    label: 'AI lab',
+    variant: 'ai',
+    weight: 1,
+    re: /\b(anthropic|openai|deepmind|cohere|mistral|hugging ?face|scale ai|databricks)\b/i,
+  },
+];
+
+// Descriptions are scraped page text and can run to hundreds of kilobytes on a
+// careers page that inlines its whole site. Routing only needs the posting.
+export const RESUME_MAX_DESCRIPTION_CHARS = 20000;
+
+// A title is a stronger signal than a body: a posting names its role in the
+// title on purpose, and mentions half the stack in the body as background.
+export const RESUME_TITLE_MULTIPLIER = 2;
+// What the title's role family alone is worth, before any body evidence. Not
+// awarded to DEFAULT_ROLE_FAMILY: "Software Engineer Intern" is the absence of a
+// title signal, not evidence for the base résumé. See src/resume.js.
+export const RESUME_FAMILY_WEIGHT = 3;
+// How far ahead the winner must be to override the title's own family. Below
+// this, the body is murmuring rather than speaking, and we trust the title.
+export const RESUME_MIN_MARGIN = 2;
+
+// How many independent pieces of evidence a body-only decision needs. Margin
+// alone is not enough: one weight-2 signal clears it, so "you will write Go
+// services, familiarity with HTML/CSS a plus" scored frontend=2 and confidently
+// attached the frontend résumé to a backend job. A posting that is really about
+// frontend work says so more than once. Title evidence is exempt — a title that
+// names the role has already corroborated itself.
+export const RESUME_MIN_SUPPORT = 2;
+
 export const COVER_LETTER_PDF_PATH = path.join(ROOT, 'assets', 'cover_letter.pdf');
 export const COVER_LETTER_TXT_PATH = path.join(ROOT, 'assets', 'cover_letter.txt');
-export const APPLIED_JOBS_PATH = path.join(ROOT, 'applied_jobs.json');
+// Overridable so a test or a scratch run can point at a throwaway ledger instead
+// of the real one — writing to the real ledger marks jobs as handled for good.
+export const APPLIED_JOBS_PATH = process.env.APPLIED_JOBS_PATH || path.join(ROOT, 'applied_jobs.json');
 
 export const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || '';
 export const DRY_RUN = (process.env.DRY_RUN || 'true').toLowerCase() !== 'false';
@@ -484,6 +643,21 @@ export const ATS_CONCURRENCY = parseInt(process.env.ATS_CONCURRENCY || '16', 10)
 // 10 pages is 200 postings per tenant site, well past any campus portal's inventory.
 export const ENABLE_WORKDAY = (process.env.ENABLE_WORKDAY || 'true').toLowerCase() !== 'false';
 export const WORKDAY_MAX_PAGES = parseInt(process.env.WORKDAY_MAX_PAGES || '10', 10);
+
+// Oracle Fusion is the biggest ATS after Workday (4,289 postings, 177 tenant sites)
+// and the one Canadian banks and telcos run campus hiring on. Pages hold 200.
+export const ENABLE_ORACLE = (process.env.ENABLE_ORACLE || 'true').toLowerCase() !== 'false';
+export const ORACLE_MAX_PAGES = parseInt(process.env.ORACLE_MAX_PAGES || '5', 10);
+
+// SmartRecruiters has no keyword filter, so every posting is paged through. Its
+// pages hold 100 and no company in the feeds posts more than a few hundred roles.
+export const ENABLE_SMARTRECRUITERS = (process.env.ENABLE_SMARTRECRUITERS || 'true').toLowerCase() !== 'false';
+export const SMARTRECRUITERS_MAX_PAGES = parseInt(process.env.SMARTRECRUITERS_MAX_PAGES || '5', 10);
+
+// Probe ATS boards for employers named in assets/employers.json, so a company can
+// be found without waiting for some job board to list it first.
+export const ENABLE_DISCOVERY = (process.env.ENABLE_DISCOVERY || 'true').toLowerCase() !== 'false';
+export const EMPLOYERS_PATH = path.join(ROOT, 'assets', 'employers.json');
 
 // Workday sites whose entire inventory is student roles, so a title needn't say
 // "intern" to be one. Matching this wrongly is expensive: it waives the intern
@@ -515,6 +689,35 @@ export const STATUS_META = {
   skipped_low_compatibility: { label: 'Skipped — low fit', kind: 'muted' },
 };
 
+// Only an actual submission is final. Everything else is a snapshot of what a
+// posting looked like on one particular day, and postings change: a description
+// gains "Summer 2027", a company adds sponsorship language, a form we couldn't
+// parse gets rebuilt. Recording those verdicts permanently meant one bad reading
+// removed a job from consideration forever — 122 postings whose term we couldn't
+// determine would be flagged once and never looked at again.
+export const TERMINAL_STATUSES = new Set(['applied', 'submitted_unconfirmed']);
+
+// How long a non-terminal verdict stands before the job is reconsidered.
+// Tuned to how fast the underlying fact can change:
+//   manual_review           — we never decided; look again soon
+//   skipped_unknown_required— the form had a field we couldn't fill; forms get rebuilt
+//   skipped_no_sponsorship  — sponsorship language is edited mid-cycle
+//   skipped_low_compatibility — only changes when assets/profile.json changes
+//   skipped_closed          — a closed posting rarely reopens
+//   skipped_wrong_term      — a Fall 2026 co-op never becomes Summer 2027, but the
+//                             URL can be recycled for next cycle's posting
+export const STATUS_RETRY_DAYS = {
+  manual_review: 14,
+  skipped_unknown_required: 21,
+  skipped_no_sponsorship: 30,
+  skipped_low_compatibility: 30,
+  skipped_closed: 45,
+  skipped_wrong_term: 90,
+};
+
+// A status we don't recognise blocks for this long rather than forever.
+export const DEFAULT_RETRY_DAYS = parseInt(process.env.DEFAULT_RETRY_DAYS || '30', 10);
+
 export function coverLetterText() {
   try {
     return fs.readFileSync(COVER_LETTER_TXT_PATH, 'utf8').trim();
@@ -525,7 +728,7 @@ export function coverLetterText() {
 
 // A real résumé PDF is tens of kilobytes. A truncated, empty, or placeholder file
 // is not, and `fs.existsSync` cannot tell the difference — which is the whole
-// problem, because whatever sits at RESUME_PATH is uploaded to real employers and
+// problem, because whatever sits at these paths is uploaded to real employers and
 // the submission is irreversible. Cheap structural checks catch the realistic
 // failures: an empty file, a stub committed during setup, a Git LFS pointer, a
 // truncated download.
@@ -569,10 +772,25 @@ export function validateConfig() {
   if (!APPLICANT.email) fatal.push('APPLICANT_EMAIL is not set');
   if (!APPLICANT.phone) fatal.push('APPLICANT_PHONE is not set');
 
-  // The résumé is attached to every application, so a bad one poisons every
-  // submission in the run — and each is recorded as applied, so it is never retried.
-  const resume = documentProblem('résumé', RESUME_PATH, { required: true });
+  // The base résumé is the fallback for every posting we can't route, so a bad
+  // one poisons the whole run — and each application is recorded as applied, so
+  // it is never retried.
+  const resume = documentProblem('résumé', resumePath(DEFAULT_RESUME_VARIANT), { required: true });
   if (resume) fatal.push(resume);
+
+  // Role-specific résumés are optional. Missing is a warning (we fall back to
+  // base); present-but-broken is fatal, because that file *will* be uploaded to
+  // an employer the moment a matching posting comes through.
+  for (const variant of RESUME_VARIANTS) {
+    if (variant === DEFAULT_RESUME_VARIANT) continue;
+    const file = resumePath(variant);
+    if (!fs.existsSync(file)) {
+      warnings.push(`no ${variant} résumé at ${file} — ${variant} postings will get the ${DEFAULT_RESUME_VARIANT} résumé`);
+      continue;
+    }
+    const problem = documentProblem(`${variant} résumé`, file, { required: false });
+    if (problem) fatal.push(problem);
+  }
 
   // Only fatal when present-but-broken: the cover letter is optional, but if a file
   // exists at that path the form filler will attach it.
