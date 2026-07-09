@@ -120,6 +120,11 @@ export const VISA_NEGATIONS = [
   'without sponsorship',
   'not provide sponsorship',
   'not offer sponsorship',
+  // "Visa sponsorship is not available for this role" — a refusal phrased without
+  // any of the verbs above, which read as an *offer* on the strength of the keyword.
+  'sponsorship is not available',
+  'sponsorship not available',
+  'not eligible for sponsorship',
   'unable to provide sponsorship',
   'not offer visa sponsorship',
   'not provide visa sponsorship',

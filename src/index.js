@@ -25,7 +25,7 @@ import { scrapeSmartRecruiters } from './scrapers/smartrecruiters.js';
 import { guessBoardPostings } from './scrapers/discover.js';
 import { scrapeIndeed, fetchIndeedJobDetails } from './scrapers/indeed.js';
 import { applyToJob, supportedAts } from './apply/index.js';
-import { mentionsSponsorship, fetchPostingText, feedSponsorshipVerdict } from './visa.js';
+import { sponsorshipStance, fetchPostingText, feedSponsorshipVerdict } from './visa.js';
 import { scoreJob, explainScore } from './score.js';
 import { slack, notifyApplied, notifySummary } from './notify.js';
 
@@ -189,20 +189,27 @@ async function main() {
         if (details.externalApplyUrl) job.applyUrl = details.externalApplyUrl;
       }
 
-      // US visa filter: posting must explicitly offer sponsorship.
+      // US visa filter: skip only a posting that explicitly refuses to sponsor.
+      //
+      // This used to demand an explicit *offer*, which meant silence was treated as
+      // refusal — and most US postings never mention sponsorship at all. It skipped
+      // 56 of 60 examined postings, including every one that would have taken the
+      // application. The employer's own form asks the question, and the applier now
+      // answers it truthfully from profile.json, so let them decide.
+      //
       // The feed's curated `sponsorship` field is authoritative when it says
       // anything definite, which saves rendering the page at all.
       if (job.country === 'US') {
         const verdict = feedSponsorshipVerdict(job);
-        let sponsors = verdict === 'offers';
+        let stance = verdict === 'unknown' ? null : verdict;
 
-        if (verdict === 'unknown') {
+        if (!stance) {
           if (!description) description = await fetchPostingText(context, job.applyUrl || job.url);
-          sponsors = mentionsSponsorship(description);
+          stance = sponsorshipStance(description);
         }
 
-        if (!sponsors) {
-          const why = verdict === 'denies' ? `feed says "${job.sponsorship}"` : 'no explicit visa sponsorship mention';
+        if (stance === 'denies') {
+          const why = verdict === 'denies' ? `feed says "${job.sponsorship}"` : 'posting states it will not sponsor';
           console.log(`  → skipped: US posting — ${why}`);
           if (!DRY_RUN) tracker.add(job, 'skipped_no_sponsorship', why, { description });
           counts.skipped++;
