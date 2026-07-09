@@ -87,6 +87,9 @@ jobs:
           APPLICANT_LINKEDIN: ${{ secrets.APPLICANT_LINKEDIN }}
           APPLICANT_GITHUB: ${{ secrets.APPLICANT_GITHUB }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          # Canadian co-op postings almost never name a hiring term, so leaving this
+          # off parks every one of them in manual review. See config.js.
+          APPLY_UNSTATED_TERM: 'true'
           # Scheduled runs are DRY until the LIVE_APPLY repo variable is exactly
           # 'true'. Before this gate, a schedule meant live-fire, so the first run
           # that ever got past preflight would have submitted real applications

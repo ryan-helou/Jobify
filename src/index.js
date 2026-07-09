@@ -13,6 +13,7 @@ import {
   MAX_APPLICATIONS_PER_RUN,
   MAX_JOBS_EXAMINED_PER_RUN,
   MIN_COMPATIBILITY,
+  APPLY_UNSTATED_TERM,
   validateConfig,
 } from './config.js';
 import { loadTracker, identityKey, canonicalKey } from './tracker.js';
@@ -113,8 +114,13 @@ async function main() {
     //    is not evidence of its cycle, so this is what stops last season's roles
     //    from reaching the applier.
     const wrongTerm = fresh.filter((j) => j.term === 'other-cycle');
-    const unstated = fresh.filter((j) => j.term === 'unstated');
-    const eligible = fresh.filter((j) => j.term === '2027' || j.term === 'exempt');
+    // With APPLY_UNSTATED_TERM on, term-ambiguous postings join the apply queue
+    // instead of the review queue. `fresh` is already in city-then-fit order, so
+    // they interleave by merit rather than landing behind every stated posting.
+    const unstated = APPLY_UNSTATED_TERM ? [] : fresh.filter((j) => j.term === 'unstated');
+    const eligible = fresh.filter(
+      (j) => j.term === '2027' || j.term === 'exempt' || (APPLY_UNSTATED_TERM && j.term === 'unstated')
+    );
     console.log(`term gate: ${eligible.length} eligible, ${unstated.length} unstated, ${wrongTerm.length} wrong cycle`);
 
     for (const job of wrongTerm) {
@@ -198,7 +204,7 @@ async function main() {
         if (!sponsors) {
           const why = verdict === 'denies' ? `feed says "${job.sponsorship}"` : 'no explicit visa sponsorship mention';
           console.log(`  → skipped: US posting — ${why}`);
-          if (!DRY_RUN) tracker.add(job, 'skipped_no_sponsorship', why);
+          if (!DRY_RUN) tracker.add(job, 'skipped_no_sponsorship', why, { description });
           counts.skipped++;
           continue;
         }
@@ -217,7 +223,7 @@ async function main() {
       if (job.scores.compatibility < MIN_COMPATIBILITY) {
         const why = `compatibility ${job.scores.compatibility} below floor of ${MIN_COMPATIBILITY}`;
         console.log(`  → skipped: ${why}`);
-        if (!DRY_RUN) tracker.add(job, 'skipped_low_compatibility', why);
+        if (!DRY_RUN) tracker.add(job, 'skipped_low_compatibility', why, { description });
         counts.lowFit++;
         continue;
       }
@@ -228,7 +234,7 @@ async function main() {
       const ats = supportedAts(job.applyUrl || job.url);
       if (!ats) {
         console.log('  → manual_review: unsupported application platform');
-        if (!DRY_RUN) tracker.add(job, 'manual_review', 'unsupported application platform');
+        if (!DRY_RUN) tracker.add(job, 'manual_review', 'unsupported application platform', { description });
         counts.manual++;
         await slack(
           `:eyes: Manual review needed — *${job.title}* at *${job.company}* (${job.location})\n` +
@@ -243,7 +249,14 @@ async function main() {
       const resumeNote = result.resume ? ` [résumé: ${result.resumeReason}]` : '';
       console.log(`  → ${result.status}: ${result.details}${resumeNote}`);
       // Dry runs never touch the ledger — otherwise a test run would block real applications.
-      if (!DRY_RUN) tracker.add(job, result.status, `${result.details}${resumeNote}`);
+      // The résumé rides along as its own field rather than appended to `details`,
+      // so the dashboard can show which one was sent without parsing prose.
+      if (!DRY_RUN) {
+        tracker.add(job, result.status, result.details, {
+          description,
+          resume: result.resume ? { variant: result.resume, reason: result.resumeReason } : null,
+        });
+      }
 
       if (result.status === 'applied' || result.status === 'submitted_unconfirmed') {
         counts.applied++;

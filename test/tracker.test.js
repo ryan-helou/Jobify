@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { isBlocking, canonicalKey, identityKey } from '../src/tracker.js';
+import { isBlocking, canonicalKey, identityKey, excerptOf, expiresAt } from '../src/tracker.js';
 import { STATUS_RETRY_DAYS } from '../src/config.js';
 
 const DAY = 86_400_000;
@@ -65,4 +65,34 @@ test('identityKey collapses punctuation and accents so one role is one job', () 
     identityKey({ company: 'Naïve', title: 'SWE Intern', city: 'sf' }),
     identityKey({ company: 'Naive', title: 'S.W.E. Intern!', city: 'sf' })
   );
+});
+
+// The dashboard recomputes expiry client-side to draw the "verdict holds" bar, so
+// this is the number both sides have to agree on.
+test('expiresAt is the decision time plus the status TTL', () => {
+  const recordedAt = new Date(NOW).toISOString();
+  assert.equal(expiresAt({ status: 'manual_review', recordedAt }), NOW + 14 * DAY);
+  assert.equal(expiresAt({ status: 'skipped_wrong_term', recordedAt }), NOW + 90 * DAY);
+});
+
+test('a permanent verdict has no expiry at all, rather than one far in the future', () => {
+  assert.equal(expiresAt({ status: 'applied', recordedAt: new Date(NOW).toISOString() }), null);
+  assert.equal(expiresAt({ status: 'manual_review', recordedAt: 'not-a-date' }), null);
+  assert.equal(expiresAt(null), null);
+});
+
+test('excerptOf collapses scraped whitespace and cuts on a word boundary', () => {
+  assert.equal(excerptOf('  Build\n\n  real   things.\t'), 'Build real things.');
+  assert.equal(excerptOf('', 10), '');
+  assert.equal(excerptOf(null), '');
+
+  const cut = excerptOf('alpha bravo charlie delta echo', 12);
+  assert.equal(cut, 'alpha bravo…', 'cuts at the space, not mid-word');
+});
+
+test('excerptOf truncates a spaceless blob rather than returning almost nothing', () => {
+  // A minified page dump has no word boundary to honour. Cutting at the last space
+  // would throw away the whole excerpt, so the hard cut wins.
+  const blob = 'x'.repeat(50) + ' ' + 'y'.repeat(50);
+  assert.equal(excerptOf(blob, 40), 'x'.repeat(40) + '…');
 });
