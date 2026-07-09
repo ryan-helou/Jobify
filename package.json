@@ -9,7 +9,8 @@
   },
   "scripts": {
     "start": "node src/index.js",
-    "dry-run": "DRY_RUN=true node src/index.js"
+    "dry-run": "DRY_RUN=true node src/index.js",
+    "dashboard": "node scripts/serve-dashboard.js"
   },
   "dependencies": {
     "cheerio": "^1.0.0",
