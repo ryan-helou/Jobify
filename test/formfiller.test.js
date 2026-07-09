@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { answerForQuestion, valueFor } from '../src/apply/formFiller.js';
+import { answerForQuestion, valueFor, sameAnswer } from '../src/apply/formFiller.js';
 
 // These answers are typed into real employment applications. A wrong one is a false
 // statement to an employer, not a failed test — so the phrasings below are taken
@@ -76,4 +76,19 @@ test('education values come from the profile', () => {
   assert.equal(valueFor('graduationYear', CA), '2028');
   assert.equal(valueFor('graduationMonth', CA), 'April');
   assert.equal(valueFor('graduationDate', CA), 'April 2028');
+});
+
+// "Yes" must never land on "Yes, I require sponsorship" or similar. An answer is
+// the whole option text or it is not that option.
+test('sameAnswer matches an option exactly, not by prefix', () => {
+  assert.equal(sameAnswer('Yes', 'yes'), true);
+  assert.equal(sameAnswer('  No  ', 'no'), true);
+  assert.equal(sameAnswer('Yes, with sponsorship', 'yes'), false);
+  assert.equal(sameAnswer('No, I do not', 'no'), false);
+  assert.equal(sameAnswer('', 'yes'), false);
+});
+
+test('location is the applicant\'s city, never the posting\'s', () => {
+  assert.equal(valueFor('location', { location: 'San Francisco, CA' }), 'Montreal, QC, Canada');
+  assert.equal(valueFor('location', { location: 'Toronto, Ontario' }), 'Montreal, QC, Canada');
 });
