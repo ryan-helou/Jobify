@@ -10,6 +10,7 @@ import {
   DEV_CATEGORIES,
   WANTED_SEASON,
 } from '../config.js';
+import { termForSource } from '../term.js';
 
 // True when a title looks like a software/developer role we'd want.
 // `kind` selects the policy: internship boards must say "intern"; new-grad boards
@@ -70,6 +71,7 @@ export function parseListings(listings, source) {
       source: source.name,
       // Authoritative when present; 'Other'/absent means the feed doesn't say.
       sponsorship: l.sponsorship || null,
+      term: termForSource(source, l.title),
     });
   }
   return jobs;
@@ -128,6 +130,7 @@ export function parseBoard(markdown, source) {
       url,
       source: sourceName,
       sponsorship: null, // markdown tables don't carry it
+      term: termForSource(typeof source === 'string' ? null : source, title),
     });
   }
   return jobs;
@@ -138,18 +141,42 @@ export function parseBoard(markdown, source) {
 async function scrapeSource(source) {
   const res = await fetch(source.url, { signal: AbortSignal.timeout(30000) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const jobs =
-    source.type === 'listings' ? parseListings(await res.json(), source) : parseBoard(await res.text(), source);
-  console.log(`GitHub board ${source.name}: ${jobs.length} matching jobs`);
-  return jobs;
+
+  let jobs;
+  let postings;
+  if (source.type === 'listings') {
+    const listings = await res.json();
+    // Every posting on the board, not just the ones we want — an apply URL for a
+    // Seattle PM role still tells us that company's Greenhouse board token, and
+    // its company_name is how we learn that token's real display name.
+    postings = listings.filter((l) => l?.url).map((l) => ({ url: l.url, company: l.company_name || '' }));
+    jobs = source.harvestOnly ? [] : parseListings(listings, source);
+  } else {
+    jobs = source.harvestOnly ? [] : parseBoard(await res.text(), source);
+    postings = jobs.map((j) => ({ url: j.url, company: j.company }));
+  }
+
+  console.log(
+    source.harvestOnly
+      ? `GitHub board ${source.name}: token mine only, ${postings.length} apply URLs`
+      : `GitHub board ${source.name}: ${jobs.length} matching jobs`
+  );
+  return { jobs, postings };
 }
 
+// Returns { jobs, postings } — postings feed ATS board-token harvesting, which
+// needs both the apply URL (for the token) and the company name (to label it).
 export async function scrapeGithubBoards() {
   const results = await Promise.allSettled(GITHUB_SOURCES.map(scrapeSource));
   const jobs = [];
+  const postings = [];
   results.forEach((r, i) => {
-    if (r.status === 'fulfilled') jobs.push(...r.value);
-    else console.error(`GitHub board ${GITHUB_SOURCES[i].name} failed: ${r.reason.message}`);
+    if (r.status === 'fulfilled') {
+      jobs.push(...r.value.jobs);
+      postings.push(...r.value.postings);
+    } else {
+      console.error(`GitHub board ${GITHUB_SOURCES[i].name} failed: ${r.reason.message}`);
+    }
   });
-  return jobs;
+  return { jobs, postings };
 }
