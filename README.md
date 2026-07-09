@@ -14,7 +14,19 @@ Enumerating only the boards that a job board already named is circular: an emplo
 
 `applied_jobs.json` records every posting the runner has decided about, and that decision blocks the job from being processed again. Only a submission is permanent. Every other verdict is a snapshot of how a posting read on one particular day, and postings change — a description gains "Summer 2027", a company adds sponsorship language, a form we couldn't parse gets rebuilt. So non-terminal verdicts expire: `manual_review` after 14 days, `skipped_no_sponsorship` after 30, `skipped_wrong_term` after 90 (see `STATUS_RETRY_DAYS`). A posting flagged once for a human comes back if nobody acted on it, rather than vanishing forever.
 
+A record keeps the evidence behind its verdict, not just the verdict: the three scores and the signals they were computed from, which résumé was sent, a bounded excerpt of what the posting said, and every verdict the posting has ever had. The excerpt earns its place because a posting outlives our record of it — the URL 404s once the role is filled, and the ledger is then the only surviving account of what we read. `recordedAt` moves each time a posting is re-examined, so `firstSeenAt` remembers when it first appeared.
+
 The repo is **private**, and should stay that way: it holds your résumé and a timestamped log of every job you have applied to. For the same reason the GitHub Pages deploy is manual-only — a Pages site is served publicly even from a private repo. Read the dashboard locally with `npm run dashboard`.
+
+## 🖥 The dashboard
+
+`docs/index.html` is one self-contained file — no build step, no dependencies — because it is served three ways: from the repo root by `npm run dashboard`, from a Pages artifact, and straight out of memory by `scripts/serve-hosted.js`.
+
+It renders the ledger as what it is: a log of decisions, each of which expires. Every row shows how long its verdict still holds before the posting is reconsidered, and **Returning soon** filters to the ones the next run is about to pick back up. Opening a row shows everything the ledger knows about that posting — what happened and why, when the verdict lapses, the skills it asked for against the ones you list, the résumé that was sent, and its full verdict history. Filters and the open row live in the URL, so any view can be linked, bookmarked, or reloaded.
+
+Two rules hold the interface together. The accent colour means *a human has to do something* and is spent nowhere else, so anything copper is your queue. And facts the machine wrote — scores, timestamps, statuses, board names — are set in mono, while words a person wrote are set in sans; you can tell them apart without reading them.
+
+Because the page cannot import from `src/`, it carries its own copy of the status vocabulary and the retry windows as embedded JSON. `test/dashboard.test.js` parses that block and fails the moment it disagrees with `src/config.js`.
 
 ## 📊 Scoring
 

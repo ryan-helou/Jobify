@@ -3,309 +3,1328 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Jobify — Application Dashboard</title>
-  <style>
-    :root {
-      --bg: #f6f7f9;
-      --panel: #ffffff;
-      --border: #e4e7ec;
-      --text: #1a1d23;
-      --muted: #6b7280;
-      --accent: #4f46e5;
-      --success-bg: #dcfce7; --success-fg: #166534;
-      --warn-bg: #fef3c7; --warn-fg: #92400e;
-      --info-bg: #dbeafe; --info-fg: #1e40af;
-      --muted-bg: #eef1f4; --muted-fg: #4b5563;
-      --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.04);
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Jobify — the ledger</title>
+
+  <!--
+    The status vocabulary, mirrored from src/config.js because this page is a single
+    self-contained file and cannot import from the runner. It is JSON rather than a
+    JS object literal so test/dashboard.test.js can parse it without evaluating the
+    page, and fail the build the moment the two copies disagree.
+
+    `blurb` has no counterpart in config.js — it is interface copy, and lives only here.
+  -->
+  <script type="application/json" id="ledger-vocabulary">
+  {
+    "statuses": {
+      "applied": {
+        "label": "Applied",
+        "kind": "success",
+        "blurb": "Jobify filled this form and submitted it. Applications are permanent — this posting is never reconsidered."
+      },
+      "submitted_unconfirmed": {
+        "label": "Submitted, unconfirmed",
+        "kind": "warn",
+        "blurb": "The form was submitted, but no confirmation page came back. Check your email or the company's portal before applying again by hand."
+      },
+      "manual_review": {
+        "label": "Needs you",
+        "kind": "attention",
+        "blurb": "Jobify stopped here and submitted nothing. Finish this application yourself."
+      },
+      "skipped_unknown_required": {
+        "label": "Skipped — unknown field",
+        "kind": "muted",
+        "blurb": "The form required a question Jobify didn't recognise. It refused to guess an answer, so nothing was submitted."
+      },
+      "skipped_no_sponsorship": {
+        "label": "Skipped — no sponsorship",
+        "kind": "muted",
+        "blurb": "A US posting that never says it sponsors work visas. Silence is treated as a refusal."
+      },
+      "skipped_closed": {
+        "label": "Skipped — closed",
+        "kind": "muted",
+        "blurb": "The posting was already closed or gone when Jobify opened it."
+      },
+      "skipped_wrong_term": {
+        "label": "Skipped — wrong term",
+        "kind": "muted",
+        "blurb": "The posting names a hiring season other than Summer 2027."
+      },
+      "skipped_low_compatibility": {
+        "label": "Skipped — low fit",
+        "kind": "muted",
+        "blurb": "Fit scored below the MIN_COMPATIBILITY floor, so no application was spent on it."
+      }
+    },
+    "terminalStatuses": ["applied", "submitted_unconfirmed"],
+    "retryDays": {
+      "manual_review": 14,
+      "skipped_unknown_required": 21,
+      "skipped_no_sponsorship": 30,
+      "skipped_low_compatibility": 30,
+      "skipped_closed": 45,
+      "skipped_wrong_term": 90
+    },
+    "defaultRetryDays": 30,
+    "cities": {
+      "montreal": "Montreal",
+      "toronto": "Toronto",
+      "nyc": "New York",
+      "sf": "San Francisco"
     }
+  }
+  </script>
+
+  <style>
+    /* ── Tokens ──────────────────────────────────────────────────────────────
+       One rule governs colour: copper is reserved for things that want a human.
+       Manual review, links, focus rings, the control that filters to your queue.
+       Everything the bot settled on its own stays in slate and says nothing.
+
+       One rule governs type: facts the machine wrote — scores, timestamps,
+       statuses, sources, keys — are set in mono. Words a person wrote — the role,
+       the company, the posting — are set in sans. You can tell them apart without
+       reading them. */
+    :root {
+      --paper: #f1f3f5;
+      --surface: #ffffff;
+      --surface-2: #f7f8fa;
+      --rule: #e1e5ea;
+      --rule-strong: #cfd5dd;
+      --ink: #14171c;
+      --muted: #5f6773;
+      --faint: #8b93a0;
+
+      --accent: #b0522a;
+      --accent-ink: #8f3f1d;
+      --accent-wash: #fbeee7;
+
+      --ok: #14663d;
+      --ok-wash: #e0f1e7;
+      --warn: #8a5600;
+      --warn-wash: #fbeed4;
+      --skip: #58606c;
+      --skip-wash: #e8ebef;
+
+      --meter-track: #e3e6eb;
+      --meter-fill: #7b8492;
+
+      --shadow-sm: 0 1px 2px rgba(16, 24, 40, .05);
+      --shadow-lg: -18px 0 48px rgba(16, 24, 40, .16);
+
+      --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace;
+
+      --radius: 10px;
+      --row-h: 52px;
+    }
+    :root { color-scheme: light dark; }
+    :root[data-theme="light"] { color-scheme: light; }
+    :root[data-theme="dark"] { color-scheme: dark; }
+    /* Dark values live in one block, applied by either the OS or the toggle. */
     @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0e1116; --panel: #171b22; --border: #262c36;
-        --text: #e6e9ef; --muted: #9aa4b2; --accent: #818cf8;
-        --success-bg: #14331f; --success-fg: #86efac;
-        --warn-bg: #3a2c0a; --warn-fg: #fcd34d;
-        --info-bg: #16294d; --info-fg: #93c5fd;
-        --muted-bg: #21262e; --muted-fg: #9aa4b2;
-        --shadow: none;
+      :root:not([data-theme="light"]) {
+        --paper: #0e1013;
+        --surface: #15181d;
+        --surface-2: #1a1e24;
+        --rule: #262b33;
+        --rule-strong: #343a44;
+        --ink: #e5e8ed;
+        --muted: #98a0ac;
+        --faint: #6f7784;
+
+        --accent: #dd8055;
+        --accent-ink: #ef9a72;
+        --accent-wash: #2c1810;
+
+        --ok: #58c98d;
+        --ok-wash: #10301f;
+        --warn: #dfb254;
+        --warn-wash: #302509;
+        --skip: #98a0ac;
+        --skip-wash: #21252c;
+
+        --meter-track: #282d35;
+        --meter-fill: #6f7784;
+
+        --shadow-sm: none;
+        --shadow-lg: -18px 0 48px rgba(0, 0, 0, .5);
       }
     }
+    :root[data-theme="dark"] {
+      --paper: #0e1013;
+      --surface: #15181d;
+      --surface-2: #1a1e24;
+      --rule: #262b33;
+      --rule-strong: #343a44;
+      --ink: #e5e8ed;
+      --muted: #98a0ac;
+      --faint: #6f7784;
+
+      --accent: #dd8055;
+      --accent-ink: #ef9a72;
+      --accent-wash: #2c1810;
+
+      --ok: #58c98d;
+      --ok-wash: #10301f;
+      --warn: #dfb254;
+      --warn-wash: #302509;
+      --skip: #98a0ac;
+      --skip-wash: #21252c;
+
+      --meter-track: #282d35;
+      --meter-fill: #6f7784;
+
+      --shadow-sm: none;
+      --shadow-lg: -18px 0 48px rgba(0, 0, 0, .5);
+    }
+
     * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
     body {
-      margin: 0; background: var(--bg); color: var(--text);
-      font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 15px/1.55 var(--sans);
       -webkit-font-smoothing: antialiased;
     }
-    .wrap { max-width: 1200px; margin: 0 auto; padding: 32px 20px 64px; }
-    header.top { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-    h1 { font-size: 24px; margin: 0; letter-spacing: -.02em; }
-    h1 .dot { color: var(--accent); }
-    .updated { color: var(--muted); font-size: 13px; }
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 24px 0; }
-    .stat { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); }
-    .stat .n { font-size: 28px; font-weight: 700; letter-spacing: -.02em; }
-    .stat .l { color: var(--muted); font-size: 13px; margin-top: 2px; }
-    .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
-    input[type=search], select {
-      background: var(--panel); color: var(--text); border: 1px solid var(--border);
-      border-radius: 9px; padding: 9px 12px; font-size: 14px; outline: none;
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 4px;
     }
-    input[type=search] { flex: 1 1 240px; min-width: 200px; }
-    input[type=search]:focus, select:focus { border-color: var(--accent); }
-    .table-wrap { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; box-shadow: var(--shadow); }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-    th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--panel); }
-    th.sort-asc::after { content: " ▲"; color: var(--accent); }
-    th.sort-desc::after { content: " ▼"; color: var(--accent); }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 28px 20px 96px; }
+
+    /* ── Masthead ─────────────────────────────────────────────────────────── */
+    .masthead { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .wordmark { display: flex; align-items: baseline; gap: 10px; }
+    .wordmark b { font-size: 25px; font-weight: 700; letter-spacing: -.035em; }
+    .wordmark span {
+      font: 500 11px/1 var(--mono);
+      text-transform: uppercase; letter-spacing: .18em; color: var(--faint);
+      padding-bottom: 2px;
+    }
+    .masthead-right { display: flex; align-items: center; gap: 8px; }
+    .stamp { font: 400 12px/1.4 var(--mono); color: var(--muted); text-align: right; }
+    .stamp b { color: var(--ink); font-weight: 500; }
+
+    .iconbtn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; padding: 0;
+      background: var(--surface); color: var(--muted);
+      border: 1px solid var(--rule); border-radius: 8px;
+      cursor: pointer; font-size: 14px; line-height: 1;
+    }
+    .iconbtn:hover { color: var(--ink); border-color: var(--rule-strong); }
+    .iconbtn[aria-busy="true"] { opacity: .5; pointer-events: none; }
+    .iconbtn:disabled { opacity: .35; cursor: default; }
+
+    /* ── Stat cards (each one is a filter) ────────────────────────────────── */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 10px; margin: 22px 0 18px; }
+    .stat {
+      appearance: none; text-align: left; font: inherit;
+      background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius);
+      padding: 13px 15px; box-shadow: var(--shadow-sm);
+    }
+    button.stat { cursor: pointer; }
+    button.stat:hover { border-color: var(--rule-strong); }
+    button.stat[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-wash); }
+    .stat .n { font: 600 26px/1.15 var(--mono); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+    .stat .l { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+    button.stat[aria-pressed="true"] .l { color: var(--accent-ink); }
+
+    /* ── Toolbar ──────────────────────────────────────────────────────────── */
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .search { position: relative; flex: 1 1 260px; min-width: 200px; }
+    .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--faint); pointer-events: none; }
+    .search input {
+      width: 100%; background: var(--surface); color: var(--ink);
+      border: 1px solid var(--rule); border-radius: 8px;
+      padding: 9px 12px 9px 34px; font: inherit; font-size: 14px; outline: none;
+    }
+    .search input::placeholder { color: var(--faint); }
+    .search input:focus { border-color: var(--accent); }
+    .search kbd {
+      position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+      font: 500 11px/1 var(--mono); color: var(--faint);
+      border: 1px solid var(--rule); border-radius: 4px; padding: 3px 5px; background: var(--surface-2);
+    }
+    .search input:focus + kbd { display: none; }
+
+    .menu { position: relative; }
+    .menu > summary {
+      list-style: none; cursor: pointer; user-select: none;
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--surface); border: 1px solid var(--rule); border-radius: 8px;
+      padding: 9px 11px; font-size: 14px; color: var(--ink); white-space: nowrap;
+    }
+    .menu > summary::-webkit-details-marker { display: none; }
+    .menu > summary:hover { border-color: var(--rule-strong); }
+    .menu[open] > summary { border-color: var(--accent); }
+    .menu > summary .caret { color: var(--faint); font-size: 10px; }
+    .menu > summary .n {
+      font: 600 11px/1 var(--mono); background: var(--accent); color: #fff;
+      border-radius: 999px; padding: 3px 6px; font-variant-numeric: tabular-nums;
+    }
+    .menu-panel {
+      position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; min-width: 244px; max-height: 340px; overflow-y: auto;
+      background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius);
+      box-shadow: 0 12px 32px rgba(16, 24, 40, .14); padding: 6px;
+    }
+    :root[data-theme="dark"] .menu-panel { box-shadow: 0 12px 32px rgba(0, 0, 0, .45); }
+    .menu-panel label {
+      display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 6px; cursor: pointer; font-size: 14px;
+    }
+    .menu-panel label:hover { background: var(--surface-2); }
+    .menu-panel input { accent-color: var(--accent); margin: 0; }
+    .menu-panel .count { margin-left: auto; font: 400 12px/1 var(--mono); color: var(--faint); font-variant-numeric: tabular-nums; }
+
+    .toggle {
+      cursor: pointer; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px;
+      padding: 9px 11px; font: inherit; font-size: 14px; color: var(--ink); white-space: nowrap;
+    }
+    .toggle:hover { border-color: var(--rule-strong); }
+    .toggle[aria-pressed="true"] { background: var(--accent-wash); border-color: var(--accent); color: var(--accent-ink); }
+    .linkbtn {
+      background: none; border: none; cursor: pointer; font: inherit; font-size: 13.5px;
+      color: var(--accent); padding: 6px 4px; text-decoration: underline; text-underline-offset: 2px;
+    }
+    .spacer { flex: 1 1 0; }
+
+    /* ── Table ────────────────────────────────────────────────────────────── */
+    .sheet { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
+    .scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      position: sticky; top: 0; z-index: 2; background: var(--surface);
+      text-align: left; white-space: nowrap; cursor: pointer; user-select: none;
+      font: 500 10.5px/1 var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--faint);
+      padding: 12px 14px; border-bottom: 1px solid var(--rule);
+    }
+    thead th:hover { color: var(--ink); }
+    thead th .dir { color: var(--accent); }
+    thead th.num { text-align: right; }
+    tbody td { padding: 9px 14px; border-bottom: 1px solid var(--rule); vertical-align: middle; height: var(--row-h); }
     tbody tr:last-child td { border-bottom: none; }
-    tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
-    td.title { white-space: normal; font-weight: 600; max-width: 230px; min-width: 150px; }
-    td.company { white-space: normal; max-width: 150px; }
-    td.why { color: var(--muted); font-size: 13px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
-    .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; }
-    .badge.success { background: var(--success-bg); color: var(--success-fg); }
-    .badge.warn { background: var(--warn-bg); color: var(--warn-fg); }
-    .badge.info { background: var(--info-bg); color: var(--info-fg); }
-    .badge.muted { background: var(--muted-bg); color: var(--muted-fg); }
-    .city { text-transform: capitalize; }
-    /* Three score columns were added to an already-wide table; keep them compact
-       so Why/Date/Link stay reachable without horizontal scrolling. */
-    th[data-sort=compatibility], th[data-sort=quality], th[data-sort=interviewOdds], td.score { padding-left: 8px; padding-right: 8px; }
-    td.score { font-variant-numeric: tabular-nums; cursor: help; }
-    td.score.none { color: var(--muted); }
-    .meter { display: inline-block; width: 32px; height: 6px; border-radius: 999px; background: var(--muted-bg); margin-right: 7px; vertical-align: middle; overflow: hidden; }
-    .meter > i { display: block; height: 100%; border-radius: 999px; background: var(--muted-fg); }
-    .meter.hi > i { background: var(--success-fg); }
-    .meter.mid > i { background: var(--warn-fg); }
-    th .hint { text-transform: none; letter-spacing: 0; font-weight: 400; }
-    a.link { color: var(--accent); text-decoration: none; font-weight: 600; }
-    a.link:hover { text-decoration: underline; }
-    .empty, .error { text-align: center; padding: 48px 20px; color: var(--muted); }
-    .error { color: var(--warn-fg); }
-    .muted-note { color: var(--muted); font-size: 13px; margin-top: 14px; }
-    code { background: var(--muted-bg); padding: 1px 6px; border-radius: 5px; font-size: 13px; }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover td { background: var(--surface-2); }
+    tbody tr[aria-selected="true"] td { background: var(--accent-wash); }
+    tbody tr:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+    .role { min-width: 232px; }
+    .role .t { font-weight: 600; letter-spacing: -.01em; }
+    .role .c { color: var(--muted); font-size: 13px; }
+    .loc { min-width: 148px; font-size: 13.5px; color: var(--muted); }
+    .loc .raw { color: var(--ink); }
+    .chip-city { font: 500 11px/1 var(--mono); color: var(--faint); text-transform: uppercase; letter-spacing: .06em; }
+
+    /* The reason for a skip sits beside the verdict, not inside the badge. Spelled
+       out in full, "SKIPPED — NO SPONSORSHIP" is wide enough on its own to push the
+       two rightmost columns — including the verdict lifecycle — off the screen. */
+    .reason { margin-top: 4px; font-size: 12px; color: var(--muted); }
+
+    .badge {
+      display: inline-block; white-space: nowrap;
+      font: 500 10.5px/1 var(--mono); text-transform: uppercase; letter-spacing: .07em;
+      padding: 5px 8px; border-radius: 5px;
+    }
+    .badge.success { background: var(--ok-wash); color: var(--ok); }
+    .badge.warn { background: var(--warn-wash); color: var(--warn); }
+    .badge.attention { background: var(--accent-wash); color: var(--accent-ink); }
+    .badge.muted { background: var(--skip-wash); color: var(--skip); }
+
+    td.num { text-align: right; white-space: nowrap; }
+    .score { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; }
+    .score .v { font: 500 13px/1 var(--mono); font-variant-numeric: tabular-nums; min-width: 30px; text-align: right; }
+    .score.none .v { color: var(--faint); }
+    .meter { width: 34px; height: 5px; border-radius: 999px; background: var(--meter-track); overflow: hidden; flex: none; }
+    .meter i { display: block; height: 100%; border-radius: 999px; background: var(--meter-fill); }
+    .meter.hi i { background: var(--ok); }
+
+    .src { font: 400 12px/1 var(--mono); color: var(--muted); white-space: nowrap; }
+    /* A board name like `github:vanshb03/Summer2027-Internships` is 38 characters of
+       mono. Left to size itself it takes the width of the two columns after it. */
+    .src-cell { display: block; max-width: 132px; overflow: hidden; text-overflow: ellipsis; }
+    .stamp-cell { font: 400 12.5px/1 var(--mono); color: var(--muted); white-space: nowrap; }
+
+    /* The signature: how long this verdict still speaks for the posting. */
+    .holds { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+    .holds .track { width: 30px; height: 5px; border-radius: 999px; background: var(--meter-track); overflow: hidden; flex: none; }
+    .holds .track i { display: block; height: 100%; background: var(--meter-fill); border-radius: 999px; }
+    .holds .lbl { font: 400 12px/1 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+    .holds.permanent .lbl { color: var(--faint); }
+    .holds.due .lbl { color: var(--accent); }
+    .holds.attention .track i { background: var(--accent); }
+
+    .empty { padding: 60px 24px; text-align: center; color: var(--muted); }
+    .empty h3 { margin: 0 0 6px; font-size: 16px; color: var(--ink); letter-spacing: -.01em; }
+    .empty p { margin: 0 auto 14px; max-width: 400px; font-size: 14px; }
+    .empty code { font: 400 13px/1 var(--mono); background: var(--surface-2); border: 1px solid var(--rule); padding: 2px 5px; border-radius: 4px; }
+
+    .footnote { color: var(--faint); font-size: 12.5px; margin-top: 14px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .footnote .keys { font-family: var(--mono); }
+    .footnote .keys b { color: var(--muted); font-weight: 500; }
+    .prose { color: var(--muted); font-size: 12.5px; line-height: 1.65; margin-top: 8px; max-width: 78ch; }
+    .prose em { color: var(--ink); font-style: normal; font-weight: 600; }
+
+    /* ── Drawer ───────────────────────────────────────────────────────────── */
+    .scrim { position: fixed; inset: 0; z-index: 50; background: rgba(16, 24, 40, .34); backdrop-filter: blur(2px); animation: fade .16s ease-out; }
+    @keyframes fade { from { opacity: 0 } }
+    @keyframes slide { from { transform: translateX(24px); opacity: .4 } }
+
+    .drawer {
+      position: fixed; z-index: 51; top: 0; right: 0; bottom: 0;
+      width: min(580px, 100%); display: flex; flex-direction: column;
+      background: var(--surface); border-left: 1px solid var(--rule); box-shadow: var(--shadow-lg);
+      animation: slide .18s cubic-bezier(.2, .8, .2, 1);
+    }
+    .drawer-top { display: flex; align-items: center; gap: 6px; padding: 12px 14px; border-bottom: 1px solid var(--rule); }
+    .drawer-top .spacer { flex: 1 }
+    .drawer-body { overflow-y: auto; padding: 20px 22px 40px; }
+
+    .d-status { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .d-title { font-size: 21px; font-weight: 650; letter-spacing: -.02em; margin: 12px 0 4px; line-height: 1.28; }
+    .d-company { color: var(--muted); font-size: 14.5px; }
+    .d-company b { color: var(--ink); font-weight: 600; }
+    .d-blurb {
+      margin: 16px 0 0; padding: 13px 15px; border-radius: 8px; font-size: 14px; line-height: 1.55;
+      background: var(--surface-2); border: 1px solid var(--rule); border-left: 3px solid var(--rule-strong);
+    }
+    .d-blurb.attention { border-left-color: var(--accent); }
+    .d-blurb.success { border-left-color: var(--ok); }
+    .d-blurb.warn { border-left-color: var(--warn); }
+    .d-blurb .said { display: block; margin-top: 8px; font: 400 12.5px/1.5 var(--mono); color: var(--muted); }
+
+    .d-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0 4px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+      font: inherit; font-size: 13.5px; padding: 8px 12px; border-radius: 7px;
+      border: 1px solid var(--rule); background: var(--surface); color: var(--ink); text-decoration: none;
+    }
+    .btn:hover { border-color: var(--rule-strong); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 550; }
+    .btn.primary:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+
+    section.block { margin-top: 28px; }
+    section.block > h3 {
+      font: 500 10.5px/1 var(--mono); text-transform: uppercase; letter-spacing: .12em; color: var(--faint);
+      margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--rule);
+    }
+
+    .lifecycle { display: flex; flex-direction: column; gap: 9px; }
+    .lifecycle .bar { height: 7px; border-radius: 999px; background: var(--meter-track); overflow: hidden; }
+    .lifecycle .bar i { display: block; height: 100%; border-radius: 999px; background: var(--meter-fill); }
+    .lifecycle .bar.attention i { background: var(--accent); }
+    .lifecycle .line { font-size: 13.5px; color: var(--muted); }
+    .lifecycle .line b { color: var(--ink); font-weight: 600; }
+    .lifecycle .when { font-family: var(--mono); font-size: 12.5px; color: var(--faint); }
+
+    .scores { display: grid; gap: 16px; }
+    .srow { display: grid; grid-template-columns: 92px 1fr auto; align-items: center; gap: 12px; }
+    .srow .k { font-size: 13.5px; color: var(--muted); }
+    .srow .bar { height: 7px; border-radius: 999px; background: var(--meter-track); overflow: hidden; }
+    .srow .bar i { display: block; height: 100%; border-radius: 999px; background: var(--meter-fill); }
+    .srow .bar.hi i { background: var(--ok); }
+    .srow .v { font: 500 14px/1 var(--mono); font-variant-numeric: tabular-nums; min-width: 42px; text-align: right; }
+    .srow .v.none { color: var(--faint); }
+    .score-note { margin-top: 14px; font-size: 12.5px; color: var(--faint); line-height: 1.6; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      font: 400 12px/1 var(--mono); padding: 6px 8px; border-radius: 5px;
+      background: var(--surface-2); border: 1px solid var(--rule); color: var(--muted);
+    }
+    .chip.have { background: var(--ok-wash); border-color: transparent; color: var(--ok); font-weight: 500; }
+    .chip.have.strong { box-shadow: inset 0 0 0 1px var(--ok); }
+    .chip.missing { border-style: dashed; color: var(--faint); }
+    .chip.flag { background: var(--warn-wash); border-color: transparent; color: var(--warn); font-weight: 500; }
+    .legend { font-size: 12.5px; color: var(--faint); margin: 10px 0 0; }
+
+    .facts { display: grid; grid-template-columns: 128px 1fr; gap: 9px 16px; font-size: 13.5px; }
+    .facts dt { color: var(--muted); }
+    .facts dd { margin: 0; font-family: var(--mono); font-size: 12.5px; word-break: break-word; }
+    .facts dd.sans { font-family: var(--sans); font-size: 13.5px; }
+    .facts dd .none { color: var(--faint); }
+
+    .timeline { list-style: none; margin: 0; padding: 0; }
+    .timeline li { position: relative; padding: 0 0 18px 22px; }
+    .timeline li::before {
+      content: ""; position: absolute; left: 3px; top: 5px; width: 7px; height: 7px; border-radius: 50%;
+      background: var(--rule-strong);
+    }
+    .timeline li.now::before { background: var(--accent); }
+    .timeline li:not(:last-child)::after {
+      content: ""; position: absolute; left: 6px; top: 15px; bottom: 2px; width: 1px; background: var(--rule);
+    }
+    .timeline .t { font-size: 13.5px; }
+    .timeline .t b { font-weight: 600; }
+    .timeline .m { font: 400 12px/1.5 var(--mono); color: var(--faint); }
+    .timeline .d { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+    .excerpt {
+      font-size: 13.5px; line-height: 1.65; color: var(--muted);
+      background: var(--surface-2); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 16px;
+      max-height: 190px; overflow-y: auto;
+    }
+
+    a.ext { color: var(--accent); text-decoration: none; font-weight: 500; word-break: break-all; }
+    a.ext:hover { text-decoration: underline; }
+
+    .toast {
+      position: fixed; z-index: 60; bottom: 22px; left: 50%; transform: translateX(-50%);
+      background: var(--ink); color: var(--paper); font-size: 13.5px; padding: 10px 16px; border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.28);
+    }
+
+    /* ── Small screens: the table becomes cards ───────────────────────────── */
+    @media (max-width: 800px) {
+      .wrap { padding: 20px 14px 72px; }
+      thead { display: none; }
+      /* Flex, not grid: the three score cells have to share one wrapping line,
+         which a two-column grid can't express without stacking them on top of
+         each other. */
+      tbody tr { display: flex; flex-wrap: wrap; align-items: center; gap: 7px 14px; padding: 14px; border-bottom: 1px solid var(--rule); }
+      tbody td { display: block; height: auto; padding: 0; border: none; }
+      tbody tr:hover td, tbody tr[aria-selected="true"] td { background: none; }
+      tbody tr:hover, tbody tr[aria-selected="true"] { background: var(--surface-2); }
+      td.c-status { order: 1; }
+      td.c-holds { order: 2; margin-left: auto; }
+      td.c-role { order: 3; flex: 1 0 100%; }
+      td.c-loc { order: 4; flex: 1 0 100%; }
+      td.c-loc .raw, td.c-loc .chip-city { display: inline; }
+      td.c-loc .chip-city::before { content: " · "; }
+      td.c-fit { order: 5; }
+      td.c-quality { order: 6; }
+      td.c-odds { order: 7; }
+      td.c-fit, td.c-quality, td.c-odds { display: inline-flex; align-items: center; gap: 7px; }
+      td.c-fit::before, td.c-quality::before, td.c-odds::before {
+        font: 500 10.5px/1 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--faint);
+      }
+      td.c-fit::before { content: "Fit"; }
+      td.c-quality::before { content: "Qual"; }
+      td.c-odds::before { content: "Odds"; }
+      td.c-date { order: 8; margin-left: auto; }
+      td.c-src { display: none; }
+      .drawer { width: 100%; border-left: none; }
+      .facts { grid-template-columns: 1fr; gap: 2px; }
+      .facts dd { margin-bottom: 10px; }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <header class="top">
-      <h1>Jobify<span class="dot">.</span> <span style="font-weight:500;color:var(--muted);font-size:16px">application tracker</span></h1>
-      <div class="updated" id="updated">Loading…</div>
+    <header class="masthead">
+      <div class="wordmark">
+        <b>Jobify</b><span>the ledger</span>
+      </div>
+      <div class="masthead-right">
+        <div class="stamp" id="stamp">Reading the ledger…</div>
+        <button class="iconbtn" id="refresh" title="Reload the ledger" aria-label="Reload the ledger">↻</button>
+        <button class="iconbtn" id="theme" title="Switch between light and dark" aria-label="Switch between light and dark">◐</button>
+      </div>
     </header>
 
     <div class="stats" id="stats"></div>
 
-    <div class="controls">
-      <input type="search" id="search" placeholder="Search title, company, or location…" />
-      <select id="statusFilter"><option value="">All statuses</option></select>
-      <select id="cityFilter"><option value="">All cities</option></select>
-      <select id="sourceFilter"><option value="">All sources</option></select>
+    <div class="toolbar">
+      <div class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+        </svg>
+        <input type="search" id="q" placeholder="Search role, company, location, skills, or why…" autocomplete="off" spellcheck="false" aria-label="Search the ledger" />
+        <kbd>/</kbd>
+      </div>
+
+      <details class="menu" id="menu-status">
+        <summary>Status <span class="n" hidden></span><span class="caret">▾</span></summary>
+        <div class="menu-panel"></div>
+      </details>
+      <details class="menu" id="menu-city">
+        <summary>City <span class="n" hidden></span><span class="caret">▾</span></summary>
+        <div class="menu-panel"></div>
+      </details>
+      <details class="menu" id="menu-source">
+        <summary>Source <span class="n" hidden></span><span class="caret">▾</span></summary>
+        <div class="menu-panel"></div>
+      </details>
+
+      <button class="toggle" id="returning" aria-pressed="false" title="Verdicts that expire within a week — the next run will look at these postings again">Returning soon</button>
+      <div class="spacer"></div>
+      <button class="linkbtn" id="clear" hidden>Clear filters</button>
+      <button class="linkbtn" id="csv">Export CSV</button>
     </div>
 
-    <div class="table-wrap">
-      <table id="table">
-        <thead>
-          <tr>
-            <th data-sort="status">Status</th>
-            <th data-sort="title">Role</th>
-            <th data-sort="company">Company</th>
-            <th data-sort="location">Location</th>
-            <th data-sort="city">City</th>
-            <th data-sort="compatibility" title="How well this posting matches the skills in assets/profile.json, plus city, role type and eligibility. 0–100.">Fit</th>
-            <th data-sort="quality" title="How good the internship looks: pay, return offer, mentorship, real production work, company tier. 0–100.">Quality</th>
-            <th data-sort="interviewOdds" title="Heuristic estimate of the chance this application leads to a first-round interview. NOT a calibrated probability — no interview outcomes are recorded anywhere, so nothing was fitted to data. Use it to rank postings, not to predict them.">Odds <span class="hint">*</span></th>
-            <th data-sort="source">Source</th>
-            <th data-sort="details">Why</th>
-            <th data-sort="recordedAt">Date</th>
-            <th>Link</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
+    <div class="sheet">
+      <div class="scroll">
+        <table id="table">
+          <thead>
+            <tr>
+              <th data-sort="status" style="width:1%">Status</th>
+              <th data-sort="title">Role</th>
+              <th data-sort="location">Location</th>
+              <th data-sort="compatibility" class="num" title="How well this posting matches the skills in assets/profile.json, times an eligibility factor for term and work authorization. 0–100.">Fit</th>
+              <th data-sort="quality" class="num" title="How good the internship looks, independent of who is applying: pay, return offer, mentorship, real work, company tier. 0–100.">Quality</th>
+              <th data-sort="interviewOdds" class="num" title="A heuristic prior, not a calibrated probability. Nothing here records interview outcomes.">Odds</th>
+              <th data-sort="source">Source</th>
+              <th data-sort="expiry" title="How long this verdict still speaks for the posting. An application is permanent; every other verdict expires and the posting is reconsidered.">Verdict holds</th>
+              <th data-sort="recordedAt">Decided</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
     </div>
-    <div class="muted-note" id="count"></div>
-    <div class="muted-note">
-      <strong>*</strong> <em>Odds</em> is a heuristic estimate, not a calibrated probability. No interview outcomes
-      are recorded anywhere in this project, so nothing has been fitted to real data — it is a base rate adjusted by
-      fit, company prestige and how early the posting was found. Use it to rank two postings against each other, not
-      to predict what will happen. <em>Fit</em> and <em>Quality</em> are computed from the posting text against
-      <code>assets/profile.json</code>; hover any row to see the signals behind its scores.
+
+    <div class="footnote">
+      <span id="count"></span>
+      <span class="keys"><b>/</b> search · <b>j</b> <b>k</b> move · <b>↵</b> open · <b>esc</b> close</span>
     </div>
+
+    <p class="prose">
+      <em>Fit</em> and <em>Quality</em> are computed from the posting's own text against <code>assets/profile.json</code>.
+      <em>Odds</em> is a heuristic prior, not a forecast — no interview outcomes are recorded anywhere in this project,
+      so nothing has been fitted to real data. Rank two postings against each other with it; never predict one.
+      Open any row to see the evidence behind its numbers.
+    </p>
   </div>
 
+  <div id="drawer-host"></div>
+  <div id="toast-host" aria-live="polite"></div>
+
   <script>
-    const STATUS_META = {
-      applied: { label: 'Applied', kind: 'success' },
-      submitted_unconfirmed: { label: 'Submitted (unconfirmed)', kind: 'warn' },
-      manual_review: { label: 'Manual review', kind: 'info' },
-      skipped_unknown_required: { label: 'Skipped — unknown field', kind: 'muted' },
-      skipped_no_sponsorship: { label: 'Skipped — no sponsorship', kind: 'muted' },
-      skipped_closed: { label: 'Skipped — closed', kind: 'muted' },
-      skipped_wrong_term: { label: 'Skipped — wrong hiring term', kind: 'muted' },
-      skipped_low_compatibility: { label: 'Skipped — low fit', kind: 'muted' },
+  (() => {
+    'use strict';
+
+    const VOCAB = JSON.parse(document.getElementById('ledger-vocabulary').textContent);
+    const STATUS = VOCAB.statuses;
+    const TERMINAL = new Set(VOCAB.terminalStatuses);
+    const RETRY_DAYS = VOCAB.retryDays;
+    const DEFAULT_RETRY_DAYS = VOCAB.defaultRetryDays;
+    const CITY = VOCAB.cities;
+
+    const DAY = 86_400_000;
+    // A verdict inside this window is about to hand the posting back to the next run.
+    const RETURNING_SOON_DAYS = 7;
+
+    // Bar thresholds differ per score because the scales do: 70/100 is a good fit,
+    // but 20% is an excellent chance at an interview.
+    const SCALES = {
+      compatibility: { max: 100, hi: 70, suffix: '' },
+      quality: { max: 100, hi: 70, suffix: '' },
+      interviewOdds: { max: 40, hi: 20, suffix: '%' },
     };
-    const CITY_LABEL = { montreal: 'Montreal', toronto: 'Toronto', sf: 'San Francisco', nyc: 'New York' };
-    const COLSPAN = 12;
 
-    // Bar thresholds differ per score because the scales do: 70/100 is a good
-    // fit, but 20% is an excellent chance at an interview.
-    const SCORE_SCALES = {
-      score: { max: 100, hi: 70, mid: 45, suffix: '' },
-      odds: { max: 40, hi: 20, mid: 8, suffix: '%' },
+    const TERM_LABEL = {
+      '2027': 'Summer 2027',
+      exempt: 'Exempt (source guarantees the cycle)',
+      unstated: 'Not stated in the posting',
+      'other-cycle': 'A different hiring cycle',
+    };
+    const TIER_LABEL = { top: 'Top tier', strong: 'Strong tier', unknown: 'Not on the tier list' };
+    const CONFIDENCE_BLURB = {
+      high: 'a long description, and enough named technologies to trust the skill overlap',
+      medium: 'some description text, but thin evidence',
+      low: 'no description at all — these rest on the title and the company name',
+    };
+    const FAMILY_LABEL = {
+      swe: 'General software', fullstack: 'Full stack', backend: 'Backend', frontend: 'Frontend',
+      infra: 'Infrastructure', ml: 'Machine learning', data: 'Data', mobile: 'Mobile',
+      security: 'Security', embedded: 'Embedded', game: 'Games',
     };
 
-    let jobs = [];
-    let sortKey = 'recordedAt';
-    let sortDir = -1; // newest first
-
-    const $ = (id) => document.getElementById(id);
+    const $ = (s, r = document) => r.querySelector(s);
+    const $$ = (s, r = document) => [...r.querySelectorAll(s)];
     const esc = (s) => (s == null ? '' : String(s)).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const meta = (s) => STATUS[s] || { label: s, kind: 'muted', blurb: 'A status this dashboard does not know about.' };
 
-    function fmtDate(iso) {
-      if (!iso) return '—';
+    // ── State ──────────────────────────────────────────────────────────────
+    let jobs = [];
+    let rows = [];        // the filtered, sorted view
+    let cursor = -1;      // keyboard position within `rows`
+    let openKey = null;   // identity of the record in the drawer
+    let lastFocus = null;
+
+    const state = {
+      q: '',
+      statuses: new Set(),
+      cities: new Set(),
+      sources: new Set(),
+      returning: false,
+      sort: 'recordedAt',
+      dir: -1,
+    };
+
+    // ── Derived facts ──────────────────────────────────────────────────────
+
+    // Mirrors expiresAt() in src/tracker.js. Null means the verdict never expires
+    // (a submission) or the record can't say (an unreadable timestamp).
+    function expiryOf(j) {
+      if (TERMINAL.has(j.status)) return null;
+      const at = Date.parse(j.recordedAt);
+      if (Number.isNaN(at)) return null;
+      return at + (RETRY_DAYS[j.status] ?? DEFAULT_RETRY_DAYS) * DAY;
+    }
+
+    function holdsOf(j, now = Date.now()) {
+      if (TERMINAL.has(j.status)) return { kind: 'permanent' };
+      const expiry = expiryOf(j);
+      if (expiry == null) return { kind: 'due' };
+      const msLeft = expiry - now;
+      if (msLeft <= 0) return { kind: 'due', expiry };
+      const total = (RETRY_DAYS[j.status] ?? DEFAULT_RETRY_DAYS) * DAY;
+      return { kind: 'holding', expiry, days: Math.ceil(msLeft / DAY), frac: Math.max(0.03, msLeft / total) };
+    }
+
+    // A posting the next run is about to pick back up — the ledger's whole point.
+    const isReturningSoon = (j) => {
+      const h = holdsOf(j);
+      return h.kind === 'due' || (h.kind === 'holding' && h.days <= RETURNING_SOON_DAYS);
+    };
+    const needsYou = (j) => j.status === 'manual_review' || j.status === 'submitted_unconfirmed';
+    const idOf = (j) => j.identity || j.key || `${j.company}|${j.title}`;
+    const skipStatuses = () => Object.keys(STATUS).filter((s) => s.startsWith('skipped_'));
+
+    // "Skipped — no sponsorship" reads as a verdict and a reason. The table shows the
+    // verdict as a badge and the reason as a line beneath it; the drawer and the
+    // filter menus keep the whole label.
+    function statusParts(status) {
+      const m = meta(status).label.match(/^(.*?)\s*[—,]\s*(.*)$/);
+      return m ? { head: m[1], tail: m[2] } : { head: meta(status).label, tail: '' };
+    }
+
+    // "Toronto, ON · TORONTO" tells you nothing twice. The city chip earns its place
+    // only when the posting's own location doesn't already name the target city —
+    // Brooklyn is New York, Sunnyvale is San Francisco, and those are worth saying.
+    function redundantCity(j) {
+      const label = CITY[j.city];
+      if (!label || !j.location) return !label;
+      const norm = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      return norm(j.location).startsWith(norm(label));
+    }
+
+    // ── Formatting ─────────────────────────────────────────────────────────
+    const fmtDate = (iso) => {
       const d = new Date(iso);
-      if (isNaN(d)) return '—';
-      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+      return isNaN(d) ? '—' : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    };
+    const fmtDateTime = (iso) => {
+      const d = new Date(iso);
+      return isNaN(d) ? '—' : d.toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    };
+    function fmtAgo(iso) {
+      const d = Date.parse(iso);
+      if (Number.isNaN(d)) return '—';
+      const mins = Math.round((Date.now() - d) / 60000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.round(mins / 60);
+      if (hrs < 24) return `${hrs}h ago`;
+      const days = Math.round(hrs / 24);
+      return days < 31 ? `${days}d ago` : fmtDate(iso);
     }
+    const plural = (n, one, many = one + 's') => `${n} ${n === 1 ? one : many}`;
 
-    // A score cell: a small meter plus the number. Records written before scoring
-    // existed have no score at all, and must read as "unknown", never as zero.
-    function scoreCell(v, scale) {
-      if (typeof v !== 'number' || !isFinite(v)) return `<td class="score none">—</td>`;
-      const s = SCORE_SCALES[scale];
-      const cls = v >= s.hi ? 'hi' : v >= s.mid ? 'mid' : 'lo';
-      const width = Math.max(3, Math.min(100, (v / s.max) * 100));
-      return `<td class="score"><span class="meter ${cls}"><i style="width:${width}%"></i></span>${v}${s.suffix}</td>`;
-    }
-
-    // Why a row scored the way it did — shown on hover over its score cells.
-    function scoreTooltip(j) {
-      if (typeof j.compatibility !== 'number') return 'Scored before this run recorded score details.';
+    // ── Filtering & sorting ────────────────────────────────────────────────
+    function haystack(j) {
+      if (j.__hay) return j.__hay;
       const s = j.scoreSignals || {};
-      const bits = [];
-      if (s.matchedSkills?.length) bits.push(`Your skills matched: ${s.matchedSkills.join(', ')}`);
-      if (s.requiredSkills?.length) bits.push(`Posting asks for: ${s.requiredSkills.join(', ')}`);
-      if (s.family) bits.push(`Role type: ${s.family}`);
-      if (s.pay) bits.push(`Pay: ${s.pay}`);
-      if (s.tier && s.tier !== 'unknown') bits.push(`Company: ${s.tier} tier`);
-      if (s.flags?.length) bits.push(`Flags: ${s.flags.join(', ')}`);
-      if (j.scoreConfidence) bits.push(`Confidence: ${j.scoreConfidence}`);
-      return bits.join('\n') || 'No scoring signals recorded.';
+      return (j.__hay = [j.title, j.company, j.location, CITY[j.city], j.source, j.details, meta(j.status).label,
+        ...(s.matchedSkills || []), ...(s.requiredSkills || []), s.family, s.tier, s.pay]
+        .filter(Boolean).join(' ').toLowerCase());
     }
 
-    const mean = (ns) => (ns.length ? Math.round(ns.reduce((a, b) => a + b, 0) / ns.length) : null);
-
-    function renderStats() {
-      const counts = {};
-      for (const j of jobs) counts[j.status] = (counts[j.status] || 0) + 1;
-      const applied = (counts.applied || 0) + (counts.submitted_unconfirmed || 0);
-      // Derived, not enumerated: listing the skip statuses by hand meant a new one
-      // (skipped_wrong_term) was tracked, filterable and shown in the table, yet
-      // silently missing from this card.
-      const skipped = Object.entries(counts)
-        .filter(([status]) => status.startsWith('skipped_'))
-        .reduce((sum, [, n]) => sum + n, 0);
-      const avgFit = mean(jobs.map((j) => j.compatibility).filter((v) => typeof v === 'number'));
-      const cards = [
-        { n: jobs.length, l: 'Total tracked' },
-        { n: applied, l: 'Applied' },
-        { n: counts.manual_review || 0, l: 'Manual review' },
-        { n: skipped, l: 'Skipped' },
-        { n: avgFit == null ? '—' : avgFit, l: 'Avg fit' },
-      ];
-      $('stats').innerHTML = cards.map((c) => `<div class="stat"><div class="n">${c.n}</div><div class="l">${c.l}</div></div>`).join('');
-    }
-
-    function fillFilter(id, values, labelFn) {
-      const sel = $(id);
-      const current = sel.value;
-      const opts = ['<option value="">' + sel.options[0].text + '</option>'];
-      for (const v of [...values].sort()) opts.push(`<option value="${esc(v)}">${esc(labelFn ? labelFn(v) : v)}</option>`);
-      sel.innerHTML = opts.join('');
-      sel.value = current;
-    }
-
-    function buildFilters() {
-      fillFilter('statusFilter', new Set(jobs.map((j) => j.status)), (s) => (STATUS_META[s]?.label || s));
-      fillFilter('cityFilter', new Set(jobs.map((j) => j.city).filter(Boolean)), (c) => CITY_LABEL[c] || c);
-      fillFilter('sourceFilter', new Set(jobs.map((j) => j.source).filter(Boolean)));
-    }
-
-    function currentRows() {
-      const q = $('search').value.trim().toLowerCase();
-      const sf = $('statusFilter').value, cf = $('cityFilter').value, srf = $('sourceFilter').value;
-      let rows = jobs.filter((j) => {
-        if (sf && j.status !== sf) return false;
-        if (cf && j.city !== cf) return false;
-        if (srf && j.source !== srf) return false;
-        if (q) {
-          const hay = `${j.title} ${j.company} ${j.location}`.toLowerCase();
-          if (!hay.includes(q)) return false;
+    function compute() {
+      const q = state.q.trim().toLowerCase();
+      const terms = q ? q.split(/\s+/) : [];
+      let out = jobs.filter((j) => {
+        if (state.statuses.size && !state.statuses.has(j.status)) return false;
+        if (state.cities.size && !state.cities.has(j.city)) return false;
+        if (state.sources.size && !state.sources.has(j.source)) return false;
+        if (state.returning && !isReturningSoon(j)) return false;
+        if (terms.length) {
+          const hay = haystack(j);
+          if (!terms.every((t) => hay.includes(t))) return false;
         }
         return true;
       });
-      rows.sort((a, b) => {
-        const av = a[sortKey], bv = b[sortKey];
-        // Unscored records sort last in both directions rather than pretending to
-        // be zero — the old `|| ''` coerced a real score of 0 into a string and
-        // compared it against numbers.
-        const aMissing = av == null || av === '', bMissing = bv == null || bv === '';
-        if (aMissing || bMissing) return aMissing && bMissing ? 0 : aMissing ? 1 : -1;
-        if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * sortDir;
-        return String(av).localeCompare(String(bv)) * sortDir;
+
+      const key = state.sort;
+      const val = (j) => {
+        if (key === 'expiry') {
+          // Permanent verdicts sort as "forever". A record whose timestamp we can't
+          // read is due immediately, and belongs at the other end.
+          if (TERMINAL.has(j.status)) return Infinity;
+          return expiryOf(j) ?? 0;
+        }
+        if (key === 'status') return meta(j.status).label;
+        if (key === 'recordedAt') return Date.parse(j.recordedAt) || 0;
+        return j[key];
+      };
+      out.sort((a, b) => {
+        const av = val(a), bv = val(b);
+        // Unscored records sort last in both directions rather than pretending to be
+        // zero — a missing score is unknown, not bad.
+        const am = av == null || av === '', bm = bv == null || bv === '';
+        if (am || bm) return am && bm ? 0 : am ? 1 : -1;
+        if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * state.dir;
+        return String(av).localeCompare(String(bv)) * state.dir;
       });
-      return rows;
+      return out;
     }
 
-    function render() {
-      const rows = currentRows();
-      const tbody = $('tbody');
+    // ── URL as the source of truth for a view ──────────────────────────────
+    function readUrl() {
+      const p = new URLSearchParams(location.search);
+      state.q = p.get('q') || '';
+      state.statuses = new Set((p.get('status') || '').split(',').filter(Boolean));
+      state.cities = new Set((p.get('city') || '').split(',').filter(Boolean));
+      state.sources = new Set((p.get('source') || '').split(',').filter(Boolean));
+      state.returning = p.get('returning') === '1';
+      state.sort = p.get('sort') || 'recordedAt';
+      state.dir = p.get('dir') === 'asc' ? 1 : -1;
+      const h = new URLSearchParams(location.hash.slice(1));
+      openKey = h.get('j') || null;
+    }
+    function writeUrl(push = false) {
+      const p = new URLSearchParams();
+      if (state.q) p.set('q', state.q);
+      if (state.statuses.size) p.set('status', [...state.statuses].join(','));
+      if (state.cities.size) p.set('city', [...state.cities].join(','));
+      if (state.sources.size) p.set('source', [...state.sources].join(','));
+      if (state.returning) p.set('returning', '1');
+      if (state.sort !== 'recordedAt') p.set('sort', state.sort);
+      if (state.dir === 1) p.set('dir', 'asc');
+      const qs = p.toString();
+      const hash = openKey ? '#j=' + encodeURIComponent(openKey) : '';
+      const url = location.pathname + (qs ? '?' + qs : '') + hash;
+      history[push ? 'pushState' : 'replaceState'](null, '', url);
+    }
+    const anyFilter = () => state.q || state.statuses.size || state.cities.size || state.sources.size || state.returning;
+
+    // ── Stat cards ─────────────────────────────────────────────────────────
+    function renderStats() {
+      const n = (fn) => jobs.filter(fn).length;
+      const fits = jobs.map((j) => j.compatibility).filter((v) => typeof v === 'number');
+      const avgFit = fits.length ? Math.round(fits.reduce((a, b) => a + b, 0) / fits.length) : null;
+
+      const cards = [
+        { n: jobs.length, l: 'Tracked' },
+        { n: n((j) => j.status === 'applied'), l: 'Applied', preset: ['applied'] },
+        { n: n(needsYou), l: 'Needs you', preset: ['manual_review', 'submitted_unconfirmed'] },
+        { n: n((j) => j.status.startsWith('skipped_')), l: 'Skipped', preset: skipStatuses() },
+        { n: n(isReturningSoon), l: 'Returning soon', returning: true },
+        { n: avgFit == null ? '—' : avgFit, l: 'Average fit' },
+      ];
+
+      $('#stats').innerHTML = cards.map((c) => {
+        const inner = `<div class="n">${c.n}</div><div class="l">${c.l}</div>`;
+        if (c.returning) {
+          return `<button class="stat" type="button" data-returning="1" aria-pressed="${state.returning}">${inner}</button>`;
+        }
+        if (!c.preset) return `<div class="stat">${inner}</div>`;
+        const on = c.preset.length === state.statuses.size && c.preset.every((s) => state.statuses.has(s));
+        return `<button class="stat" type="button" data-preset="${c.preset.join(',')}" aria-pressed="${on}">${inner}</button>`;
+      }).join('');
+    }
+
+    // ── Filter menus ───────────────────────────────────────────────────────
+    function renderMenu(id, selected, values, label) {
+      const menu = $('#' + id);
+      const panel = $('.menu-panel', menu);
+      const badge = $('.n', menu);
+      panel.innerHTML = values.map(([v, count]) => `
+        <label>
+          <input type="checkbox" value="${esc(v)}" ${selected.has(v) ? 'checked' : ''} />
+          <span>${esc(label(v))}</span>
+          <span class="count">${count}</span>
+        </label>`).join('') || `<label><span class="count">Nothing to filter yet</span></label>`;
+      badge.hidden = selected.size === 0;
+      badge.textContent = selected.size;
+    }
+
+    function tally(pick) {
+      const counts = new Map();
+      for (const j of jobs) {
+        const v = pick(j);
+        if (v) counts.set(v, (counts.get(v) || 0) + 1);
+      }
+      return [...counts.entries()].sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0])));
+    }
+
+    function renderMenus() {
+      // Rebuilding a panel replaces the checkbox that was just clicked, dropping focus
+      // to the body mid-interaction. Put it back on the replacement.
+      const active = document.activeElement;
+      const refocus = active?.matches?.('.menu-panel input') ? { menu: active.closest('.menu').id, value: active.value } : null;
+
+      renderMenu('menu-status', state.statuses, tally((j) => j.status), (s) => meta(s).label);
+      renderMenu('menu-city', state.cities, tally((j) => j.city), (c) => CITY[c] || c);
+      renderMenu('menu-source', state.sources, tally((j) => j.source), (s) => s);
+
+      if (refocus) $(`#${refocus.menu} .menu-panel input[value="${CSS.escape(refocus.value)}"]`)?.focus();
+
+      // The toolbar toggle and the "Returning soon" card drive one piece of state, so
+      // the toggle has to be told when the card was the thing that changed it.
+      $('#returning').setAttribute('aria-pressed', String(state.returning));
+    }
+
+    // ── Table ──────────────────────────────────────────────────────────────
+    function scoreCell(v, kind) {
+      if (typeof v !== 'number' || !isFinite(v)) return `<span class="score none"><span class="v">—</span></span>`;
+      const s = SCALES[kind];
+      // Green marks a strong score; everything else stays slate. The bar's length
+      // already says how big the number is, and a second colour here would collide
+      // with the accent that means "a human is needed".
+      const cls = v >= s.hi ? 'hi' : '';
+      const w = Math.max(4, Math.min(100, (v / s.max) * 100));
+      return `<span class="score"><span class="meter ${cls}"><i style="width:${w}%"></i></span><span class="v">${v}${s.suffix}</span></span>`;
+    }
+
+    function holdsCell(j) {
+      const h = holdsOf(j);
+      if (h.kind === 'permanent') return `<span class="holds permanent"><span class="lbl">permanent</span></span>`;
+      if (h.kind === 'due') return `<span class="holds due" title="The next run will look at this posting again."><span class="lbl">due</span></span>`;
+      // Copper only where a human is wanted; a verdict merely expiring is the bot's business.
+      const cls = j.status === 'manual_review' ? 'attention' : '';
+      return `<span class="holds ${cls}" title="Reconsidered on ${esc(fmtDate(new Date(h.expiry).toISOString()))}">
+        <span class="track"><i style="width:${Math.round(h.frac * 100)}%"></i></span><span class="lbl">${h.days}d</span></span>`;
+    }
+
+    function renderTable() {
+      const tbody = $('#tbody');
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="${COLSPAN}"><div class="empty">No jobs match these filters yet.</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9">${emptyState()}</td></tr>`;
       } else {
-        tbody.innerHTML = rows.map((j) => {
-          const m = STATUS_META[j.status] || { label: j.status, kind: 'muted' };
-          const why = esc(scoreTooltip(j));
-          return `<tr title="${why}">
-            <td><span class="badge ${m.kind}">${esc(m.label)}</span></td>
-            <td class="title">${esc(j.title)}</td>
-            <td class="company">${esc(j.company)}</td>
-            <td>${esc(j.location)}</td>
-            <td class="city">${esc(CITY_LABEL[j.city] || j.city || '')}</td>
-            ${scoreCell(j.compatibility, 'score')}
-            ${scoreCell(j.quality, 'score')}
-            ${scoreCell(j.interviewOdds, 'odds')}
-            <td>${esc(j.source)}</td>
-            <td class="why" title="${esc(j.details || '')}">${esc(j.details || '—')}</td>
-            <td>${esc(fmtDate(j.recordedAt))}</td>
-            <td>${j.url ? `<a class="link" href="${esc(j.url)}" target="_blank" rel="noopener">Open ↗</a>` : ''}</td>
+        tbody.innerHTML = rows.map((j, i) => {
+          const m = meta(j.status);
+          const { head, tail } = statusParts(j.status);
+          const city = redundantCity(j) ? '' : `<div class="chip-city">${esc(CITY[j.city] || j.city || '')}</div>`;
+          return `<tr tabindex="0" data-i="${i}" data-id="${esc(idOf(j))}" aria-selected="${i === cursor}">
+            <td class="c-status"><span class="badge ${m.kind}">${esc(head)}</span>${tail ? `<div class="reason">${esc(tail)}</div>` : ''}</td>
+            <td class="c-role role"><div class="t">${esc(j.title)}</div><div class="c">${esc(j.company)}</div></td>
+            <td class="c-loc loc"><div class="raw">${esc(j.location || '—')}</div>${city}</td>
+            <td class="c-fit num">${scoreCell(j.compatibility, 'compatibility')}</td>
+            <td class="c-quality num">${scoreCell(j.quality, 'quality')}</td>
+            <td class="c-odds num">${scoreCell(j.interviewOdds, 'interviewOdds')}</td>
+            <td class="c-src"><span class="src src-cell" title="${esc(j.source || '')}">${esc(j.source || '—')}</span></td>
+            <td class="c-holds">${holdsCell(j)}</td>
+            <td class="c-date"><span class="stamp-cell">${esc(fmtDate(j.recordedAt))}</span></td>
           </tr>`;
         }).join('');
       }
-      $('count').textContent = `Showing ${rows.length} of ${jobs.length} tracked job${jobs.length === 1 ? '' : 's'}.`;
-      document.querySelectorAll('th[data-sort]').forEach((th) => {
-        th.classList.remove('sort-asc', 'sort-desc');
-        if (th.dataset.sort === sortKey) th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+
+      $('#count').textContent = jobs.length
+        ? `${rows.length} of ${plural(jobs.length, 'posting')}`
+        : '';
+      $$('#table thead th[data-sort]').forEach((th) => {
+        const on = th.dataset.sort === state.sort;
+        th.innerHTML = th.innerHTML.replace(/\s*<span class="dir">[▲▼]<\/span>/, '');
+        if (on) th.innerHTML += ` <span class="dir">${state.dir === 1 ? '▲' : '▼'}</span>`;
+        th.setAttribute('aria-sort', on ? (state.dir === 1 ? 'ascending' : 'descending') : 'none');
       });
+      $('#clear').hidden = !anyFilter();
     }
 
-    function wire() {
-      ['search', 'statusFilter', 'cityFilter', 'sourceFilter'].forEach((id) => $(id).addEventListener('input', render));
-      document.querySelectorAll('th[data-sort]').forEach((th) => {
-        th.addEventListener('click', () => {
-          const k = th.dataset.sort;
-          // Scores and dates are most useful highest-first on the first click.
-          const DESC_FIRST = ['recordedAt', 'compatibility', 'quality', 'interviewOdds'];
-          if (sortKey === k) sortDir *= -1;
-          else { sortKey = k; sortDir = DESC_FIRST.includes(k) ? -1 : 1; }
-          render();
-        });
-      });
+    function emptyState() {
+      if (!jobs.length) {
+        return `<div class="empty">
+          <h3>Nothing tracked yet</h3>
+          <p>Jobify writes to the ledger the first time it runs for real. Dry runs deliberately leave it untouched.</p>
+          <p><code>DRY_RUN=false npm start</code></p>
+        </div>`;
+      }
+      return `<div class="empty">
+        <h3>No postings match these filters</h3>
+        <p>${esc(plural(jobs.length, 'posting is', 'postings are'))} tracked. Widen the search to find them.</p>
+        <button class="btn" type="button" data-act="clear">Clear filters</button>
+      </div>`;
     }
 
-    async function fetchJobsJson() {
-      // Works whether the JSON sits beside index.html (Pages artifact) or one
-      // level up at the repo root (local server, or Pages served from branch root).
+    // ── Drawer ─────────────────────────────────────────────────────────────
+    function bar(v, kind) {
+      if (typeof v !== 'number') return { cls: '', w: 0 };
+      const s = SCALES[kind];
+      return { cls: v >= s.hi ? 'hi' : '', w: Math.max(3, Math.min(100, (v / s.max) * 100)) };
+    }
+
+    function scoreRow(label, v, kind, hint) {
+      const s = SCALES[kind];
+      const b = bar(v, kind);
+      const has = typeof v === 'number';
+      return `<div class="srow" title="${esc(hint)}">
+        <div class="k">${esc(label)}</div>
+        <div class="bar ${b.cls}"><i style="width:${b.w}%"></i></div>
+        <div class="v ${has ? '' : 'none'}">${has ? v + s.suffix : '—'}</div>
+      </div>`;
+    }
+
+    function lifecycleBlock(j) {
+      const h = holdsOf(j);
+      if (h.kind === 'permanent') {
+        return `<div class="lifecycle">
+          <div class="bar"><i style="width:100%"></i></div>
+          <div class="line"><b>This verdict is permanent.</b> A submitted application is never retried, so Jobify will not open this posting again.</div>
+        </div>`;
+      }
+      if (h.kind === 'due') {
+        return `<div class="lifecycle">
+          <div class="bar attention"><i style="width:0%"></i></div>
+          <div class="line"><b>This verdict has expired.</b> The next run will read the posting again and decide fresh.</div>
+        </div>`;
+      }
+      const total = RETRY_DAYS[j.status] ?? DEFAULT_RETRY_DAYS;
+      const cls = j.status === 'manual_review' ? 'attention' : '';
+      return `<div class="lifecycle">
+        <div class="bar ${cls}"><i style="width:${Math.round(h.frac * 100)}%"></i></div>
+        <div class="line">Holds for <b>${plural(h.days, 'more day')}</b>, then the posting is reconsidered from scratch.</div>
+        <div class="when">${esc(fmtDate(new Date(h.expiry).toISOString()))} · ${plural(total, 'day')} from the decision below</div>
+      </div>`;
+    }
+
+    function evidenceBlock(j) {
+      const s = j.scoreSignals;
+      if (!s) return `<p class="legend">This record was written before Jobify kept the evidence behind its scores.</p>`;
+      const matched = s.matchedSkills || [];
+      const required = s.requiredSkills || [];
+      const missing = required.filter((k) => !matched.includes(k));
+
+      const chips = [
+        ...matched.map((k) => `<span class="chip have">${esc(k)}</span>`),
+        ...missing.map((k) => `<span class="chip missing">${esc(k)}</span>`),
+      ].join('');
+
+      const flags = (s.flags || []).map((f) => `<span class="chip flag">⚠ ${esc(f)}</span>`).join('');
+
+      return `
+        ${required.length
+          ? `<div class="chips">${chips}</div>
+             <p class="legend">${plural(matched.length, 'skill')} of the ${required.length} this posting names ${matched.length === 1 ? 'is' : 'are'} on your profile. Dashed chips are the ones it asks for and you don't list.</p>`
+          : `<p class="legend">This posting names no technology Jobify recognises, so the skill overlap was shrunk toward a neutral prior rather than scored as a miss.</p>`}
+        ${flags ? `<div class="chips" style="margin-top:12px">${flags}</div><p class="legend">A red flag caps quality at 25 no matter how well the rest of the posting reads.</p>` : ''}
+        <dl class="facts" style="margin-top:16px">
+          <dt>Role family</dt><dd class="sans">${esc(FAMILY_LABEL[s.family] || s.family || '—')}</dd>
+          <dt>Company tier</dt><dd class="sans">${esc(TIER_LABEL[s.tier] || s.tier || '—')}</dd>
+          <dt>Pay</dt><dd>${s.pay ? esc(s.pay) : '<span class="none">not stated in the posting</span>'}</dd>
+        </dl>`;
+    }
+
+    function timelineBlock(j) {
+      const history = Array.isArray(j.history) && j.history.length
+        ? j.history
+        : [{ at: j.recordedAt, status: j.status, details: j.details }];
+      const first = j.firstSeenAt || history[0]?.at;
+
+      const items = [...history].reverse().map((h, i) => {
+        const m = meta(h.status);
+        return `<li class="${i === 0 ? 'now' : ''}">
+          <div class="t"><b>${esc(m.label)}</b></div>
+          ${h.details ? `<div class="d">${esc(h.details)}</div>` : ''}
+          <div class="m">${esc(fmtDateTime(h.at))}</div>
+        </li>`;
+      }).join('');
+
+      const seen = first && first !== history[0]?.at
+        ? `<li><div class="t">First seen</div><div class="m">${esc(fmtDateTime(first))}</div></li>`
+        : '';
+
+      const examined = j.attempts > 1
+        ? `<p class="legend">Examined ${plural(j.attempts, 'time')} — this posting came back around after an earlier verdict expired.</p>`
+        : '';
+
+      return `<ul class="timeline">${items}${seen}</ul>${examined}`;
+    }
+
+    function factsBlock(j) {
+      const none = (v) => (v ? esc(v) : '<span class="none">not recorded</span>');
+      const applyUrl = j.applyUrl && j.applyUrl !== j.url ? j.applyUrl : null;
+      return `<dl class="facts">
+        <dt>Source</dt><dd>${none(j.source)}</dd>
+        <dt>Hiring term</dt><dd class="sans">${j.term ? esc(TERM_LABEL[j.term] || j.term) : '<span class="none">not recorded</span>'}</dd>
+        <dt>Country</dt><dd>${none(j.country)}</dd>
+        ${j.country === 'US' ? `<dt>Sponsorship</dt><dd class="sans">${none(j.sponsorship)}</dd>` : ''}
+        <dt>Résumé sent</dt><dd class="sans">${j.resume ? `${esc(j.resume.variant)} — ${esc(j.resume.reason)}` : '<span class="none">none — nothing was submitted</span>'}</dd>
+        <dt>Posting</dt><dd>${j.url ? `<a class="ext" href="${esc(j.url)}" target="_blank" rel="noopener">${esc(j.url)}</a>` : '—'}</dd>
+        ${applyUrl ? `<dt>Apply form</dt><dd><a class="ext" href="${esc(applyUrl)}" target="_blank" rel="noopener">${esc(applyUrl)}</a></dd>` : ''}
+      </dl>`;
+    }
+
+    function drawerHtml(j, i) {
+      const m = meta(j.status);
+      const conf = j.scoreConfidence;
+      const applyUrl = j.applyUrl && j.applyUrl !== j.url ? j.applyUrl : j.url;
+
+      return `
+      <div class="scrim" data-act="close"></div>
+      <aside class="drawer" role="dialog" aria-modal="true" aria-label="${esc(j.title)} at ${esc(j.company)}">
+        <div class="drawer-top">
+          <button class="iconbtn" data-act="close" title="Close (esc)" aria-label="Close">✕</button>
+          <div class="spacer"></div>
+          <span class="src">${i + 1} / ${rows.length}</span>
+          <button class="iconbtn" data-act="prev" title="Previous posting (k)" aria-label="Previous posting" ${i <= 0 ? 'disabled' : ''}>↑</button>
+          <button class="iconbtn" data-act="next" title="Next posting (j)" aria-label="Next posting" ${i >= rows.length - 1 ? 'disabled' : ''}>↓</button>
+        </div>
+
+        <div class="drawer-body">
+          <div class="d-status">
+            <span class="badge ${m.kind}">${esc(m.label)}</span>
+            <span class="src">${esc(fmtAgo(j.recordedAt))}</span>
+          </div>
+          <h2 class="d-title">${esc(j.title)}</h2>
+          <div class="d-company"><b>${esc(j.company)}</b> · ${esc(j.location || '—')}${redundantCity(j) ? '' : ` · ${esc(CITY[j.city] || j.city)}`}</div>
+
+          <div class="d-blurb ${m.kind}">
+            ${esc(m.blurb)}
+            ${j.details ? `<span class="said">${esc(j.details)}</span>` : ''}
+          </div>
+
+          <div class="d-actions">
+            <a class="btn primary" href="${esc(applyUrl)}" target="_blank" rel="noopener">Open the posting ↗</a>
+            <button class="btn" data-act="copy-link">Copy link to this row</button>
+            <button class="btn" data-act="copy-json">Copy record</button>
+          </div>
+
+          <section class="block">
+            <h3>Verdict lifecycle</h3>
+            ${lifecycleBlock(j)}
+          </section>
+
+          <section class="block">
+            <h3>Scores</h3>
+            <div class="scores">
+              ${scoreRow('Fit', j.compatibility, 'compatibility', 'Skill overlap and role match against assets/profile.json, times an eligibility factor.')}
+              ${scoreRow('Quality', j.quality, 'quality', 'Pay, program signals, real work, company tier. Independent of who is applying.')}
+              ${scoreRow('Interview odds', j.interviewOdds, 'interviewOdds', 'A heuristic prior. Not a forecast.')}
+            </div>
+            <p class="score-note">
+              ${conf
+                ? `Confidence <b>${esc(conf)}</b> — ${esc(CONFIDENCE_BLURB[conf] || '')}.`
+                : 'Confidence was not recorded for this posting.'}
+              Odds is a base rate adjusted by fit, prestige and how early the posting was found; nothing here was fitted to real interview outcomes.
+            </p>
+          </section>
+
+          <section class="block">
+            <h3>Evidence</h3>
+            ${evidenceBlock(j)}
+          </section>
+
+          <section class="block">
+            <h3>What happened, and when</h3>
+            ${timelineBlock(j)}
+          </section>
+
+          ${j.excerpt ? `<section class="block"><h3>The posting said</h3><div class="excerpt">${esc(j.excerpt)}</div></section>` : ''}
+
+          <section class="block">
+            <h3>Record</h3>
+            ${factsBlock(j)}
+          </section>
+        </div>
+      </aside>`;
+    }
+
+    function renderDrawer() {
+      const host = $('#drawer-host');
+      const i = openKey ? rows.findIndex((j) => idOf(j) === openKey) : -1;
+      if (i < 0) {
+        if (host.innerHTML) {
+          host.innerHTML = '';
+          document.body.style.overflow = '';
+          if (lastFocus?.isConnected) lastFocus.focus();
+        }
+        return;
+      }
+      host.innerHTML = drawerHtml(rows[i], i);
+      document.body.style.overflow = 'hidden';
+      $('.drawer .iconbtn', host)?.focus();
+    }
+
+    function open(i, push = true) {
+      if (i < 0 || i >= rows.length) return;
+      cursor = i;
+      openKey = idOf(rows[i]);
+      lastFocus = document.activeElement;
+      writeUrl(push);
+      renderTable();
+      renderDrawer();
+    }
+    function close() {
+      if (!openKey) return;
+      openKey = null;
+      writeUrl();
+      renderDrawer();
+      focusRow(cursor);
+    }
+
+    // ── Render ─────────────────────────────────────────────────────────────
+    function render() {
+      rows = compute();
+      if (cursor >= rows.length) cursor = rows.length - 1;
+      renderStats();
+      renderMenus();
+      renderTable();
+      renderDrawer();
+    }
+
+    function update({ push = false } = {}) {
+      writeUrl(push);
+      render();
+    }
+
+    // ── Keyboard ───────────────────────────────────────────────────────────
+    function focusRow(i) {
+      const tr = $(`#tbody tr[data-i="${i}"]`);
+      if (tr) { tr.focus({ preventScroll: true }); tr.scrollIntoView({ block: 'nearest' }); }
+    }
+    function move(delta) {
+      if (!rows.length) return;
+      cursor = Math.max(0, Math.min(rows.length - 1, cursor + delta));
+      if (openKey) open(cursor, false);
+      else { renderTable(); focusRow(cursor); }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
+      if (e.key === 'Escape') {
+        if (openKey) { close(); return; }
+        if (typing) { e.target.blur(); return; }
+      }
+      if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+
+      if (e.key === '/') { e.preventDefault(); $('#q').focus(); return; }
+      if (e.key === 'j' || e.key === 'ArrowDown') { e.preventDefault(); move(1); return; }
+      if (e.key === 'k' || e.key === 'ArrowUp') { e.preventDefault(); move(-1); return; }
+      if (e.key === 'Enter' && !openKey && cursor >= 0) { e.preventDefault(); open(cursor); }
+    });
+
+    // ── Events ─────────────────────────────────────────────────────────────
+    let searchTimer;
+    $('#q').addEventListener('input', (e) => {
+      state.q = e.target.value;
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => { cursor = -1; update(); }, 90);
+    });
+
+    $('#stats').addEventListener('click', (e) => {
+      const btn = e.target.closest('button.stat');
+      if (!btn) return;
+      if (btn.dataset.returning) {
+        state.returning = !state.returning;
+      } else {
+        const preset = btn.dataset.preset.split(',');
+        const on = preset.length === state.statuses.size && preset.every((s) => state.statuses.has(s));
+        state.statuses = on ? new Set() : new Set(preset);
+      }
+      cursor = -1;
+      update();
+    });
+
+    for (const [id, bucket] of [['menu-status', 'statuses'], ['menu-city', 'cities'], ['menu-source', 'sources']]) {
+      $('#' + id).addEventListener('change', (e) => {
+        const cb = e.target;
+        if (cb.checked) state[bucket].add(cb.value);
+        else state[bucket].delete(cb.value);
+        cursor = -1;
+        update();
+      });
+    }
+    // A menu left open swallows the next click somewhere else on the page.
+    document.addEventListener('click', (e) => {
+      $$('.menu[open]').forEach((m) => { if (!m.contains(e.target)) m.open = false; });
+    });
+
+    $('#returning').addEventListener('click', () => { state.returning = !state.returning; cursor = -1; update(); });
+    $('#clear').addEventListener('click', () => {
+      state.q = ''; $('#q').value = '';
+      state.statuses = new Set(); state.cities = new Set(); state.sources = new Set();
+      state.returning = false;
+      cursor = -1;
+      update();
+    });
+
+    $('#table thead').addEventListener('click', (e) => {
+      const th = e.target.closest('th[data-sort]');
+      if (!th) return;
+      const k = th.dataset.sort;
+      // Scores, dates and remaining time all read best highest-first on a first click.
+      const DESC_FIRST = ['recordedAt', 'compatibility', 'quality', 'interviewOdds', 'expiry'];
+      if (state.sort === k) state.dir *= -1;
+      else { state.sort = k; state.dir = DESC_FIRST.includes(k) ? -1 : 1; }
+      update();
+    });
+
+    $('#tbody').addEventListener('click', (e) => {
+      if (e.target.closest('[data-act="clear"]')) { $('#clear').click(); return; }
+      const tr = e.target.closest('tr[data-i]');
+      if (tr) open(Number(tr.dataset.i));
+    });
+    $('#tbody').addEventListener('keydown', (e) => {
+      const tr = e.target.closest('tr[data-i]');
+      if (tr && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(Number(tr.dataset.i)); }
+    });
+
+    let toastTimer;
+    function toast(msg) {
+      $('#toast-host').innerHTML = `<div class="toast" role="status">${esc(msg)}</div>`;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => ($('#toast-host').innerHTML = ''), 1800);
+    }
+    async function copy(text, msg) {
+      try {
+        await navigator.clipboard.writeText(text);
+        toast(msg);
+      } catch {
+        toast('Copying needs a secure connection (https or localhost)');
+      }
+    }
+
+    $('#drawer-host').addEventListener('click', (e) => {
+      const act = e.target.closest('[data-act]')?.dataset.act;
+      if (!act) return;
+      const i = rows.findIndex((j) => idOf(j) === openKey);
+      if (act === 'close') close();
+      else if (act === 'next') move(1);
+      else if (act === 'prev') move(-1);
+      else if (act === 'copy-link') copy(location.href, 'Link copied');
+      else if (act === 'copy-json') copy(JSON.stringify(rows[i], (k, v) => (k === '__hay' ? undefined : v), 2), 'Record copied as JSON');
+    });
+
+    $('#csv').addEventListener('click', () => {
+      const cols = ['status', 'title', 'company', 'location', 'city', 'compatibility', 'quality', 'interviewOdds', 'source', 'recordedAt', 'details', 'url'];
+      const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const csv = [cols.join(','), ...rows.map((j) => cols.map((c) => cell(j[c])).join(','))].join('\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+      a.download = `jobify-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast(`Exported ${plural(rows.length, 'row')}`);
+    });
+
+    // ── Theme ──────────────────────────────────────────────────────────────
+    const savedTheme = localStorage.getItem('jobify-theme');
+    if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+    $('#theme').addEventListener('click', () => {
+      const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+      const now = document.documentElement.dataset.theme || (dark ? 'dark' : 'light');
+      const next = now === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem('jobify-theme', next);
+    });
+
+    window.addEventListener('popstate', () => { readUrl(); $('#q').value = state.q; render(); });
+
+    // ── Load ───────────────────────────────────────────────────────────────
+    async function fetchLedger() {
+      // Works whether the JSON sits beside index.html (Pages artifact, Railway) or
+      // one level up at the repo root (the local server).
       const bust = '?t=' + Date.now();
       let lastErr;
       for (const path of ['./applied_jobs.json', '../applied_jobs.json']) {
@@ -313,28 +1332,41 @@
           const res = await fetch(path + bust);
           if (res.ok) return await res.json();
           lastErr = new Error('HTTP ' + res.status);
-        } catch (e) { lastErr = e; }
+        } catch (err) { lastErr = err; }
       }
       throw lastErr || new Error('not found');
     }
 
     async function load() {
+      const btn = $('#refresh');
+      btn.setAttribute('aria-busy', 'true');
       try {
-        const data = await fetchJobsJson();
+        const data = await fetchLedger();
         jobs = Array.isArray(data.jobs) ? data.jobs : [];
-        $('updated').textContent = data.updatedAt ? 'Updated ' + fmtDate(data.updatedAt) + ' · ' + new Date(data.updatedAt).toLocaleTimeString() : 'No runs recorded yet';
-        renderStats();
-        buildFilters();
+        $('#stamp').innerHTML = data.updatedAt
+          ? `Last run <b title="${esc(fmtDateTime(data.updatedAt))}">${esc(fmtAgo(data.updatedAt))}</b>`
+          : 'No run has written to the ledger yet';
         render();
       } catch (err) {
-        $('stats').innerHTML = '';
-        $('tbody').innerHTML = `<tr><td colspan="${COLSPAN}"><div class="error">Could not load <code>applied_jobs.json</code> (${esc(err.message)}).<br>Open this page over http (GitHub Pages or <code>npm run dashboard</code>), not from the file system.</div></td></tr>`;
-        $('updated').textContent = '';
+        $('#stats').innerHTML = '';
+        $('#stamp').textContent = '';
+        $('#tbody').innerHTML = `<tr><td colspan="9"><div class="empty">
+          <h3>The ledger didn't load</h3>
+          <p>Fetching <code>applied_jobs.json</code> failed with ${esc(err.message)}.</p>
+          <p>This page reads the ledger over http. Serve it with <code>npm run dashboard</code> rather than opening the file directly.</p>
+        </div></td></tr>`;
+      } finally {
+        btn.removeAttribute('aria-busy');
       }
     }
 
-    wire();
+    $('#refresh').addEventListener('click', load);
+
+    readUrl();
+    $('#q').value = state.q;
     load();
+  })();
   </script>
+
 </body>
 </html>
