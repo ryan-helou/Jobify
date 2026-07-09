@@ -1,0 +1,61 @@
+name: Auto Apply
+
+on:
+  schedule:
+    # 6AM, 9AM, 12PM, 3PM, 6PM, 9PM Eastern (cron is UTC; these match EDT/UTC-4).
+    # During winter (EST/UTC-5) runs land an hour early — shift to 11,14,17,20,23,2 if that matters.
+    - cron: '0 10,13,16,19,22,1 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Fill forms but do not submit'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-apply
+  cancel-in-progress: false
+
+jobs:
+  auto-apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Jobify
+        env:
+          APPLICANT_NAME: ${{ secrets.APPLICANT_NAME }}
+          APPLICANT_EMAIL: ${{ secrets.APPLICANT_EMAIL }}
+          APPLICANT_PHONE: ${{ secrets.APPLICANT_PHONE }}
+          APPLICANT_LINKEDIN: ${{ secrets.APPLICANT_LINKEDIN }}
+          APPLICANT_GITHUB: ${{ secrets.APPLICANT_GITHUB }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          DRY_RUN: ${{ inputs.dry_run && 'true' || 'false' }}
+        run: node src/index.js
+
+      - name: Commit applied_jobs.json
+        if: always()
+        run: |
+          git config user.name "jobify-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add applied_jobs.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update applied_jobs.json [skip ci]"
+            git pull --rebase origin ${{ github.ref_name }}
+            git push
+          fi
