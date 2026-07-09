@@ -1,13 +1,21 @@
 name: Deploy Dashboard
 
-# Publishes the dashboard to GitHub Pages whenever the tracker or dashboard changes.
+# MANUAL ONLY — and think before you run it.
+#
+# This copies applied_jobs.json into the published site, and a GitHub Pages site is
+# served publicly even when its repository is private. Deploying it puts a
+# timestamped, permanent log of every job you have applied to on the open internet,
+# which is the exact exposure this repo was made private to avoid.
+#
+# For everyday use run the dashboard locally instead:
+#
+#     npm run dashboard
+#
+# Deploying also requires Pages to be enabled on the repo (it is not: the API
+# returns 404, which is why every historical run of this workflow failed at
+# actions/configure-pages), and serving Pages from a private repo needs a paid
+# plan. The push trigger was removed so those failures stop recurring.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'applied_jobs.json'
-      - 'docs/**'
-      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:

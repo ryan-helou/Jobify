@@ -4,7 +4,10 @@ import {
   CITIES,
   DRY_RUN,
   ENABLE_ATS,
+  ENABLE_DISCOVERY,
   ENABLE_INDEED,
+  ENABLE_ORACLE,
+  ENABLE_SMARTRECRUITERS,
   ENABLE_WORKDAY,
   MANUAL_REVIEW_BATCH,
   MAX_APPLICATIONS_PER_RUN,
@@ -16,6 +19,9 @@ import { loadTracker, identityKey, canonicalKey } from './tracker.js';
 import { scrapeGithubBoards } from './scrapers/github.js';
 import { scrapeAtsBoards } from './scrapers/ats.js';
 import { scrapeWorkday } from './scrapers/workday.js';
+import { scrapeOracle } from './scrapers/oracle.js';
+import { scrapeSmartRecruiters } from './scrapers/smartrecruiters.js';
+import { guessBoardPostings } from './scrapers/discover.js';
 import { scrapeIndeed, fetchIndeedJobDetails } from './scrapers/indeed.js';
 import { applyToJob, supportedAts } from './apply/index.js';
 import { mentionsSponsorship, fetchPostingText, feedSponsorshipVerdict } from './visa.js';
@@ -56,16 +62,23 @@ async function main() {
 
   try {
     // 1. Scrape sources. The GitHub boards run first because their apply URLs are
-    //    what tell us which company ATS boards exist. Indeed needs the shared
-    //    browser and is opt-in since it's usually blocked in CI.
-    const { jobs: githubJobs, postings } = await scrapeGithubBoards();
-    const [atsJobs, workdayJobs, indeedJobs] = await Promise.all([
+    //    what tell us which company ATS boards exist. Discovery adds employers no
+    //    board has named, so its guesses join the same pool before enumeration.
+    //    Indeed needs the shared browser and is opt-in; it's usually blocked in CI.
+    const { jobs: githubJobs, postings: boardPostings } = await scrapeGithubBoards();
+    const postings = ENABLE_DISCOVERY ? [...boardPostings, ...guessBoardPostings()] : boardPostings;
+
+    const [atsJobs, workdayJobs, oracleJobs, srJobs, indeedJobs] = await Promise.all([
       ENABLE_ATS ? scrapeAtsBoards(postings) : Promise.resolve([]),
       ENABLE_WORKDAY ? scrapeWorkday(postings) : Promise.resolve([]),
+      ENABLE_ORACLE ? scrapeOracle(postings) : Promise.resolve([]),
+      ENABLE_SMARTRECRUITERS ? scrapeSmartRecruiters(postings) : Promise.resolve([]),
       ENABLE_INDEED ? scrapeIndeed(context) : Promise.resolve([]),
     ]);
     if (!ENABLE_ATS) console.log('ATS board enumeration disabled (set ENABLE_ATS=true to enable).');
     if (!ENABLE_WORKDAY) console.log('Workday enumeration disabled (set ENABLE_WORKDAY=true to enable).');
+    if (!ENABLE_ORACLE) console.log('Oracle enumeration disabled (set ENABLE_ORACLE=true to enable).');
+    if (!ENABLE_SMARTRECRUITERS) console.log('SmartRecruiters enumeration disabled (set ENABLE_SMARTRECRUITERS=true).');
     if (!ENABLE_INDEED) console.log('Indeed scraping disabled (set ENABLE_INDEED=true to attempt it).');
 
     // 2. Dedup against the ledger and within this run. The same posting shows up
@@ -75,7 +88,7 @@ async function main() {
     const seenUrls = new Set();
     const seenIdentities = new Set();
     const fresh = [];
-    for (const job of [...githubJobs, ...atsJobs, ...workdayJobs, ...indeedJobs]) {
+    for (const job of [...githubJobs, ...atsJobs, ...workdayJobs, ...oracleJobs, ...srJobs, ...indeedJobs]) {
       const identity = identityKey(job);
       if (tracker.has(job.url) || tracker.hasIdentity(identity)) continue;
       if (seenUrls.has(canonicalKey(job.url)) || seenIdentities.has(identity)) continue;
@@ -93,7 +106,7 @@ async function main() {
     console.log(
       `${fresh.length} new jobs after dedup ` +
         `(${githubJobs.length} github, ${atsJobs.length} ats, ${workdayJobs.length} workday, ` +
-        `${indeedJobs.length} indeed scraped)`
+        `${oracleJobs.length} oracle, ${srJobs.length} smartrecruiters, ${indeedJobs.length} indeed scraped)`
     );
 
     // 3. Gate on hiring term before spending anything on a posting. A board's name
@@ -227,13 +240,14 @@ async function main() {
 
       applyAttempts++;
       const result = await applyToJob(context, job);
-      console.log(`  → ${result.status}: ${result.details}`);
+      const resumeNote = result.resume ? ` [résumé: ${result.resumeReason}]` : '';
+      console.log(`  → ${result.status}: ${result.details}${resumeNote}`);
       // Dry runs never touch the ledger — otherwise a test run would block real applications.
-      if (!DRY_RUN) tracker.add(job, result.status, result.details);
+      if (!DRY_RUN) tracker.add(job, result.status, `${result.details}${resumeNote}`);
 
       if (result.status === 'applied' || result.status === 'submitted_unconfirmed') {
         counts.applied++;
-        await notifyApplied(job);
+        await notifyApplied(job, result.resume);
       } else if (result.status === 'manual_review') {
         counts.manual++;
         await slack(
