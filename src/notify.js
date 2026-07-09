@@ -24,7 +24,7 @@ export async function notifyApplied(job) {
   );
 }
 
-export async function notifySummary({ found, applied, manual, skipped, dryRun }) {
+export async function notifySummary({ found, applied, manual, skipped, wrongTerm = 0, dryRun }) {
   const prefix = dryRun ? ':test_tube: [DRY RUN] ' : '';
   if (found === 0) {
     await slack(`${prefix}:mag: Jobify run finished — no new matching jobs found this run.`);
@@ -32,6 +32,7 @@ export async function notifySummary({ found, applied, manual, skipped, dryRun })
   }
   await slack(
     `${prefix}:clipboard: Jobify run finished — ${found} new job(s) found, ${applied} applied, ` +
-      `${manual} need manual review, ${skipped} skipped.`
+      `${manual} need manual review, ${skipped} skipped` +
+      (wrongTerm ? `, ${wrongTerm} from the wrong hiring cycle.` : '.')
   );
 }

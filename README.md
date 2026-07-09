@@ -78,6 +78,15 @@ DRY_RUN=false npm start
 
 Every status blocks re-processing on later runs. Delete a record from the JSON to let the bot retry that job.
 
+## Run budgets
+
+Two separate limits, because they bound different things:
+
+- `MAX_APPLICATIONS_PER_RUN` (default 10) — applications actually attempted.
+- `MAX_JOBS_EXAMINED_PER_RUN` (default 60) — jobs looked at while trying to fill that quota.
+
+A job can be examined and then skipped (no sponsorship) or handed to a human (unsupported ATS) without ever costing an application. Keeping the budgets separate is what stops a queue that happens to start with a run of no-sponsorship postings from consuming the whole quota and submitting nothing.
+
 ## Tests
 
 `npm test` runs the suite (`node --test`) covering role filtering, seniority/season/category rules, city priority, both parsers, sponsorship logic (including negations), and the dedup keys. The auto-apply workflow runs it before every scheduled run — the filter rules decide what gets applied to, so they never run unverified.
