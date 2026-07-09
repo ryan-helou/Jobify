@@ -472,9 +472,44 @@ function loadProfile() {
 
 export const CANDIDATE = loadProfile();
 
+function profileFile() {
+  try {
+    return JSON.parse(fs.readFileSync(PROFILE_PATH, 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+// Answers to the questions every application form asks beyond name/email/phone.
+// Absent values stay empty rather than defaulting: a wrong school or graduation
+// date on a real application is worse than an aborted one.
+export const EDUCATION = {
+  school: '',
+  degree: '',
+  major: '',
+  graduationMonth: '',
+  graduationYear: '',
+  ...(profileFile().education || {}),
+};
+
+// Keyed by the country a question is about, not the country of the posting — a US
+// employer hiring in Toronto still asks "authorized to work in the US?". A country
+// that is missing here means we cannot answer, and the applier aborts rather than
+// guessing. Each entry is a legal statement made on the applicant's behalf.
+export const WORK_AUTH = profileFile().workAuthorization || {};
+
 // Postings below this compatibility score are skipped without applying. Off by
 // default (0) — turn it up once you've seen how the scores land on real jobs.
 export const MIN_COMPATIBILITY = parseInt(process.env.MIN_COMPATIBILITY || '0', 10);
+
+// Postings that never name a hiring term go to a human by default (see term.js).
+// That is the safe reading, but it parked every Canadian posting we found — co-op
+// listings say "12-month" or "Co-op", almost never "Summer 2027" — while the only
+// application that went out was the one US posting that spelled its term out.
+// Turning this on applies to them instead. The cost of being wrong is an
+// application to the wrong cycle, which an employer discards; the cost of leaving
+// it off is applying to nothing.
+export const APPLY_UNSTATED_TERM = (process.env.APPLY_UNSTATED_TERM || 'false').toLowerCase() === 'true';
 
 export const APPLICANT = {
   name: process.env.APPLICANT_NAME || '',
@@ -677,15 +712,21 @@ export const CAMPUS_SITE =
 // hundreds of Slack lines; the rest stay unrecorded and resurface next run.
 export const MANUAL_REVIEW_BATCH = parseInt(process.env.MANUAL_REVIEW_BATCH || '20', 10);
 
-// Shared status vocabulary — kept here so the dashboard and the runner agree.
+// Shared status vocabulary. The dashboard is a single self-contained HTML file and
+// cannot import this, so it carries its own copy of these labels and kinds; the
+// copies are held together by test/dashboard.test.js, which fails when they drift.
+//
+// `kind` names what the status *is to the reader*, not a colour. Only `attention`
+// means a human has to do something, and it is the only kind the dashboard paints
+// in its accent colour.
 export const STATUS_META = {
   applied: { label: 'Applied', kind: 'success' },
-  submitted_unconfirmed: { label: 'Submitted (unconfirmed)', kind: 'warn' },
-  manual_review: { label: 'Manual review', kind: 'info' },
+  submitted_unconfirmed: { label: 'Submitted, unconfirmed', kind: 'warn' },
+  manual_review: { label: 'Needs you', kind: 'attention' },
   skipped_unknown_required: { label: 'Skipped — unknown field', kind: 'muted' },
   skipped_no_sponsorship: { label: 'Skipped — no sponsorship', kind: 'muted' },
   skipped_closed: { label: 'Skipped — closed', kind: 'muted' },
-  skipped_wrong_term: { label: 'Skipped — wrong hiring term', kind: 'muted' },
+  skipped_wrong_term: { label: 'Skipped — wrong term', kind: 'muted' },
   skipped_low_compatibility: { label: 'Skipped — low fit', kind: 'muted' },
 };
 
@@ -717,6 +758,18 @@ export const STATUS_RETRY_DAYS = {
 
 // A status we don't recognise blocks for this long rather than forever.
 export const DEFAULT_RETRY_DAYS = parseInt(process.env.DEFAULT_RETRY_DAYS || '30', 10);
+
+// A posting outlives our record of it: URLs 404 once a role is filled, and the
+// dashboard is then the only surviving account of what we read and decided on.
+// So the ledger keeps a short excerpt of the description — bounded, because the
+// ledger is committed to git after every run and some careers pages inline their
+// entire site into the page text.
+export const LEDGER_EXCERPT_CHARS = parseInt(process.env.LEDGER_EXCERPT_CHARS || '600', 10);
+
+// A posting can be examined several times as its verdict expires and it comes
+// back around. Keep the most recent verdicts so the dashboard can show why a job
+// moved from `manual_review` to `applied`, without growing without bound.
+export const LEDGER_HISTORY_LIMIT = parseInt(process.env.LEDGER_HISTORY_LIMIT || '10', 10);
 
 export function coverLetterText() {
   try {

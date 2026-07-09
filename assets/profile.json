@@ -37,5 +37,24 @@
     "mobile",
     "security",
     "embedded"
-  ]
+  ],
+  "education": {
+    "school": "Concordia University",
+    "degree": "Bachelor's Degree",
+    "major": "Software Engineering",
+    "graduationMonth": "April",
+    "graduationYear": "2028"
+  },
+  "_workAuthorizationComment": [
+    "Answers to the work-authorization questions nearly every form asks. These are",
+    "typed verbatim into real employment applications, so they must be true.",
+    "A Canadian citizen holding no US visa is not authorized to work in the US and",
+    "does require sponsorship — being able or willing to relocate is not authorization.",
+    "A country absent from this map means 'we don't know', and the applier will abort",
+    "rather than answer. Never add a country you cannot answer honestly for."
+  ],
+  "workAuthorization": {
+    "CA": { "authorized": true, "requiresSponsorship": false },
+    "US": { "authorized": false, "requiresSponsorship": true }
+  }
 }
