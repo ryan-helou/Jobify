@@ -18,6 +18,22 @@ export function mentionsSponsorship(text) {
   return true;
 }
 
+/**
+ * 'offers' | 'denies' | 'silent' — the distinction mentionsSponsorship cannot make.
+ *
+ * It collapses "we will not sponsor" and "the posting never raises the subject"
+ * into the same `false`. Most US postings simply never mention sponsorship, and
+ * treating that silence as a refusal skipped 56 of the 60 postings examined in a
+ * real run. Silence is not a refusal: the employer hasn't said, and their own form
+ * asks the question directly — which the applier now answers from profile.json.
+ */
+export function sponsorshipStance(text) {
+  const lower = (text || '').toLowerCase();
+  if (VISA_NEGATIONS.some((neg) => lower.includes(neg))) return 'denies';
+  if (VISA_KEYWORDS.some((kw) => lower.includes(kw))) return 'offers';
+  return 'silent';
+}
+
 // Renders a posting with Playwright (many boards — workatastartup, Ashby, Workday —
 // are JS-rendered, so a plain fetch returns an empty shell). Falls back to a raw
 // fetch if the render fails.
