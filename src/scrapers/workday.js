@@ -22,13 +22,49 @@ import { mapLimit, getJson, postJson, htmlToText } from './http.js';
 // cost and then filter titles ourselves.
 
 const PAGE = 20;
+
+// Workday serves tenants on two domains, and they disagree about where the tenant
+// name lives:
+//
+//   https://expedia.wd108.myworkdayjobs.com/private/job/…              subdomain
+//   https://wd5.myworkdaysite.com/recruiting/guidewire/external/job/…  path
+//
+// Both back onto the identical CxS API — `wday/cxs/guidewire/external/jobs` answers
+// on myworkdaysite exactly as it does on myworkdayjobs — so the domain only changes
+// how a target is parsed out of an apply URL and how a public URL is rebuilt from it.
 const TENANT_URL = /^https:\/\/([^.]+)\.(wd\d+)\.myworkdayjobs\.com\/(?:[a-z]{2}-[A-Z]{2}\/)?([^/?#]+)/i;
+const SITE_URL = /^https:\/\/(wd\d+)\.myworkdaysite\.com\/(?:[a-z]{2}-[A-Z]{2}\/)?recruiting\/([^/?#]+)\/([^/?#]+)/i;
 
 // `.../myworkdayjobs.com/job/...` has no site segment — the first path element is
 // the job itself. Enumerating a site called "job" just 404s.
 const NOT_A_SITE = /^(job|jobs)$/i;
 
-const base = ({ tenant, pod, site }) => `https://${tenant}.${pod}.myworkdayjobs.com/wday/cxs/${tenant}/${site}`;
+const host = ({ tenant, pod, domain }) =>
+  domain === 'myworkdaysite' ? `${pod}.myworkdaysite.com` : `${tenant}.${pod}.myworkdayjobs.com`;
+
+const base = (target) => `https://${host(target)}/wday/cxs/${target.tenant}/${target.site}`;
+
+// Where a human applies. The CxS `externalPath` is relative to the site root, which
+// on myworkdaysite is nested under `/recruiting/{tenant}`.
+export const workdayJobUrl = (target, externalPath) =>
+  target.domain === 'myworkdaysite'
+    ? `https://${host(target)}/recruiting/${target.tenant}/${target.site}${externalPath}`
+    : `https://${host(target)}/${target.site}${externalPath}`;
+
+// Returns { tenant, pod, site, domain } or null.
+function parseTarget(url) {
+  const onJobs = TENANT_URL.exec(url);
+  if (onJobs) {
+    const [, tenant, pod, site] = onJobs;
+    return { tenant, pod, site, domain: 'myworkdayjobs' };
+  }
+  const onSite = SITE_URL.exec(url);
+  if (onSite) {
+    const [, pod, tenant, site] = onSite; // note: pod first — the tenant moved into the path
+    return { tenant, pod, site, domain: 'myworkdaysite' };
+  }
+  return null;
+}
 
 // Keyed by tenant+site: one employer can run several sites ("bmo/Campus" and
 // "bmo/Privileged"), and they list different jobs.
@@ -39,13 +75,12 @@ export function harvestWorkdayTenants(postings) {
     const company = (typeof posting === 'string' ? '' : posting?.company || '').trim();
     if (!raw) continue;
 
-    const m = TENANT_URL.exec(raw);
-    if (!m) continue;
-    const [, tenant, pod, site] = m;
-    if (NOT_A_SITE.test(site)) continue;
+    const target = parseTarget(raw);
+    if (!target) continue;
+    if (NOT_A_SITE.test(target.site)) continue;
 
-    const key = `${tenant}|${pod}|${site}`;
-    if (!tenants.get(key)?.company) tenants.set(key, { tenant, pod, site, company });
+    const key = `${target.domain}|${target.tenant}|${target.pod}|${target.site}`;
+    if (!tenants.get(key)?.company) tenants.set(key, { ...target, company });
   }
   return [...tenants.values()];
 }
@@ -85,7 +120,7 @@ async function scrapeSite(target) {
   // Only survivors cost a detail request. A failed description leaves the term
   // unstated, which routes to a human rather than dropping the job.
   const enriched = await mapLimit(hits, 4, async (h) => {
-    const url = `https://${tenant}.${target.pod}.myworkdayjobs.com/${site}${h.externalPath}`;
+    const url = workdayJobUrl(target, h.externalPath);
     let description = '';
     try {
       const detail = await getJson(`${api}${h.externalPath}`, { headers: { Accept: 'application/json' } });
