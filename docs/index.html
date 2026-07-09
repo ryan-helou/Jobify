@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jobify — Application Dashboard</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --border: #e4e7ec;
+      --text: #1a1d23;
+      --muted: #6b7280;
+      --accent: #4f46e5;
+      --success-bg: #dcfce7; --success-fg: #166534;
+      --warn-bg: #fef3c7; --warn-fg: #92400e;
+      --info-bg: #dbeafe; --info-fg: #1e40af;
+      --muted-bg: #eef1f4; --muted-fg: #4b5563;
+      --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.04);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0e1116; --panel: #171b22; --border: #262c36;
+        --text: #e6e9ef; --muted: #9aa4b2; --accent: #818cf8;
+        --success-bg: #14331f; --success-fg: #86efac;
+        --warn-bg: #3a2c0a; --warn-fg: #fcd34d;
+        --info-bg: #16294d; --info-fg: #93c5fd;
+        --muted-bg: #21262e; --muted-fg: #9aa4b2;
+        --shadow: none;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 32px 20px 64px; }
+    header.top { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+    h1 { font-size: 24px; margin: 0; letter-spacing: -.02em; }
+    h1 .dot { color: var(--accent); }
+    .updated { color: var(--muted); font-size: 13px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 24px 0; }
+    .stat { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); }
+    .stat .n { font-size: 28px; font-weight: 700; letter-spacing: -.02em; }
+    .stat .l { color: var(--muted); font-size: 13px; margin-top: 2px; }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+    input[type=search], select {
+      background: var(--panel); color: var(--text); border: 1px solid var(--border);
+      border-radius: 9px; padding: 9px 12px; font-size: 14px; outline: none;
+    }
+    input[type=search] { flex: 1 1 240px; min-width: 200px; }
+    input[type=search]:focus, select:focus { border-color: var(--accent); }
+    .table-wrap { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--panel); }
+    th.sort-asc::after { content: " ▲"; color: var(--accent); }
+    th.sort-desc::after { content: " ▼"; color: var(--accent); }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+    td.title { white-space: normal; font-weight: 600; max-width: 340px; }
+    td.company { white-space: normal; max-width: 200px; }
+    .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .badge.success { background: var(--success-bg); color: var(--success-fg); }
+    .badge.warn { background: var(--warn-bg); color: var(--warn-fg); }
+    .badge.info { background: var(--info-bg); color: var(--info-fg); }
+    .badge.muted { background: var(--muted-bg); color: var(--muted-fg); }
+    .city { text-transform: capitalize; }
+    a.link { color: var(--accent); text-decoration: none; font-weight: 600; }
+    a.link:hover { text-decoration: underline; }
+    .empty, .error { text-align: center; padding: 48px 20px; color: var(--muted); }
+    .error { color: var(--warn-fg); }
+    .muted-note { color: var(--muted); font-size: 13px; margin-top: 14px; }
+    code { background: var(--muted-bg); padding: 1px 6px; border-radius: 5px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <h1>Jobify<span class="dot">.</span> <span style="font-weight:500;color:var(--muted);font-size:16px">application tracker</span></h1>
+      <div class="updated" id="updated">Loading…</div>
+    </header>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="controls">
+      <input type="search" id="search" placeholder="Search title, company, or location…" />
+      <select id="statusFilter"><option value="">All statuses</option></select>
+      <select id="cityFilter"><option value="">All cities</option></select>
+      <select id="sourceFilter"><option value="">All sources</option></select>
+    </div>
+
+    <div class="table-wrap">
+      <table id="table">
+        <thead>
+          <tr>
+            <th data-sort="status">Status</th>
+            <th data-sort="title">Role</th>
+            <th data-sort="company">Company</th>
+            <th data-sort="location">Location</th>
+            <th data-sort="city">City</th>
+            <th data-sort="source">Source</th>
+            <th data-sort="recordedAt">Date</th>
+            <th>Link</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="muted-note" id="count"></div>
+  </div>
+
+  <script>
+    const STATUS_META = {
+      applied: { label: 'Applied', kind: 'success' },
+      submitted_unconfirmed: { label: 'Submitted (unconfirmed)', kind: 'warn' },
+      manual_review: { label: 'Manual review', kind: 'info' },
+      skipped_unknown_required: { label: 'Skipped — unknown field', kind: 'muted' },
+      skipped_no_sponsorship: { label: 'Skipped — no sponsorship', kind: 'muted' },
+      skipped_closed: { label: 'Skipped — closed', kind: 'muted' },
+    };
+    const CITY_LABEL = { montreal: 'Montreal', toronto: 'Toronto', sf: 'San Francisco', nyc: 'New York' };
+
+    let jobs = [];
+    let sortKey = 'recordedAt';
+    let sortDir = -1; // newest first
+
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => (s == null ? '' : String(s)).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      if (isNaN(d)) return '—';
+      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function renderStats() {
+      const counts = {};
+      for (const j of jobs) counts[j.status] = (counts[j.status] || 0) + 1;
+      const applied = (counts.applied || 0) + (counts.submitted_unconfirmed || 0);
+      const skipped = (counts.skipped_no_sponsorship || 0) + (counts.skipped_unknown_required || 0) + (counts.skipped_closed || 0);
+      const cards = [
+        { n: jobs.length, l: 'Total tracked' },
+        { n: applied, l: 'Applied' },
+        { n: counts.manual_review || 0, l: 'Manual review' },
+        { n: skipped, l: 'Skipped' },
+      ];
+      $('stats').innerHTML = cards.map((c) => `<div class="stat"><div class="n">${c.n}</div><div class="l">${c.l}</div></div>`).join('');
+    }
+
+    function fillFilter(id, values, labelFn) {
+      const sel = $(id);
+      const current = sel.value;
+      const opts = ['<option value="">' + sel.options[0].text + '</option>'];
+      for (const v of [...values].sort()) opts.push(`<option value="${esc(v)}">${esc(labelFn ? labelFn(v) : v)}</option>`);
+      sel.innerHTML = opts.join('');
+      sel.value = current;
+    }
+
+    function buildFilters() {
+      fillFilter('statusFilter', new Set(jobs.map((j) => j.status)), (s) => (STATUS_META[s]?.label || s));
+      fillFilter('cityFilter', new Set(jobs.map((j) => j.city).filter(Boolean)), (c) => CITY_LABEL[c] || c);
+      fillFilter('sourceFilter', new Set(jobs.map((j) => j.source).filter(Boolean)));
+    }
+
+    function currentRows() {
+      const q = $('search').value.trim().toLowerCase();
+      const sf = $('statusFilter').value, cf = $('cityFilter').value, srf = $('sourceFilter').value;
+      let rows = jobs.filter((j) => {
+        if (sf && j.status !== sf) return false;
+        if (cf && j.city !== cf) return false;
+        if (srf && j.source !== srf) return false;
+        if (q) {
+          const hay = `${j.title} ${j.company} ${j.location}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+      rows.sort((a, b) => {
+        const av = a[sortKey] || '', bv = b[sortKey] || '';
+        return (av < bv ? -1 : av > bv ? 1 : 0) * sortDir;
+      });
+      return rows;
+    }
+
+    function render() {
+      const rows = currentRows();
+      const tbody = $('tbody');
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="8"><div class="empty">No jobs match these filters yet.</div></td></tr>`;
+      } else {
+        tbody.innerHTML = rows.map((j) => {
+          const m = STATUS_META[j.status] || { label: j.status, kind: 'muted' };
+          return `<tr>
+            <td><span class="badge ${m.kind}">${esc(m.label)}</span></td>
+            <td class="title">${esc(j.title)}</td>
+            <td class="company">${esc(j.company)}</td>
+            <td>${esc(j.location)}</td>
+            <td class="city">${esc(CITY_LABEL[j.city] || j.city || '')}</td>
+            <td>${esc(j.source)}</td>
+            <td>${esc(fmtDate(j.recordedAt))}</td>
+            <td>${j.url ? `<a class="link" href="${esc(j.url)}" target="_blank" rel="noopener">Open ↗</a>` : ''}</td>
+          </tr>`;
+        }).join('');
+      }
+      $('count').textContent = `Showing ${rows.length} of ${jobs.length} tracked job${jobs.length === 1 ? '' : 's'}.`;
+      document.querySelectorAll('th[data-sort]').forEach((th) => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (th.dataset.sort === sortKey) th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+      });
+    }
+
+    function wire() {
+      ['search', 'statusFilter', 'cityFilter', 'sourceFilter'].forEach((id) => $(id).addEventListener('input', render));
+      document.querySelectorAll('th[data-sort]').forEach((th) => {
+        th.addEventListener('click', () => {
+          const k = th.dataset.sort;
+          if (sortKey === k) sortDir *= -1;
+          else { sortKey = k; sortDir = k === 'recordedAt' ? -1 : 1; }
+          render();
+        });
+      });
+    }
+
+    async function fetchJobsJson() {
+      // Works whether the JSON sits beside index.html (Pages artifact) or one
+      // level up at the repo root (local server, or Pages served from branch root).
+      const bust = '?t=' + Date.now();
+      let lastErr;
+      for (const path of ['./applied_jobs.json', '../applied_jobs.json']) {
+        try {
+          const res = await fetch(path + bust);
+          if (res.ok) return await res.json();
+          lastErr = new Error('HTTP ' + res.status);
+        } catch (e) { lastErr = e; }
+      }
+      throw lastErr || new Error('not found');
+    }
+
+    async function load() {
+      try {
+        const data = await fetchJobsJson();
+        jobs = Array.isArray(data.jobs) ? data.jobs : [];
+        $('updated').textContent = data.updatedAt ? 'Updated ' + fmtDate(data.updatedAt) + ' · ' + new Date(data.updatedAt).toLocaleTimeString() : 'No runs recorded yet';
+        renderStats();
+        buildFilters();
+        render();
+      } catch (err) {
+        $('stats').innerHTML = '';
+        $('tbody').innerHTML = `<tr><td colspan="8"><div class="error">Could not load <code>applied_jobs.json</code> (${esc(err.message)}).<br>Open this page over http (GitHub Pages or <code>npm run dashboard</code>), not from the file system.</div></td></tr>`;
+        $('updated').textContent = '';
+      }
+    }
+
+    wire();
+    load();
+  </script>
+</body>
+</html>

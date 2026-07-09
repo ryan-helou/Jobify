@@ -1,4 +1,5 @@
-import { CITIES, SEARCH_QUERY, ROLE_EXCLUDE } from '../config.js';
+import { CITIES, SEARCH_QUERY } from '../config.js';
+import { isDevRole } from './github.js';
 
 // Scrapes Indeed search results per target city with Playwright.
 // Indeed sits behind Cloudflare; when a run gets challenged we log it and move
@@ -39,7 +40,7 @@ async function scrapeCity(context, city) {
 
     for (const c of cards) {
       if (!c.jk || !c.title) continue;
-      if (ROLE_EXCLUDE.test(c.title)) continue;
+      if (!isDevRole(c.title)) continue;
       jobs.push({
         id: `indeed:${c.jk}`,
         jk: c.jk,

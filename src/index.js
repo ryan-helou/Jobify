@@ -2,6 +2,7 @@ import { chromium } from 'playwright';
 import {
   CITIES,
   DRY_RUN,
+  ENABLE_INDEED,
   MAX_APPLICATIONS_PER_RUN,
   validateConfig,
 } from './config.js';
@@ -37,9 +38,13 @@ async function main() {
   const counts = { found: 0, applied: 0, manual: 0, skipped: 0 };
 
   try {
-    // 1. Scrape both sources.
-    const githubJobs = await scrapeGithubBoards();
-    const indeedJobs = await scrapeIndeed(context);
+    // 1. Scrape sources. GitHub boards use plain fetch (parallel-safe); Indeed
+    //    needs the shared browser and is opt-in since it's usually blocked in CI.
+    const [githubJobs, indeedJobs] = await Promise.all([
+      scrapeGithubBoards(),
+      ENABLE_INDEED ? scrapeIndeed(context) : Promise.resolve([]),
+    ]);
+    if (!ENABLE_INDEED) console.log('Indeed scraping disabled (set ENABLE_INDEED=true to attempt it).');
 
     // 2. Dedup against the ledger and within this run.
     const seen = new Set();
@@ -77,7 +82,7 @@ async function main() {
 
       // US visa filter: posting must explicitly mention sponsorship.
       if (job.country === 'US') {
-        if (!description) description = await fetchPostingText(job.applyUrl || job.url);
+        if (!description) description = await fetchPostingText(context, job.applyUrl || job.url);
         if (!mentionsSponsorship(description)) {
           console.log('  → skipped: US posting with no explicit visa sponsorship mention');
           if (!DRY_RUN) tracker.add(job, 'skipped_no_sponsorship');

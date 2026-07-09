@@ -8,9 +8,9 @@ Scrapes job boards for **Summer 2027** software internships / entry-level develo
 
 Every scheduled run (GitHub Actions, 6× daily):
 
-1. **Scrape** — Indeed search results per city (Playwright) + GitHub internship boards ([vanshb03/Summer2027-Internships](https://github.com/vanshb03/Summer2027-Internships), [speedyapply/2027-SWE-College-Jobs](https://github.com/speedyapply/2027-SWE-College-Jobs)), parsed with cheerio.
+1. **Scrape** — GitHub internship boards ([vanshb03/Summer2027-Internships](https://github.com/vanshb03/Summer2027-Internships), [speedyapply/2027-SWE-College-Jobs](https://github.com/speedyapply/2027-SWE-College-Jobs)) parsed with cheerio, plus Indeed per city (Playwright, opt-in — see below). Roles are filtered to genuine software/developer internships: a title must read as an internship/new-grad/co-op **and** carry a software signal (SWE, developer, full-stack, ML, etc.), while non-dev tracks (research scientist, GTM, hardware, sales, PM) are excluded.
 2. **Dedup** — anything already in `applied_jobs.json` is skipped. New jobs are sorted Montreal-first and capped at `MAX_APPLICATIONS_PER_RUN` (default 10) per run.
-3. **US visa filter** — SF/NYC postings must explicitly mention visa sponsorship / H-1B willingness in the posting text, otherwise they're skipped and recorded.
+3. **US visa filter** — SF/NYC postings must explicitly mention visa sponsorship / H-1B willingness. The posting page is **rendered with Playwright** (not just fetched) so JS-heavy boards like Work-at-a-Startup, Ashby, and Workday are read accurately; negation phrases ("unable to provide sponsorship") force a skip even if a keyword also appears.
 4. **Apply** — for postings on supported ATS platforms (**Greenhouse, Lever, Ashby**), Playwright fills the form:
    - required fields it recognizes (name, email, phone, resume) are filled;
    - optional fields are filled only when confidently recognized (LinkedIn, GitHub, location, cover letter);
@@ -18,6 +18,13 @@ Every scheduled run (GitHub Actions, 6× daily):
    - resume PDF is attached to every application; the cover letter is attached/pasted when the form accepts one.
 5. **Flag** — postings on unsupported platforms (Workday, Taleo, Indeed-hosted apply behind login, custom portals) are sent to Slack as *manual review* with the link, and recorded so they're only surfaced once.
 6. **Persist + notify** — `applied_jobs.json` is committed back to the repo; Slack gets a message per application and a run summary (including the "0 jobs found" case).
+
+## Dashboard
+
+A zero-dependency web dashboard ([`docs/index.html`](docs/index.html)) shows every tracked job with per-status stat cards, search, and filters by status / city / source, sortable by any column.
+
+- **Hosted (auto-updating):** enable GitHub Pages for the repo (Settings → Pages → Source: *GitHub Actions*). The [Deploy Dashboard workflow](.github/workflows/pages.yml) republishes it on every push that changes `applied_jobs.json`, so it refreshes after each run. Your URL will be `https://ryan-helou.github.io/Jobify/`.
+- **Locally:** `npm run dashboard`, then open <http://localhost:8080/docs/>.
 
 ## Setup
 
@@ -55,12 +62,13 @@ DRY_RUN=false npm start
 | `manual_review` | unsupported platform or attach failure — Slack has the link |
 | `skipped_unknown_required` | form had a required field the bot couldn't identify |
 | `skipped_no_sponsorship` | US posting without explicit sponsorship mention |
+| `skipped_closed` | posting was already closed/filled |
 
 Every status blocks re-processing on later runs. Delete a record from the JSON to let the bot retry that job.
 
 ## Known limitations (honest MVP notes)
 
-- **Indeed bot protection**: Indeed sits behind Cloudflare, which frequently blocks datacenter IPs like GitHub Actions runners. Blocked cities are logged and skipped gracefully — the GitHub boards remain a reliable source. If Indeed coverage matters, run locally/on a residential IP or add a scraping proxy.
+- **Indeed bot protection**: Indeed sits behind Cloudflare, which reliably blocks datacenter IPs like GitHub Actions runners, so Indeed scraping is **off by default** (`ENABLE_INDEED=false`). The GitHub boards are the productive source. Set `ENABLE_INDEED=true` to attempt it — best on a residential IP or with a scraping proxy. Blocked cities are logged and skipped gracefully.
 - **Indeed-hosted "Easy Apply"** requires an Indeed login and triggers CAPTCHAs under automation; those jobs are routed to Slack for manual review rather than risking a garbage submission. Indeed jobs with an external "apply on company site" link *are* auto-applied when the site is Greenhouse/Lever/Ashby.
 - **Confirmation detection is heuristic** — `submitted_unconfirmed` entries are usually fine but worth spot-checking.
 - Respect the terms of service of the sites involved; keep `MAX_APPLICATIONS_PER_RUN` modest.
