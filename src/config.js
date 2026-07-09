@@ -26,22 +26,63 @@ export const CITIES = [
 export const SEARCH_QUERY = 'software engineering internship summer 2027';
 
 // Role must look like an internship / entry-level dev role, and not be for a past/other season.
-export const ROLE_INCLUDE = /intern|new grad|entry[\s-]?level/i;
+export const ROLE_INCLUDE = /intern|new grad|entry[\s-]?level|co[\s-]?op/i;
 export const ROLE_EXCLUDE = /\b20(2[0-6])\b/; // mentions 2020–2026 explicitly → not summer 2027
+
+// Software/developer signal — at least one must be present so we don't apply to
+// unrelated internships (finance, design, ops) that merely contain "intern".
+export const DEV_INCLUDE =
+  /\b(software|swe|sde|developer|dev|engineer|engineering|full[\s-]?stack|front[\s-]?end|back[\s-]?end|firmware|embedded|infrastructure|platform|systems|web|mobile|ios|android|data engineer|machine learning|ml|ai|devops|sre|security|programming|coding|computer science|cs)\b/i;
+
+// Explicitly non-developer roles that can slip past DEV_INCLUDE (e.g. "GTM Engineer",
+// "Research Scientist", hardware/design/sales tracks). Skipped even if they say "engineer".
+export const NON_DEV_EXCLUDE =
+  /\b(research scientist|quantitative research|quant research|go[\s-]?to[\s-]?market|gtm|sales|marketing|recruit|talent|financial analyst|business analyst|data analyst|product manager|program manager|project manager|ux|ui\/ux|graphic|content|community|mechanical engineer|electrical engineer|hardware engineer|civil engineer|chemical engineer|biomedical|manufacturing|supply chain|operations analyst|accounting|legal|hr\b)\b/i;
 
 // US postings must explicitly mention sponsorship, otherwise skipped.
 export const VISA_KEYWORDS = [
   'visa sponsorship',
   'sponsorship available',
   'sponsorship is available',
+  'able to sponsor',
+  'we sponsor',
+  'do sponsor',
+  'offer sponsorship',
+  'provide sponsorship',
   'will sponsor',
   'willing to sponsor',
   'h1b',
   'h-1b',
+  'h1-b',
   'sponsor work visa',
+  'sponsor a work visa',
   'sponsor a visa',
   'sponsor visas',
+  'work authorization sponsorship',
   'immigration sponsorship',
+];
+
+// Phrases that mean "we do NOT sponsor" — their presence forces a skip even if a
+// stray keyword above also appears (e.g. "we are unable to provide sponsorship").
+export const VISA_NEGATIONS = [
+  'unable to sponsor',
+  'not able to sponsor',
+  'cannot sponsor',
+  "can't sponsor",
+  'do not sponsor',
+  "don't sponsor",
+  'not sponsor',
+  'no sponsorship',
+  'without sponsorship',
+  'not provide sponsorship',
+  'not offer sponsorship',
+  'unable to provide sponsorship',
+  'not offer visa sponsorship',
+  'not provide visa sponsorship',
+  'must be authorized to work',
+  'must already be authorized',
+  'without the need for sponsorship',
+  'do not require sponsorship',
 ];
 
 // GitHub markdown job boards (raw README URLs).
@@ -73,6 +114,19 @@ export const APPLIED_JOBS_PATH = path.join(ROOT, 'applied_jobs.json');
 export const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || '';
 export const DRY_RUN = (process.env.DRY_RUN || 'true').toLowerCase() !== 'false';
 export const MAX_APPLICATIONS_PER_RUN = parseInt(process.env.MAX_APPLICATIONS_PER_RUN || '10', 10);
+// Indeed sits behind Cloudflare and is almost always blocked from CI runners, so
+// it's off by default. Set ENABLE_INDEED=true to attempt it (best on a residential IP).
+export const ENABLE_INDEED = (process.env.ENABLE_INDEED || 'false').toLowerCase() === 'true';
+
+// Shared status vocabulary — kept here so the dashboard and the runner agree.
+export const STATUS_META = {
+  applied: { label: 'Applied', kind: 'success' },
+  submitted_unconfirmed: { label: 'Submitted (unconfirmed)', kind: 'warn' },
+  manual_review: { label: 'Manual review', kind: 'info' },
+  skipped_unknown_required: { label: 'Skipped — unknown field', kind: 'muted' },
+  skipped_no_sponsorship: { label: 'Skipped — no sponsorship', kind: 'muted' },
+  skipped_closed: { label: 'Skipped — closed', kind: 'muted' },
+};
 
 export function coverLetterText() {
   try {

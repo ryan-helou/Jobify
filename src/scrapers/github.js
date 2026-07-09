@@ -1,5 +1,13 @@
 import * as cheerio from 'cheerio';
-import { CITIES, GITHUB_SOURCES, ROLE_INCLUDE, ROLE_EXCLUDE } from '../config.js';
+import { CITIES, GITHUB_SOURCES, ROLE_INCLUDE, ROLE_EXCLUDE, DEV_INCLUDE, NON_DEV_EXCLUDE } from '../config.js';
+
+// True when a role title looks like a software/developer internship we want.
+export function isDevRole(title) {
+  if (!ROLE_INCLUDE.test(title)) return false; // must be intern/new-grad/entry-level
+  if (ROLE_EXCLUDE.test(title)) return false; // explicit past/other-year season
+  if (NON_DEV_EXCLUDE.test(title)) return false; // clearly non-developer track
+  return DEV_INCLUDE.test(title); // must carry a software signal
+}
 
 // Parses markdown job tables from GitHub internship boards. Column layouts differ
 // between repos (Role vs Position, Application/Link vs Posting), so the parser
@@ -52,8 +60,7 @@ export function parseBoard(markdown, sourceName) {
     const url = cellLink(texts[columns.link]) || cellLink(texts[columns.company]);
 
     if (!company || !title || !url || !url.startsWith('http')) continue;
-    if (!ROLE_INCLUDE.test(title)) continue;
-    if (ROLE_EXCLUDE.test(title)) continue;
+    if (!isDevRole(title)) continue;
 
     const city = matchCity(location);
     if (!city) continue;
