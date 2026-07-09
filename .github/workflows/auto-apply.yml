@@ -50,8 +50,13 @@ jobs:
           require APPLICANT_EMAIL "$APPLICANT_EMAIL"
           require APPLICANT_PHONE "$APPLICANT_PHONE"
 
-          if [ ! -s assets/resume.pdf ]; then
-            echo "::error title=Missing résumé::assets/resume.pdf is absent or empty. Commit your résumé (this repo is private)."
+          # assets/resume-base.pdf, not assets/resume.pdf: résumé routing (see
+          # RESUME_VARIANT_FILES in src/config.js) replaced the single file with one
+          # per role shape, and base is the only variant that must exist — every
+          # unrouted posting falls back to it. This guard kept naming the old path
+          # and so failed every scheduled run regardless of what was committed.
+          if [ ! -s assets/resume-base.pdf ]; then
+            echo "::error title=Missing résumé::assets/resume-base.pdf is absent or empty. Commit your résumé (this repo is private)."
             missing=1
           fi
           if [ -z "$SLACK_WEBHOOK_URL" ]; then
@@ -82,7 +87,18 @@ jobs:
           APPLICANT_LINKEDIN: ${{ secrets.APPLICANT_LINKEDIN }}
           APPLICANT_GITHUB: ${{ secrets.APPLICANT_GITHUB }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          DRY_RUN: ${{ inputs.dry_run && 'true' || 'false' }}
+          # Scheduled runs are DRY until the LIVE_APPLY repo variable is exactly
+          # 'true'. Before this gate, a schedule meant live-fire, so the first run
+          # that ever got past preflight would have submitted real applications
+          # unreviewed — with MIN_COMPATIBILITY unset (no fit gate) and no Slack
+          # webhook to report it. Applications cannot be recalled, so the default
+          # has to be the safe one. Flip with:
+          #   gh variable set LIVE_APPLY --body true
+          # Manual runs are unchanged: they honour the dry_run input, default true.
+          DRY_RUN: >-
+            ${{ github.event_name == 'schedule'
+                && (vars.LIVE_APPLY == 'true' && 'false' || 'true')
+                || (inputs.dry_run && 'true' || 'false') }}
         run: node src/index.js
 
       # Runs even when Jobify exits non-zero, so a crash mid-apply still records
