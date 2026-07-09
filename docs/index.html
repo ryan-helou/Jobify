@@ -199,11 +199,12 @@
       const counts = {};
       for (const j of jobs) counts[j.status] = (counts[j.status] || 0) + 1;
       const applied = (counts.applied || 0) + (counts.submitted_unconfirmed || 0);
-      const skipped =
-        (counts.skipped_no_sponsorship || 0) +
-        (counts.skipped_unknown_required || 0) +
-        (counts.skipped_closed || 0) +
-        (counts.skipped_low_compatibility || 0);
+      // Derived, not enumerated: listing the skip statuses by hand meant a new one
+      // (skipped_wrong_term) was tracked, filterable and shown in the table, yet
+      // silently missing from this card.
+      const skipped = Object.entries(counts)
+        .filter(([status]) => status.startsWith('skipped_'))
+        .reduce((sum, [, n]) => sum + n, 0);
       const avgFit = mean(jobs.map((j) => j.compatibility).filter((v) => typeof v === 'number'));
       const cards = [
         { n: jobs.length, l: 'Total tracked' },
