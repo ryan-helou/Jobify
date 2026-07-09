@@ -13,14 +13,18 @@ import {
 import { termForSource } from '../term.js';
 
 // True when a title looks like a software/developer role we'd want.
-// `kind` selects the policy: internship boards must say "intern"; new-grad boards
-// are entry-level by construction, so we reject senior/levelled titles instead.
+// `kind` selects the policy:
+//   internship → the board mixes role types, so the title must say intern/co-op
+//   newgrad    → entry-level by construction; reject senior/levelled titles instead
+//   campus     → a student/campus portal. Every posting is an internship whether or
+//                not it says so: BMO advertises "Application developer" on its
+//                Campus site. Demanding an intern token there loses real roles.
 export function isDevRole(title, kind = 'internship') {
   if (!title) return false;
   if (ROLE_EXCLUDE.test(title)) return false; // explicit past/other-year season
   if (NON_DEV_EXCLUDE.test(title)) return false; // clearly non-developer track
 
-  if (kind === 'newgrad') {
+  if (kind === 'newgrad' || kind === 'campus') {
     if (SENIOR_EXCLUDE.test(title)) return false;
   } else if (!ROLE_INCLUDE.test(title)) {
     return false; // internship boards: must be intern/new-grad/co-op
@@ -138,6 +142,19 @@ export function parseBoard(markdown, source) {
 
 // ---- driver --------------------------------------------------------------
 
+// Badge images and repo links outnumber real apply URLs in these READMEs.
+const NOT_AN_APPLY_URL = /img\.shields\.io|badgen\.net|\.(?:png|svg|gif|jpe?g)(?:$|\?)|github\.com|githubusercontent\.com/i;
+
+// A harvest-only markdown board is read for apply URLs alone, so we never parse its
+// table. That matters: the Canadian boards write links as markdown `[Apply](url)`
+// rather than `<a href>`, which parseBoard's cellLink can't see — but a plain URL
+// sweep doesn't care how the link was written.
+function harvestMarkdownUrls(markdown) {
+  return [...markdown.matchAll(/https?:\/\/[^\s)"'<>\]]+/g)]
+    .map((m) => m[0])
+    .filter((url) => !NOT_AN_APPLY_URL.test(url));
+}
+
 async function scrapeSource(source) {
   const res = await fetch(source.url, { signal: AbortSignal.timeout(30000) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -152,8 +169,14 @@ async function scrapeSource(source) {
     postings = listings.filter((l) => l?.url).map((l) => ({ url: l.url, company: l.company_name || '' }));
     jobs = source.harvestOnly ? [] : parseListings(listings, source);
   } else {
-    jobs = source.harvestOnly ? [] : parseBoard(await res.text(), source);
-    postings = jobs.map((j) => ({ url: j.url, company: j.company }));
+    const markdown = await res.text();
+    if (source.harvestOnly) {
+      jobs = [];
+      postings = harvestMarkdownUrls(markdown).map((url) => ({ url, company: '' }));
+    } else {
+      jobs = parseBoard(markdown, source);
+      postings = jobs.map((j) => ({ url: j.url, company: j.company }));
+    }
   }
 
   console.log(

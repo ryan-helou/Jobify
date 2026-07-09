@@ -64,9 +64,20 @@ export function loadTracker() {
         title: job.title,
         company: job.company,
         location: job.location,
+        city: job.city,
         source: job.source,
         status, // applied | submitted_unconfirmed | manual_review | skipped_unknown_required
         details,
+        // Flattened from job.scores (see src/score.js) so the dashboard can sort
+        // on them directly. Absent on records written before scoring existed —
+        // the dashboard renders those as "—" rather than as a zero.
+        ...(job.scores && {
+          compatibility: job.scores.compatibility,
+          quality: job.scores.quality,
+          interviewOdds: job.scores.interviewOdds,
+          scoreConfidence: job.scores.confidence,
+          scoreSignals: job.scores.signals,
+        }),
         recordedAt: new Date().toISOString(),
       });
     },

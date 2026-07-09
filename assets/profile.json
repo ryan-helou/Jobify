@@ -1,0 +1,41 @@
+{
+  "_comment": [
+    "The candidate model that posting compatibility is scored against.",
+    "`skills` and `strongSkills` must be keys of SKILL_LEXICON in src/config.js;",
+    "anything else is dropped and reported as a config warning on the next run.",
+    "`strongSkills` are the ones you'd be interviewed on — they earn a bonus when",
+    "a posting asks for them. `preferredFamilies` is ordered: first is best fit."
+  ],
+  "skills": [
+    "javascript",
+    "typescript",
+    "python",
+    "java",
+    "c++",
+    "react",
+    "node",
+    "sql",
+    "nosql",
+    "git",
+    "linux",
+    "docker",
+    "aws",
+    "rest",
+    "algorithms",
+    "testing",
+    "ci"
+  ],
+  "strongSkills": ["javascript", "typescript", "python", "react", "node"],
+  "preferredFamilies": [
+    "swe",
+    "fullstack",
+    "backend",
+    "frontend",
+    "infra",
+    "ml",
+    "data",
+    "mobile",
+    "security",
+    "embedded"
+  ]
+}

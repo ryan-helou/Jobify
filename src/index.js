@@ -1,32 +1,45 @@
 import { chromium } from 'playwright';
 import {
+  CANDIDATE,
   CITIES,
   DRY_RUN,
   ENABLE_ATS,
   ENABLE_INDEED,
+  ENABLE_WORKDAY,
   MANUAL_REVIEW_BATCH,
   MAX_APPLICATIONS_PER_RUN,
   MAX_JOBS_EXAMINED_PER_RUN,
+  MIN_COMPATIBILITY,
   validateConfig,
 } from './config.js';
 import { loadTracker, identityKey, canonicalKey } from './tracker.js';
 import { scrapeGithubBoards } from './scrapers/github.js';
 import { scrapeAtsBoards } from './scrapers/ats.js';
+import { scrapeWorkday } from './scrapers/workday.js';
 import { scrapeIndeed, fetchIndeedJobDetails } from './scrapers/indeed.js';
 import { applyToJob, supportedAts } from './apply/index.js';
 import { mentionsSponsorship, fetchPostingText, feedSponsorshipVerdict } from './visa.js';
+import { scoreJob, explainScore } from './score.js';
 import { slack, notifyApplied, notifySummary } from './notify.js';
 
 const CITY_PRIORITY = Object.fromEntries(CITIES.map((c, i) => [c.key, i]));
 
+// Within a city, spend the application budget on the best-fitting jobs first.
+// City still dominates — a mediocre Montreal role beats a perfect SF one, since
+// the SF role costs a visa and a move.
+const byCityThenFit = (a, b) =>
+  CITY_PRIORITY[a.city] - CITY_PRIORITY[b.city] || b.scores.compatibility - a.scores.compatibility;
+
 async function main() {
-  const problems = validateConfig();
-  if (problems.length) {
-    console.warn('Config warnings:\n - ' + problems.join('\n - '));
-    if (problems.some((p) => p.includes('resume') || p.includes('APPLICANT'))) {
-      await slack(`:warning: Jobify run aborted — configuration incomplete: ${problems.join('; ')}`);
-      process.exit(1);
-    }
+  const { fatal, warnings } = validateConfig();
+  if (warnings.length) console.warn('Config warnings:\n - ' + warnings.join('\n - '));
+  if (fatal.length) {
+    // Applications are irreversible and get recorded as applied, so a broken
+    // résumé would silently poison the whole run. Refuse to start, even on a dry
+    // run — a dry run that passes with a bad résumé teaches you nothing.
+    console.error('Config errors:\n - ' + fatal.join('\n - '));
+    await slack(`:warning: Jobify run aborted — ${fatal.join('; ')}`);
+    process.exit(1);
   }
   console.log(`Jobify run starting (dry run: ${DRY_RUN})`);
 
@@ -39,18 +52,20 @@ async function main() {
     locale: 'en-US',
   });
 
-  const counts = { found: 0, applied: 0, manual: 0, skipped: 0, wrongTerm: 0 };
+  const counts = { found: 0, applied: 0, manual: 0, skipped: 0, wrongTerm: 0, lowFit: 0 };
 
   try {
     // 1. Scrape sources. The GitHub boards run first because their apply URLs are
     //    what tell us which company ATS boards exist. Indeed needs the shared
     //    browser and is opt-in since it's usually blocked in CI.
     const { jobs: githubJobs, postings } = await scrapeGithubBoards();
-    const [atsJobs, indeedJobs] = await Promise.all([
+    const [atsJobs, workdayJobs, indeedJobs] = await Promise.all([
       ENABLE_ATS ? scrapeAtsBoards(postings) : Promise.resolve([]),
+      ENABLE_WORKDAY ? scrapeWorkday(postings) : Promise.resolve([]),
       ENABLE_INDEED ? scrapeIndeed(context) : Promise.resolve([]),
     ]);
     if (!ENABLE_ATS) console.log('ATS board enumeration disabled (set ENABLE_ATS=true to enable).');
+    if (!ENABLE_WORKDAY) console.log('Workday enumeration disabled (set ENABLE_WORKDAY=true to enable).');
     if (!ENABLE_INDEED) console.log('Indeed scraping disabled (set ENABLE_INDEED=true to attempt it).');
 
     // 2. Dedup against the ledger and within this run. The same posting shows up
@@ -60,7 +75,7 @@ async function main() {
     const seenUrls = new Set();
     const seenIdentities = new Set();
     const fresh = [];
-    for (const job of [...githubJobs, ...atsJobs, ...indeedJobs]) {
+    for (const job of [...githubJobs, ...atsJobs, ...workdayJobs, ...indeedJobs]) {
       const identity = identityKey(job);
       if (tracker.has(job.url) || tracker.hasIdentity(identity)) continue;
       if (seenUrls.has(canonicalKey(job.url)) || seenIdentities.has(identity)) continue;
@@ -68,11 +83,17 @@ async function main() {
       seenIdentities.add(identity);
       fresh.push(job);
     }
-    fresh.sort((a, b) => CITY_PRIORITY[a.city] - CITY_PRIORITY[b.city]); // Montreal first
+    // Score every posting up front. It's pure and cheap — no network — and the
+    // ATS sources already carry descriptions, so most jobs get a well-evidenced
+    // score here. The rest are re-scored below once a description is fetched.
+    for (const job of fresh) job.scores = scoreJob(job, CANDIDATE);
+
+    fresh.sort(byCityThenFit); // Montreal first, best fit first within each city
     counts.found = fresh.length;
     console.log(
       `${fresh.length} new jobs after dedup ` +
-        `(${githubJobs.length} github, ${atsJobs.length} ats, ${indeedJobs.length} indeed scraped)`
+        `(${githubJobs.length} github, ${atsJobs.length} ats, ${workdayJobs.length} workday, ` +
+        `${indeedJobs.length} indeed scraped)`
     );
 
     // 3. Gate on hiring term before spending anything on a posting. A board's name
@@ -91,10 +112,16 @@ async function main() {
 
     // Postings that never say which term they're for go to a human, not the
     // applier. Batched into one Slack message and capped — the uncapped remainder
-    // stays out of the ledger so it resurfaces next run.
+    // stays out of the ledger so it resurfaces next run. `unstated` inherits the
+    // city-then-fit order, so the cap spends a human's attention on the best of
+    // them rather than on whichever board happened to be scraped first.
     const review = unstated.slice(0, MANUAL_REVIEW_BATCH);
     if (review.length) {
-      const lines = review.map((j) => `• <${j.applyUrl || j.url}|${j.title}> — *${j.company}* (${j.location})`);
+      const lines = review.map(
+        (j) =>
+          `• <${j.applyUrl || j.url}|${j.title}> — *${j.company}* (${j.location})` +
+          `  _fit ${j.scores.compatibility} · quality ${j.scores.quality} · ~${j.scores.interviewOdds}% interview_`
+      );
       await slack(
         `:mag: ${review.length} posting(s) don't state a hiring term — worth a look` +
           (unstated.length > review.length ? ` _(${unstated.length - review.length} more next run)_` : '') +
@@ -164,6 +191,24 @@ async function main() {
         }
       }
 
+      // Re-score now that we may have fetched a description the pre-sort didn't
+      // have. Scoring is pure, so this just replaces a weakly-evidenced guess with
+      // a better one; the queue order was already fixed above and doesn't change.
+      job.scores = scoreJob(job, CANDIDATE, description);
+      console.log(`  → ${explainScore(job.scores)}`);
+
+      // Optional fit floor. Gated *here*, after the description is in hand, rather
+      // than before the fetch: a posting with no description scores on its title
+      // alone, and rejecting it on that would throw away jobs we simply hadn't
+      // read yet. The examined-jobs budget already bounds the work this costs.
+      if (job.scores.compatibility < MIN_COMPATIBILITY) {
+        const why = `compatibility ${job.scores.compatibility} below floor of ${MIN_COMPATIBILITY}`;
+        console.log(`  → skipped: ${why}`);
+        if (!DRY_RUN) tracker.add(job, 'skipped_low_compatibility', why);
+        counts.lowFit++;
+        continue;
+      }
+
       // Apply, or hand off for manual review on unsupported platforms. Only opening
       // and filling a real form consumes the application budget — passing a Workday
       // link to Slack costs nothing and shouldn't crowd out a job we can apply to.
@@ -174,7 +219,8 @@ async function main() {
         counts.manual++;
         await slack(
           `:eyes: Manual review needed — *${job.title}* at *${job.company}* (${job.location})\n` +
-            `<${job.applyUrl || job.url}|Apply here> — unsupported application platform`
+            `<${job.applyUrl || job.url}|Apply here> — unsupported application platform\n` +
+            `_${explainScore(job.scores)}_`
         );
         continue;
       }
@@ -192,7 +238,8 @@ async function main() {
         counts.manual++;
         await slack(
           `:eyes: Manual review needed — *${job.title}* at *${job.company}* (${job.location})\n` +
-            `<${job.applyUrl || job.url}|Apply here> — ${result.details}`
+            `<${job.applyUrl || job.url}|Apply here> — ${result.details}\n` +
+            `_${explainScore(job.scores)}_`
         );
       } else {
         counts.skipped++;

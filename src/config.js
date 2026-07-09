@@ -182,6 +182,29 @@ export const GITHUB_SOURCES = [
     harvestOnly: true,
     url: 'https://raw.githubusercontent.com/SimplifyJobs/Summer2026-Internships/dev/.github/scripts/listings.json',
   },
+  // Canadian boards. Their listings are the 2026 cycle and their tables use markdown
+  // links our parser can't read — but that doesn't matter, because we mine them for
+  // employer board tokens only. Without these, no Canadian employer is ever queried:
+  // only 7 of 44 major Canadian tech firms appear anywhere in the US feeds above.
+  // Most of what they name is Workday, which is why these arrived with workday.js.
+  {
+    name: 'negarprh/Canadian-Tech-Internships',
+    type: 'markdown',
+    harvestOnly: true,
+    url: 'https://raw.githubusercontent.com/negarprh/Canadian-Tech-Internships-2026/main/README.md',
+  },
+  {
+    name: 'hanzili/canada_sde_intern_position',
+    type: 'markdown',
+    harvestOnly: true,
+    url: 'https://raw.githubusercontent.com/hanzili/canada_sde_intern_position/main/README.md',
+  },
+  {
+    name: 'Dannny-Babs/Canadian-Tech-Internships',
+    type: 'markdown',
+    harvestOnly: true,
+    url: 'https://raw.githubusercontent.com/Dannny-Babs/Canadian-Tech-Internships-2025/main/README.md',
+  },
 ];
 
 // ---- hiring-term classification ------------------------------------------
@@ -219,6 +242,207 @@ export const SPONSORSHIP_VERDICT = {
   'U.S. Citizenship is Required': 'denies',
 };
 
+// ---- scoring inputs -------------------------------------------------------
+//
+// Three scores are attached to every posting (see src/score.js):
+//
+//   compatibility — how well *this* candidate fits *this* posting
+//   quality       — how good the internship is, candidate-independent
+//   interviewOdds — a heuristic prior, NOT a calibrated probability
+//
+// The lexicons below are the evidence those scores are computed from. They are
+// meant to be edited: a skill this candidate doesn't have is noise, and a
+// company tier list is an opinion, not a fact.
+
+// Canonical skill → the shapes a posting writes it in. The keys are what
+// assets/profile.json lists; the regexes are what we look for in the posting.
+//
+// Deliberately conservative on short names. Bare `go`, `c` and `rest` are
+// unmatchable without false positives ("go to market", "C-level executives",
+// "the rest of the team"), so they're only matched in unambiguous forms.
+export const SKILL_LEXICON = {
+  javascript: /\bjavascript\b|\bes6\b/i,
+  typescript: /\btypescript\b/i,
+  python: /\bpython\b/i,
+  java: /\bjava\b/i, // \b after "java" can't match inside "javascript"
+  // No trailing \b after `++` / `#`: a word boundary needs a word character on
+  // one side, and these are almost always followed by punctuation ("C++.", "C#,").
+  // `\bc\+\+\b` matches essentially only "C++11", so it silently never fired.
+  'c++': /\bc\+\+|\bcpp\b/i,
+  'c#': /\bc#|\b\.net\b|\bdotnet\b/i,
+  c: /\bc\/c\+\+\b|\bembedded c\b/i,
+  go: /\bgolang\b|\bgo\s+(?:programming|developer|lang)\b/i,
+  rust: /\brust\b/i,
+  ruby: /\bruby\b|\brails\b/i,
+  swift: /\bswift\b|\bswiftui\b/i,
+  kotlin: /\bkotlin\b/i,
+  react: /\breact\b|\breact\.?js\b|\bnext\.?js\b/i,
+  vue: /\bvue\b|\bnuxt\b/i,
+  angular: /\bangular\b/i,
+  // Bare "Node" is almost always Node.js in a posting, but infrastructure prose
+  // says "each compute node". Plurals ("Kubernetes nodes") fail \bnode\b on
+  // their own; the lookbehind catches the singular qualifiers.
+  node: /\bnode\.?js\b|\bexpress\.?js\b|(?<!\b(?:compute|cluster|worker|leaf|graph|tree|edge|gpu|storage|kubernetes|k8s)\s)\bnode\b/i,
+  django: /\bdjango\b|\bflask\b|\bfastapi\b/i,
+  spring: /\bspring boot\b|\bspring framework\b/i,
+  sql: /\bsql\b|\bpostgres(?:ql)?\b|\bmysql\b|\bsqlite\b/i,
+  nosql: /\bnosql\b|\bmongodb\b|\bdynamodb\b|\bredis\b|\bcassandra\b/i,
+  aws: /\baws\b|\bamazon web services\b|\bec2\b|\bs3\b|\baws lambda\b/i,
+  gcp: /\bgcp\b|\bgoogle cloud\b/i,
+  azure: /\bazure\b/i,
+  docker: /\bdocker\b|\bcontaineriz(?:ed|ation)\b/i,
+  kubernetes: /\bkubernetes\b|\bk8s\b/i,
+  terraform: /\bterraform\b|\bpulumi\b/i,
+  ci: /\bci\/cd\b|\bcontinuous integration\b|\bgithub actions\b|\bjenkins\b/i,
+  git: /\bgit\b|\bgithub\b|\bversion control\b/i,
+  linux: /\blinux\b|\bunix\b/i,
+  graphql: /\bgraphql\b/i,
+  rest: /\brest(?:ful)?\s*apis?\b|\brestful\b/i,
+  ml: /\bmachine learning\b|\bdeep learning\b|\bneural network/i,
+  pytorch: /\bpytorch\b|\btensorflow\b|\bjax\b/i,
+  nlp: /\bnlp\b|\bnatural language\b|\bllms?\b|\blarge language model/i,
+  cv: /\bcomputer vision\b|\bopencv\b/i,
+  datascience: /\bpandas\b|\bnumpy\b|\bscikit|\bjupyter\b/i,
+  spark: /\bspark\b|\bhadoop\b|\bkafka\b|\bairflow\b/i,
+  distributed: /\bdistributed systems?\b|\bmicroservices\b/i,
+  security: /\bcryptography\b|\bpenetration test|\bappsec\b|\bthreat model/i,
+  ios: /\bios\b|\bxcode\b|\buikit\b/i,
+  android: /\bandroid\b|\bjetpack\b/i,
+  embedded: /\bembedded\b|\bfirmware\b|\brtos\b|\bverilog\b/i,
+  algorithms: /\balgorithms?\b|\bdata structures\b/i,
+  testing: /\bunit test|\bintegration test|\bjest\b|\bpytest\b/i,
+};
+
+// Role families, matched against the title. Order is load-bearing — "Full Stack"
+// also contains "stack" adjacent words, and a "Frontend Platform" role should
+// resolve as frontend, so the more specific patterns are tested first.
+export const ROLE_FAMILIES = [
+  ['fullstack', /full[\s-]?stack/i],
+  ['ml', /machine learning|\bml\b|\bai\b|deep learning|\bnlp\b|computer vision|research engineer/i],
+  ['data', /data (?:engineer|scien|analytic)|analytics/i],
+  ['security', /security|cryptograph|appsec/i],
+  ['mobile', /\bmobile\b|\bios\b|\bandroid\b/i],
+  ['embedded', /embedded|firmware/i],
+  ['infra', /infrastructure|platform|devops|\bsre\b|cloud|reliability|systems/i],
+  ['frontend', /front[\s-]?end|\bui\b|\bweb\b/i],
+  ['backend', /back[\s-]?end|server|\bapi\b|distributed/i],
+];
+export const DEFAULT_ROLE_FAMILY = 'swe';
+
+// What a good internship says about itself. Presence is weak evidence; absence
+// is weaker still (plenty of excellent programs write terse postings), which is
+// why the quality score never drops far on silence alone.
+export const QUALITY_SIGNALS = {
+  returnOffer: /\breturn offer\b|full[\s-]?time (?:offer|conversion)|convert(?:ing|ed)? to full[\s-]?time/i,
+  mentorship: /\bmentor(?:ship|ed|s)?\b|\bbuddy\b|paired with (?:a|an)? ?(?:senior|engineer)/i,
+  cohort: /intern (?:class|cohort|program)|\bcohort\b|summer program|intern events/i,
+  relocation: /\brelocation\b|\bhousing\b|\bstipend\b/i,
+  ship: /\bship\b|\bproduction\b|real (?:code|projects?|impact)|end[\s-]to[\s-]end|meaningful (?:work|projects?)/i,
+  review: /\bcode reviews?\b|design (?:doc|review)|pull requests?|pair programming/i,
+};
+
+// Phrases that mean the internship isn't worth the application. Narrow on
+// purpose: a bare /unpaid/ also matches "unpaid leave" in a benefits section.
+export const QUALITY_RED_FLAGS = {
+  unpaid: /\bunpaid (?:internship|position|role)\b|\bthis is an unpaid\b|\bno compensation\b/i,
+  creditOnly: /credit[\s-]only|for (?:course|academic|school) credit\b/i,
+};
+
+// Compensation, normalized to an hourly equivalent before scoring.
+export const HOURS_PER_MONTH = 173.33;
+export const HOURS_PER_YEAR = 2080;
+// Matches "$45/hr", "$40 - $55 per hour", "$8,000/month", "$120k/year".
+// A range takes its midpoint. The `[a-z]{1,3}` before the upper bound's `$` is
+// load-bearing: Ashby writes Canadian rates as "CA$40 - CA$50 / hr", and without
+// it the range fails to match and the regex latches onto the upper bound alone,
+// scoring the posting at the top of its band.
+// Currency itself is ignored — CAD and USD go on the same curve, which slightly
+// flatters Canadian postings. Accepted: the alternative is an FX feed for a
+// heuristic that's ±10 points anyway.
+// The leading `[a-z]{1,3}` is only there so the matched text reads "CA$40 - CA$50"
+// rather than "$40 - CA$50" when it's echoed back to Slack and the dashboard.
+export const PAY_PATTERN =
+  /(?:[a-z]{1,3})?\$\s?([\d,]+(?:\.\d+)?)\s*(k\b)?(?:\s*(?:-|–|—|to)\s*(?:[a-z]{1,3})?\$?\s?([\d,]+(?:\.\d+)?)\s*(k\b)?)?\s*(?:\/|\s+per\s+|\s+an?\s+)\s*(hour|hr|month|mo|year|yr|annum)/i;
+// Hourly rate → quality points. Anchored on the 2026 US intern market: ~$20/hr
+// is the low end of paid, ~$50/hr is strong, big-tech tops out near $80/hr.
+export const PAY_CURVE = [
+  [15, 10],
+  [20, 25],
+  [25, 40],
+  [30, 50],
+  [40, 65],
+  [50, 80],
+  [65, 92],
+  [80, 100],
+];
+// A posting that never states pay. Most don't, outside CA/NY/CO/WA pay-
+// transparency law, so silence is neutral-minus rather than a penalty.
+export const PAY_UNSTATED_SCORE = 55;
+
+// Company prestige. Raises `quality` and lowers `interviewOdds` — the same name
+// that makes an internship worth having makes it harder to get.
+//
+// This is an editable opinion, not a ranking. Names are normalized by
+// `normalizeCompany` in src/score.js (lowercased, legal suffix and punctuation
+// stripped), so add entries in that same form: "Jane Street" → "janestreet".
+export const TOP_TIER_COMPANIES = new Set([
+  'google', 'alphabet', 'meta', 'facebook', 'apple', 'amazon', 'microsoft', 'netflix', 'nvidia',
+  'openai', 'anthropic', 'deepmind', 'googledeepmind', 'xai', 'ssi',
+  'janestreet', 'citadel', 'citadelsecurities', 'twosigma', 'hudsonrivertrading', 'hrt', 'jumptrading',
+  'optiver', 'imc', 'imctrading', 'deshaw', 'towerresearchcapital', 'radixtrading', 'sig', 'susquehanna',
+  'stripe', 'databricks', 'palantir', 'snowflake', 'figma', 'ramp', 'anduril', 'scaleai',
+  'spacex', 'tesla', 'waymo', 'coinbase', 'airbnb', 'uber', 'doordash', 'linkedin', 'roblox',
+]);
+export const STRONG_TIER_COMPANIES = new Set([
+  'shopify', 'atlassian', 'salesforce', 'adobe', 'oracle', 'ibm', 'intel', 'amd', 'qualcomm',
+  'cloudflare', 'datadog', 'mongodb', 'hashicorp', 'twilio', 'dropbox', 'block', 'square',
+  'robinhood', 'instacart', 'reddit', 'pinterest', 'snap', 'discord', 'plaid', 'brex',
+  'notion', 'linear', 'vercel', 'retool', 'asana', 'lyft', 'spotify', 'squarespace',
+  'perplexity', 'cohere', 'mistral', 'mistralai', 'huggingface', 'anysphere', 'cursor',
+  'appliedintuition', 'rippling', 'gusto', 'benchling', 'affirm', 'chime', 'wealthsimple',
+  'shopifyplus', 'sonder', 'cohereai', 'element', 'ideogram', 'together', 'togetherai',
+]);
+
+// Interview-odds model. Read src/score.js before trusting any of these numbers —
+// they are a documented guess, tuned to feel right, calibrated against nothing.
+export const ODDS_BASE_RATE = 0.06; // P(application → first-round interview), prior
+export const ODDS_FLOOR = 0.01;
+export const ODDS_CEILING = 0.6;
+
+export const PROFILE_PATH = path.join(ROOT, 'assets', 'profile.json');
+
+// Used when assets/profile.json is missing or unreadable. A generic CS student.
+export const DEFAULT_PROFILE = {
+  skills: ['javascript', 'typescript', 'python', 'java', 'react', 'node', 'sql', 'git', 'linux', 'algorithms'],
+  strongSkills: ['javascript', 'python', 'react'],
+  preferredFamilies: ['swe', 'fullstack', 'backend', 'frontend', 'infra', 'ml', 'data', 'mobile', 'security', 'embedded'],
+};
+
+// The candidate model that `compatibility` scores against. Unknown skill keys
+// are dropped (and reported by validateConfig) rather than silently ignored —
+// a typo'd skill would otherwise quietly depress every score.
+function loadProfile() {
+  let file = {};
+  try {
+    file = JSON.parse(fs.readFileSync(PROFILE_PATH, 'utf8'));
+  } catch {
+    /* no profile.json — defaults below */
+  }
+  const merged = { ...DEFAULT_PROFILE, ...file };
+  return {
+    skills: (merged.skills || []).filter((s) => s in SKILL_LEXICON),
+    strongSkills: (merged.strongSkills || []).filter((s) => s in SKILL_LEXICON),
+    preferredFamilies: merged.preferredFamilies || DEFAULT_PROFILE.preferredFamilies,
+    unknownSkills: [...(merged.skills || []), ...(merged.strongSkills || [])].filter((s) => !(s in SKILL_LEXICON)),
+  };
+}
+
+export const CANDIDATE = loadProfile();
+
+// Postings below this compatibility score are skipped without applying. Off by
+// default (0) — turn it up once you've seen how the scores land on real jobs.
+export const MIN_COMPATIBILITY = parseInt(process.env.MIN_COMPATIBILITY || '0', 10);
+
 export const APPLICANT = {
   name: process.env.APPLICANT_NAME || '',
   email: process.env.APPLICANT_EMAIL || '',
@@ -254,6 +478,26 @@ export const ENABLE_INDEED = (process.env.ENABLE_INDEED || 'false').toLowerCase(
 export const ENABLE_ATS = (process.env.ENABLE_ATS || 'true').toLowerCase() !== 'false';
 export const ATS_CONCURRENCY = parseInt(process.env.ATS_CONCURRENCY || '16', 10);
 
+// Workday speaks the same public-API story as the boards above, but it's the only
+// ATS most Canadian employers use (28% of their postings, vs 13% for Greenhouse,
+// Ashby and Lever combined). Its pages hold 20 postings each, so cap the paging:
+// 10 pages is 200 postings per tenant site, well past any campus portal's inventory.
+export const ENABLE_WORKDAY = (process.env.ENABLE_WORKDAY || 'true').toLowerCase() !== 'false';
+export const WORKDAY_MAX_PAGES = parseInt(process.env.WORKDAY_MAX_PAGES || '10', 10);
+
+// Workday sites whose entire inventory is student roles, so a title needn't say
+// "intern" to be one. Matching this wrongly is expensive: it waives the intern
+// check for a whole company, which is how "Executive Assistant - CISO" arrived
+// from `pfizer/internaljobs`.
+//
+// Site names are slugs with no reliable separators — `uvastudentjobs`,
+// `IVZearlycareers`, `ExternalPrivatePostingStudents` — so word boundaries can't
+// be used. Instead `intern` carries a lookahead rejecting the two words that
+// swallow it: intern·al (`spgi_internal`, `Non-WorkdayInternal`) and
+// intern·ational (`HUBInternational`, `laticreteinternational`).
+export const CAMPUS_SITE =
+  /campus|student|intern(?!al|ational)|university|new[-_]?grad|early[-_ ]?career|graduate/i;
+
 // Postings whose term we can't determine go to a human instead of being applied
 // to or dropped. Cap how many we surface per run so a first run doesn't dump
 // hundreds of Slack lines; the rest stay unrecorded and resurface next run.
@@ -268,6 +512,7 @@ export const STATUS_META = {
   skipped_no_sponsorship: { label: 'Skipped — no sponsorship', kind: 'muted' },
   skipped_closed: { label: 'Skipped — closed', kind: 'muted' },
   skipped_wrong_term: { label: 'Skipped — wrong hiring term', kind: 'muted' },
+  skipped_low_compatibility: { label: 'Skipped — low fit', kind: 'muted' },
 };
 
 export function coverLetterText() {
@@ -278,12 +523,68 @@ export function coverLetterText() {
   }
 }
 
+// A real résumé PDF is tens of kilobytes. A truncated, empty, or placeholder file
+// is not, and `fs.existsSync` cannot tell the difference — which is the whole
+// problem, because whatever sits at RESUME_PATH is uploaded to real employers and
+// the submission is irreversible. Cheap structural checks catch the realistic
+// failures: an empty file, a stub committed during setup, a Git LFS pointer, a
+// truncated download.
+const PDF_HEADER = '%PDF-';
+export const MIN_RESUME_BYTES = parseInt(process.env.MIN_RESUME_BYTES || '4096', 10);
+
+/** Returns a human-readable reason the buffer isn't a usable PDF, or null if it is. */
+export function pdfProblem(buf, minBytes = MIN_RESUME_BYTES) {
+  if (!buf || buf.length === 0) return 'the file is empty';
+  const head = Buffer.from(buf.subarray(0, 5)).toString('latin1');
+  if (head !== PDF_HEADER) return `it is not a PDF (expected a ${PDF_HEADER} header, found ${JSON.stringify(head)})`;
+  if (buf.length < minBytes) {
+    return `it is only ${buf.length} bytes, which is too small to be a real document — this looks like a placeholder`;
+  }
+  return null;
+}
+
+function documentProblem(label, filePath, { required }) {
+  if (!fs.existsSync(filePath)) {
+    return required ? `${label} not found at ${filePath}` : null;
+  }
+  let problem;
+  try {
+    problem = pdfProblem(fs.readFileSync(filePath));
+  } catch (err) {
+    return `${label} at ${filePath} could not be read: ${err.message}`;
+  }
+  return problem ? `${label} at ${filePath} cannot be used: ${problem}` : null;
+}
+
+/**
+ * Splits problems by severity. `fatal` means we must not run: anything that would
+ * make us submit a broken application. Callers abort on fatal rather than
+ * pattern-matching the message text.
+ */
 export function validateConfig() {
-  const problems = [];
-  if (!APPLICANT.name) problems.push('APPLICANT_NAME is not set');
-  if (!APPLICANT.email) problems.push('APPLICANT_EMAIL is not set');
-  if (!APPLICANT.phone) problems.push('APPLICANT_PHONE is not set');
-  if (!fs.existsSync(RESUME_PATH)) problems.push(`resume not found at ${RESUME_PATH}`);
-  if (!SLACK_WEBHOOK_URL) problems.push('SLACK_WEBHOOK_URL is not set (notifications disabled)');
-  return problems;
+  const fatal = [];
+  const warnings = [];
+
+  if (!APPLICANT.name) fatal.push('APPLICANT_NAME is not set');
+  if (!APPLICANT.email) fatal.push('APPLICANT_EMAIL is not set');
+  if (!APPLICANT.phone) fatal.push('APPLICANT_PHONE is not set');
+
+  // The résumé is attached to every application, so a bad one poisons every
+  // submission in the run — and each is recorded as applied, so it is never retried.
+  const resume = documentProblem('résumé', RESUME_PATH, { required: true });
+  if (resume) fatal.push(resume);
+
+  // Only fatal when present-but-broken: the cover letter is optional, but if a file
+  // exists at that path the form filler will attach it.
+  const cover = documentProblem('cover letter PDF', COVER_LETTER_PDF_PATH, { required: false });
+  if (cover) fatal.push(cover);
+
+  if (!SLACK_WEBHOOK_URL) warnings.push('SLACK_WEBHOOK_URL is not set (notifications disabled)');
+  if (CANDIDATE.unknownSkills.length) {
+    warnings.push(`profile.json lists skills absent from SKILL_LEXICON, ignored: ${CANDIDATE.unknownSkills.join(', ')}`);
+  }
+  if (!CANDIDATE.skills.length) {
+    warnings.push('profile.json declares no known skills — compatibility scores will be uninformative');
+  }
+  return { fatal, warnings };
 }
