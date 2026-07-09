@@ -1,0 +1,13 @@
+Dear Hiring Team,
+
+I am writing to express my interest in the software engineering internship position at your company. I am a passionate developer seeking a Summer 2027 internship where I can contribute to real products while continuing to grow my engineering skills.
+
+Through personal projects and coursework I have built experience across the stack — from designing APIs and working with databases to building responsive frontends. I care about writing clean, well-tested code and I ramp up quickly on new codebases and tools.
+
+I would welcome the opportunity to bring my energy and curiosity to your team. My resume is attached; I am happy to provide anything further you might need.
+
+Thank you for your time and consideration.
+
+Best regards,
+Ryan Helou
+ryan.helou@gmail.com
