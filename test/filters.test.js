@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { isDevRole, matchCity, parseListings, parseBoard } from '../src/scrapers/github.js';
-import { mentionsSponsorship, feedSponsorshipVerdict } from '../src/visa.js';
+import { mentionsSponsorship, feedSponsorshipVerdict, sponsorshipStance } from '../src/visa.js';
 import { canonicalKey, identityKey } from '../src/tracker.js';
 
 test('isDevRole accepts software internships', () => {
@@ -167,4 +167,22 @@ test('identityKey is accent-insensitive', () => {
   const b = { company: 'Naive', title: 'Software Engineer Intern', city: 'sf' };
   assert.equal(identityKey(a), identityKey(b));
   assert.equal(identityKey({ company: 'Ether.fi', title: 'x', city: 'nyc' }), identityKey({ company: 'etherfi', title: 'x', city: 'nyc' }));
+});
+
+// Silence is not refusal. Demanding an explicit offer skipped 56 of 60 examined
+// postings in a real run, because most US postings never mention sponsorship.
+test('sponsorshipStance separates silence from refusal', () => {
+  assert.equal(sponsorshipStance('We offer visa sponsorship for this role.'), 'offers');
+  assert.equal(sponsorshipStance('We are willing to sponsor H1B candidates.'), 'offers');
+  assert.equal(sponsorshipStance('We are unable to provide sponsorship for this position.'), 'denies');
+  assert.equal(sponsorshipStance('Applicants must be authorized to work in the U.S.'), 'denies');
+  assert.equal(sponsorshipStance('Build backend services in Go. Great team, free lunch.'), 'silent');
+  assert.equal(sponsorshipStance(''), 'silent');
+});
+
+// A negation wins even when a keyword is present — these pages list H-1B inside a
+// "we do not offer" sentence, and reading that as an offer would be the worst error.
+test('sponsorshipStance lets a refusal beat a stray keyword', () => {
+  assert.equal(sponsorshipStance('We do not sponsor H-1B visas for interns.'), 'denies');
+  assert.equal(sponsorshipStance('Visa sponsorship is not available for this role.'), 'denies');
 });
