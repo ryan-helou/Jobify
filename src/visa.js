@@ -1,5 +1,12 @@
 import * as cheerio from 'cheerio';
-import { VISA_KEYWORDS, VISA_NEGATIONS } from './config.js';
+import { VISA_KEYWORDS, VISA_NEGATIONS, SPONSORSHIP_VERDICT } from './config.js';
+
+// The listings feeds state sponsorship explicitly for some jobs. Trust that when
+// present — it's curated, and it saves rendering the posting entirely.
+// Returns 'offers' | 'denies' | 'unknown'.
+export function feedSponsorshipVerdict(job) {
+  return SPONSORSHIP_VERDICT[job?.sponsorship] || 'unknown';
+}
 
 // Returns true only when the text explicitly offers sponsorship AND doesn't also
 // state it won't sponsor. A negation ("unable to provide sponsorship") wins,

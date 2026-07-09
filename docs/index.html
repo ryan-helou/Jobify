@@ -61,6 +61,7 @@
     tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
     td.title { white-space: normal; font-weight: 600; max-width: 340px; }
     td.company { white-space: normal; max-width: 200px; }
+    td.why { color: var(--muted); font-size: 13px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
     .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; }
     .badge.success { background: var(--success-bg); color: var(--success-fg); }
     .badge.warn { background: var(--warn-bg); color: var(--warn-fg); }
@@ -101,6 +102,7 @@
             <th data-sort="location">Location</th>
             <th data-sort="city">City</th>
             <th data-sort="source">Source</th>
+            <th data-sort="details">Why</th>
             <th data-sort="recordedAt">Date</th>
             <th>Link</th>
           </tr>
@@ -189,7 +191,7 @@
       const rows = currentRows();
       const tbody = $('tbody');
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="8"><div class="empty">No jobs match these filters yet.</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9"><div class="empty">No jobs match these filters yet.</div></td></tr>`;
       } else {
         tbody.innerHTML = rows.map((j) => {
           const m = STATUS_META[j.status] || { label: j.status, kind: 'muted' };
@@ -200,6 +202,7 @@
             <td>${esc(j.location)}</td>
             <td class="city">${esc(CITY_LABEL[j.city] || j.city || '')}</td>
             <td>${esc(j.source)}</td>
+            <td class="why" title="${esc(j.details || '')}">${esc(j.details || '—')}</td>
             <td>${esc(fmtDate(j.recordedAt))}</td>
             <td>${j.url ? `<a class="link" href="${esc(j.url)}" target="_blank" rel="noopener">Open ↗</a>` : ''}</td>
           </tr>`;
@@ -249,7 +252,7 @@
         render();
       } catch (err) {
         $('stats').innerHTML = '';
-        $('tbody').innerHTML = `<tr><td colspan="8"><div class="error">Could not load <code>applied_jobs.json</code> (${esc(err.message)}).<br>Open this page over http (GitHub Pages or <code>npm run dashboard</code>), not from the file system.</div></td></tr>`;
+        $('tbody').innerHTML = `<tr><td colspan="9"><div class="error">Could not load <code>applied_jobs.json</code> (${esc(err.message)}).<br>Open this page over http (GitHub Pages or <code>npm run dashboard</code>), not from the file system.</div></td></tr>`;
         $('updated').textContent = '';
       }
     }

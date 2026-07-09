@@ -4,24 +4,36 @@ Scrapes job boards for **Summer 2027** software internships / entry-level develo
 
 **Target cities** (priority order): Montreal → Toronto → San Francisco → New York.
 
+## Sources
+
+Each board is read from its **structured `listings.json` feed** where one exists, rather than by parsing the README markdown table. The feed carries authoritative `active`, `season`, `sponsorship`, and `locations` fields, so dead postings, off-season internships, and no-sponsorship US roles are filtered out before a browser ever opens.
+
+| Source | Feed | Provides |
+|---|---|---|
+| [vanshb03/Summer2027-Internships](https://github.com/vanshb03/Summer2027-Internships) | `listings.json` | Summer 2027 internships |
+| [SimplifyJobs/New-Grad-Positions](https://github.com/SimplifyJobs/New-Grad-Positions) | `listings.json` | Entry-level / new-grad roles — **the main source of Canadian jobs, including Montreal** |
+| [speedyapply/2027-SWE-College-Jobs](https://github.com/speedyapply/2027-SWE-College-Jobs) | README markdown | Additional internships |
+| Indeed | Playwright | Per-city search (opt-in, see limitations) |
+
 ## How it works
 
 Every scheduled run (GitHub Actions, 6× daily):
 
-1. **Scrape** — GitHub internship boards ([vanshb03/Summer2027-Internships](https://github.com/vanshb03/Summer2027-Internships), [speedyapply/2027-SWE-College-Jobs](https://github.com/speedyapply/2027-SWE-College-Jobs)) parsed with cheerio, plus Indeed per city (Playwright, opt-in — see below). Roles are filtered to genuine software/developer internships: a title must read as an internship/new-grad/co-op **and** carry a software signal (SWE, developer, full-stack, ML, etc.), while non-dev tracks (research scientist, GTM, hardware, sales, PM) are excluded.
-2. **Dedup** — anything already in `applied_jobs.json` is skipped. New jobs are sorted Montreal-first and capped at `MAX_APPLICATIONS_PER_RUN` (default 10) per run.
-3. **US visa filter** — SF/NYC postings must explicitly mention visa sponsorship / H-1B willingness. The posting page is **rendered with Playwright** (not just fetched) so JS-heavy boards like Work-at-a-Startup, Ashby, and Workday are read accurately; negation phrases ("unable to provide sponsorship") force a skip even if a keyword also appears.
-4. **Apply** — for postings on supported ATS platforms (**Greenhouse, Lever, Ashby**), Playwright fills the form:
+1. **Scrape** — all sources in parallel (see table above). Dead (`active: false`) and hidden postings are dropped immediately. Internship boards are filtered to the **Summer** season; the new-grad board is filtered to developer categories.
+2. **Filter to real dev roles** — a title must carry a software signal (SWE, developer, full-stack, ML…) and not match a non-dev track (research scientist, GTM, analyst, consultant, hardware, sales, PM). On internship boards the title must say intern/co-op; on the new-grad board — which is entry-level by construction — senior and levelled titles (`Senior`, `Staff`, `Software Developer 2`) are rejected instead.
+3. **Dedup** — against `applied_jobs.json` by canonical URL **and** by job identity (company + title + city, accent- and punctuation-insensitive), so the same posting listed on two boards under different links is never applied to twice. Survivors are sorted Montreal-first and capped at `MAX_APPLICATIONS_PER_RUN` (default 10).
+4. **US visa filter** — SF/NYC postings must explicitly offer sponsorship. The feed's curated `sponsorship` field decides it when definitive (`Offers Sponsorship` → proceed; `Does Not Offer Sponsorship` / `U.S. Citizenship is Required` → skip, no page load). When the feed says nothing, the posting is **rendered with Playwright** (not just fetched), so JS-heavy boards like Work-at-a-Startup, Ashby, and Workday are read accurately. Negation phrases ("unable to provide sponsorship") force a skip even if a sponsorship keyword also appears.
+5. **Apply** — for postings on supported ATS platforms (**Greenhouse, Lever, Ashby**), Playwright fills the form:
    - required fields it recognizes (name, email, phone, resume) are filled;
    - optional fields are filled only when confidently recognized (LinkedIn, GitHub, location, cover letter);
    - an **unrecognized required field aborts** the application — nothing is ever guessed;
    - resume PDF is attached to every application; the cover letter is attached/pasted when the form accepts one.
-5. **Flag** — postings on unsupported platforms (Workday, Taleo, Indeed-hosted apply behind login, custom portals) are sent to Slack as *manual review* with the link, and recorded so they're only surfaced once.
-6. **Persist + notify** — `applied_jobs.json` is committed back to the repo; Slack gets a message per application and a run summary (including the "0 jobs found" case).
+6. **Flag** — postings on unsupported platforms (Workday, Taleo, Indeed-hosted apply behind login, custom portals) are sent to Slack as *manual review* with the link, and recorded so they're only surfaced once. Already-closed postings are detected and recorded as `skipped_closed`.
+7. **Persist + notify** — `applied_jobs.json` is committed back to the repo; Slack gets a message per application and a run summary (including the "0 jobs found" case).
 
 ## Dashboard
 
-A zero-dependency web dashboard ([`docs/index.html`](docs/index.html)) shows every tracked job with per-status stat cards, search, and filters by status / city / source, sortable by any column.
+A zero-dependency web dashboard ([`docs/index.html`](docs/index.html)) shows every tracked job with per-status stat cards, search, filters by status / city / source, a "Why" column explaining every skip, and sorting on any column.
 
 - **Hosted (auto-updating):** enable GitHub Pages for the repo (Settings → Pages → Source: *GitHub Actions*). The [Deploy Dashboard workflow](.github/workflows/pages.yml) republishes it on every push that changes `applied_jobs.json`, so it refreshes after each run. Your URL will be `https://ryan-helou.github.io/Jobify/`.
 - **Locally:** `npm run dashboard`, then open <http://localhost:8080/docs/>.
@@ -66,7 +78,13 @@ DRY_RUN=false npm start
 
 Every status blocks re-processing on later runs. Delete a record from the JSON to let the bot retry that job.
 
+## Tests
+
+`npm test` runs the suite (`node --test`) covering role filtering, seniority/season/category rules, city priority, both parsers, sponsorship logic (including negations), and the dedup keys. The auto-apply workflow runs it before every scheduled run — the filter rules decide what gets applied to, so they never run unverified.
+
 ## Known limitations (honest MVP notes)
+
+- **Montreal roles are mostly on Workday.** Adding the new-grad board took Montreal coverage from 0 to ~5 active roles, but most (Expedia, Zebra, Manulife) post on Workday, which requires account creation and is not auto-applied — they arrive in Slack as manual review. The Greenhouse/Lever/Ashby ones do auto-apply. Realistically the bot applies to more US roles than Canadian ones; that's a property of where Canadian employers post, not of the filter.
 
 - **Indeed bot protection**: Indeed sits behind Cloudflare, which reliably blocks datacenter IPs like GitHub Actions runners, so Indeed scraping is **off by default** (`ENABLE_INDEED=false`). The GitHub boards are the productive source. Set `ENABLE_INDEED=true` to attempt it — best on a residential IP or with a scraping proxy. Blocked cities are logged and skipped gracefully.
 - **Indeed-hosted "Easy Apply"** requires an Indeed login and triggers CAPTCHAs under automation; those jobs are routed to Slack for manual review rather than risking a garbage submission. Indeed jobs with an external "apply on company site" link *are* auto-applied when the site is Greenhouse/Lever/Ashby.
