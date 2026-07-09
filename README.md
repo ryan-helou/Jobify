@@ -40,7 +40,7 @@ A zero-dependency web dashboard ([`docs/index.html`](docs/index.html)) shows eve
 
 ## Setup
 
-1. **Add your documents** to `assets/`: `resume.pdf` (required), and edit `cover_letter.txt` / add `cover_letter.pdf`.
+1. **Add your documents** to `assets/`: `resume.pdf` (required), and edit `cover_letter.txt` / add `cover_letter.pdf`. The runner refuses to start unless the résumé is a real PDF of plausible size — see [assets/README.md](assets/README.md).
 2. **Create a Slack incoming webhook** (Slack → Apps → Incoming Webhooks) for the channel you want notifications in.
 3. **Add GitHub Actions secrets** (repo → Settings → Secrets and variables → Actions):
    - `APPLICANT_NAME`, `APPLICANT_EMAIL`, `APPLICANT_PHONE` — required

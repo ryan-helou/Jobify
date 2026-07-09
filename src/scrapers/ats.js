@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio';
 import { ATS_CONCURRENCY } from '../config.js';
 import { isDevRole, matchCity } from './github.js';
 import { classifyPosting } from '../term.js';
+import { mapLimit, getJson } from './http.js';
 
 // Enumerates company job boards directly through the public ATS APIs.
 //
@@ -97,30 +98,6 @@ export function harvestBoardTokens(postings) {
   return tokens;
 }
 
-// Bounded-concurrency map. These are public APIs and we're hitting ~1500 of them
-// per run, so we stay polite and never retry a failure.
-async function mapLimit(items, limit, fn) {
-  const out = [];
-  let next = 0;
-  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    for (let i = next++; i < items.length; i = next++) {
-      try {
-        out.push(await fn(items[i]));
-      } catch {
-        out.push(null); // dead board, 404, rate limit — skip it
-      }
-    }
-  });
-  await Promise.all(workers);
-  return out;
-}
-
-async function getJson(url) {
-  const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
-
 // Greenhouse `content` is HTML with escaped entities; cheerio decodes them, then
 // we drop the tags so keyword matching sees prose.
 function htmlToText(html) {
@@ -133,7 +110,7 @@ function htmlToText(html) {
     .trim();
 }
 
-function candidate(company, title, location, url, ats, description) {
+function candidate(company, title, location, url, ats, description, compensation = '') {
   if (!url || !title) return null;
   if (!isDevRole(title, 'internship')) return null;
   const city = matchCity(location);
@@ -149,6 +126,9 @@ function candidate(company, title, location, url, ats, description) {
     source: `ats:${ats}`,
     sponsorship: null, // company boards don't carry a curated field
     description: description || '',
+    // Ashby states pay in a structured field; the others bury it in the prose,
+    // where the scorer's pay regex has to find it.
+    compensation: compensation || '',
     term: classifyPosting(title, description),
   };
 }
@@ -198,7 +178,8 @@ async function scrapeAshby(token, knownCompany) {
       const locations = [j.location, ...(j.secondaryLocations || []).map((s) => s?.location || s)]
         .filter(Boolean)
         .join(' ; ');
-      return candidate(knownCompany || token, j.title, locations, j.jobUrl || j.applyUrl, 'ashby', j.descriptionPlain);
+      const pay = j.compensation?.compensationTierSummary || j.compensation?.scrapeableCompensationSalarySummary || '';
+      return candidate(knownCompany || token, j.title, locations, j.jobUrl || j.applyUrl, 'ashby', j.descriptionPlain, pay);
     })
     .filter(Boolean);
 }
