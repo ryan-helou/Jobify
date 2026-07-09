@@ -251,8 +251,16 @@ async function main() {
         continue;
       }
 
-      applyAttempts++;
       const result = await applyToJob(context, job);
+
+      // Counted *after* the attempt, and only when a form was actually submitted.
+      // Incrementing before the call meant an application that aborted on an
+      // unknown required field still spent an application slot: a run of nine
+      // essay-question aborts ended the run having submitted once, leaving 200
+      // appliable postings untouched. This is the same conflation the comment above
+      // describes, surviving one level deeper — `examined` already bounds the work.
+      if (result.status === 'applied' || result.status === 'submitted_unconfirmed') applyAttempts++;
+
       const resumeNote = result.resume ? ` [résumé: ${result.resumeReason}]` : '';
       console.log(`  → ${result.status}: ${result.details}${resumeNote}`);
       // Dry runs never touch the ledger — otherwise a test run would block real applications.
