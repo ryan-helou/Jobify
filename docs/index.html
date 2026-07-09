@@ -59,8 +59,8 @@
     th.sort-desc::after { content: " ▼"; color: var(--accent); }
     tbody tr:last-child td { border-bottom: none; }
     tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
-    td.title { white-space: normal; font-weight: 600; max-width: 340px; }
-    td.company { white-space: normal; max-width: 200px; }
+    td.title { white-space: normal; font-weight: 600; max-width: 230px; min-width: 150px; }
+    td.company { white-space: normal; max-width: 150px; }
     td.why { color: var(--muted); font-size: 13px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
     .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; }
     .badge.success { background: var(--success-bg); color: var(--success-fg); }
@@ -68,6 +68,16 @@
     .badge.info { background: var(--info-bg); color: var(--info-fg); }
     .badge.muted { background: var(--muted-bg); color: var(--muted-fg); }
     .city { text-transform: capitalize; }
+    /* Three score columns were added to an already-wide table; keep them compact
+       so Why/Date/Link stay reachable without horizontal scrolling. */
+    th[data-sort=compatibility], th[data-sort=quality], th[data-sort=interviewOdds], td.score { padding-left: 8px; padding-right: 8px; }
+    td.score { font-variant-numeric: tabular-nums; cursor: help; }
+    td.score.none { color: var(--muted); }
+    .meter { display: inline-block; width: 32px; height: 6px; border-radius: 999px; background: var(--muted-bg); margin-right: 7px; vertical-align: middle; overflow: hidden; }
+    .meter > i { display: block; height: 100%; border-radius: 999px; background: var(--muted-fg); }
+    .meter.hi > i { background: var(--success-fg); }
+    .meter.mid > i { background: var(--warn-fg); }
+    th .hint { text-transform: none; letter-spacing: 0; font-weight: 400; }
     a.link { color: var(--accent); text-decoration: none; font-weight: 600; }
     a.link:hover { text-decoration: underline; }
     .empty, .error { text-align: center; padding: 48px 20px; color: var(--muted); }
@@ -101,6 +111,9 @@
             <th data-sort="company">Company</th>
             <th data-sort="location">Location</th>
             <th data-sort="city">City</th>
+            <th data-sort="compatibility" title="How well this posting matches the skills in assets/profile.json, plus city, role type and eligibility. 0–100.">Fit</th>
+            <th data-sort="quality" title="How good the internship looks: pay, return offer, mentorship, real production work, company tier. 0–100.">Quality</th>
+            <th data-sort="interviewOdds" title="Heuristic estimate of the chance this application leads to a first-round interview. NOT a calibrated probability — no interview outcomes are recorded anywhere, so nothing was fitted to data. Use it to rank postings, not to predict them.">Odds <span class="hint">*</span></th>
             <th data-sort="source">Source</th>
             <th data-sort="details">Why</th>
             <th data-sort="recordedAt">Date</th>
@@ -111,6 +124,13 @@
       </table>
     </div>
     <div class="muted-note" id="count"></div>
+    <div class="muted-note">
+      <strong>*</strong> <em>Odds</em> is a heuristic estimate, not a calibrated probability. No interview outcomes
+      are recorded anywhere in this project, so nothing has been fitted to real data — it is a base rate adjusted by
+      fit, company prestige and how early the posting was found. Use it to rank two postings against each other, not
+      to predict what will happen. <em>Fit</em> and <em>Quality</em> are computed from the posting text against
+      <code>assets/profile.json</code>; hover any row to see the signals behind its scores.
+    </div>
   </div>
 
   <script>
@@ -122,8 +142,17 @@
       skipped_no_sponsorship: { label: 'Skipped — no sponsorship', kind: 'muted' },
       skipped_closed: { label: 'Skipped — closed', kind: 'muted' },
       skipped_wrong_term: { label: 'Skipped — wrong hiring term', kind: 'muted' },
+      skipped_low_compatibility: { label: 'Skipped — low fit', kind: 'muted' },
     };
     const CITY_LABEL = { montreal: 'Montreal', toronto: 'Toronto', sf: 'San Francisco', nyc: 'New York' };
+    const COLSPAN = 12;
+
+    // Bar thresholds differ per score because the scales do: 70/100 is a good
+    // fit, but 20% is an excellent chance at an interview.
+    const SCORE_SCALES = {
+      score: { max: 100, hi: 70, mid: 45, suffix: '' },
+      odds: { max: 40, hi: 20, mid: 8, suffix: '%' },
+    };
 
     let jobs = [];
     let sortKey = 'recordedAt';
@@ -139,16 +168,49 @@
       return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
     }
 
+    // A score cell: a small meter plus the number. Records written before scoring
+    // existed have no score at all, and must read as "unknown", never as zero.
+    function scoreCell(v, scale) {
+      if (typeof v !== 'number' || !isFinite(v)) return `<td class="score none">—</td>`;
+      const s = SCORE_SCALES[scale];
+      const cls = v >= s.hi ? 'hi' : v >= s.mid ? 'mid' : 'lo';
+      const width = Math.max(3, Math.min(100, (v / s.max) * 100));
+      return `<td class="score"><span class="meter ${cls}"><i style="width:${width}%"></i></span>${v}${s.suffix}</td>`;
+    }
+
+    // Why a row scored the way it did — shown on hover over its score cells.
+    function scoreTooltip(j) {
+      if (typeof j.compatibility !== 'number') return 'Scored before this run recorded score details.';
+      const s = j.scoreSignals || {};
+      const bits = [];
+      if (s.matchedSkills?.length) bits.push(`Your skills matched: ${s.matchedSkills.join(', ')}`);
+      if (s.requiredSkills?.length) bits.push(`Posting asks for: ${s.requiredSkills.join(', ')}`);
+      if (s.family) bits.push(`Role type: ${s.family}`);
+      if (s.pay) bits.push(`Pay: ${s.pay}`);
+      if (s.tier && s.tier !== 'unknown') bits.push(`Company: ${s.tier} tier`);
+      if (s.flags?.length) bits.push(`Flags: ${s.flags.join(', ')}`);
+      if (j.scoreConfidence) bits.push(`Confidence: ${j.scoreConfidence}`);
+      return bits.join('\n') || 'No scoring signals recorded.';
+    }
+
+    const mean = (ns) => (ns.length ? Math.round(ns.reduce((a, b) => a + b, 0) / ns.length) : null);
+
     function renderStats() {
       const counts = {};
       for (const j of jobs) counts[j.status] = (counts[j.status] || 0) + 1;
       const applied = (counts.applied || 0) + (counts.submitted_unconfirmed || 0);
-      const skipped = (counts.skipped_no_sponsorship || 0) + (counts.skipped_unknown_required || 0) + (counts.skipped_closed || 0);
+      const skipped =
+        (counts.skipped_no_sponsorship || 0) +
+        (counts.skipped_unknown_required || 0) +
+        (counts.skipped_closed || 0) +
+        (counts.skipped_low_compatibility || 0);
+      const avgFit = mean(jobs.map((j) => j.compatibility).filter((v) => typeof v === 'number'));
       const cards = [
         { n: jobs.length, l: 'Total tracked' },
         { n: applied, l: 'Applied' },
         { n: counts.manual_review || 0, l: 'Manual review' },
         { n: skipped, l: 'Skipped' },
+        { n: avgFit == null ? '—' : avgFit, l: 'Avg fit' },
       ];
       $('stats').innerHTML = cards.map((c) => `<div class="stat"><div class="n">${c.n}</div><div class="l">${c.l}</div></div>`).join('');
     }
@@ -182,8 +244,14 @@
         return true;
       });
       rows.sort((a, b) => {
-        const av = a[sortKey] || '', bv = b[sortKey] || '';
-        return (av < bv ? -1 : av > bv ? 1 : 0) * sortDir;
+        const av = a[sortKey], bv = b[sortKey];
+        // Unscored records sort last in both directions rather than pretending to
+        // be zero — the old `|| ''` coerced a real score of 0 into a string and
+        // compared it against numbers.
+        const aMissing = av == null || av === '', bMissing = bv == null || bv === '';
+        if (aMissing || bMissing) return aMissing && bMissing ? 0 : aMissing ? 1 : -1;
+        if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * sortDir;
+        return String(av).localeCompare(String(bv)) * sortDir;
       });
       return rows;
     }
@@ -192,16 +260,20 @@
       const rows = currentRows();
       const tbody = $('tbody');
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="9"><div class="empty">No jobs match these filters yet.</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${COLSPAN}"><div class="empty">No jobs match these filters yet.</div></td></tr>`;
       } else {
         tbody.innerHTML = rows.map((j) => {
           const m = STATUS_META[j.status] || { label: j.status, kind: 'muted' };
-          return `<tr>
+          const why = esc(scoreTooltip(j));
+          return `<tr title="${why}">
             <td><span class="badge ${m.kind}">${esc(m.label)}</span></td>
             <td class="title">${esc(j.title)}</td>
             <td class="company">${esc(j.company)}</td>
             <td>${esc(j.location)}</td>
             <td class="city">${esc(CITY_LABEL[j.city] || j.city || '')}</td>
+            ${scoreCell(j.compatibility, 'score')}
+            ${scoreCell(j.quality, 'score')}
+            ${scoreCell(j.interviewOdds, 'odds')}
             <td>${esc(j.source)}</td>
             <td class="why" title="${esc(j.details || '')}">${esc(j.details || '—')}</td>
             <td>${esc(fmtDate(j.recordedAt))}</td>
@@ -221,8 +293,10 @@
       document.querySelectorAll('th[data-sort]').forEach((th) => {
         th.addEventListener('click', () => {
           const k = th.dataset.sort;
+          // Scores and dates are most useful highest-first on the first click.
+          const DESC_FIRST = ['recordedAt', 'compatibility', 'quality', 'interviewOdds'];
           if (sortKey === k) sortDir *= -1;
-          else { sortKey = k; sortDir = k === 'recordedAt' ? -1 : 1; }
+          else { sortKey = k; sortDir = DESC_FIRST.includes(k) ? -1 : 1; }
           render();
         });
       });
@@ -253,7 +327,7 @@
         render();
       } catch (err) {
         $('stats').innerHTML = '';
-        $('tbody').innerHTML = `<tr><td colspan="9"><div class="error">Could not load <code>applied_jobs.json</code> (${esc(err.message)}).<br>Open this page over http (GitHub Pages or <code>npm run dashboard</code>), not from the file system.</div></td></tr>`;
+        $('tbody').innerHTML = `<tr><td colspan="${COLSPAN}"><div class="error">Could not load <code>applied_jobs.json</code> (${esc(err.message)}).<br>Open this page over http (GitHub Pages or <code>npm run dashboard</code>), not from the file system.</div></td></tr>`;
         $('updated').textContent = '';
       }
     }
