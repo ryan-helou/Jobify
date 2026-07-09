@@ -503,6 +503,12 @@ export const EDUCATION = {
 // guessing. Each entry is a legal statement made on the applicant's behalf.
 export const WORK_AUTH = profileFile().workAuthorization || {};
 
+// Where the applicant actually lives. Forms asking "current location" used to be
+// filled with the *posting's* location, which told every employer the applicant
+// already lived in their city. Empty means we don't know, and a required location
+// field aborts rather than inventing a residence.
+export const APPLICANT_LOCATION = profileFile().location || '';
+
 // Postings below this compatibility score are skipped without applying. Off by
 // default (0) — turn it up once you've seen how the scores land on real jobs.
 export const MIN_COMPATIBILITY = parseInt(process.env.MIN_COMPATIBILITY || '0', 10);
