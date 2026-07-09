@@ -1,12 +1,14 @@
-# Jobify
+# 🎯 Jobify
 
 *A bot that hunts for Summer 2027 software internships across four cities, scores each posting, and auto-applies to the ones it can fill.*
+
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white) ![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=flat-square&logo=playwright&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white) ![Slack](https://img.shields.io/badge/Slack-4A154B?style=flat-square&logo=slack&logoColor=white)
 
 Jobify looks for internship and entry-level developer roles — intern, co-op, and new-grad — in Montreal, Toronto, New York, and San Francisco, in that priority order. The order is load-bearing: it sorts the apply queue and it resolves multi-city postings, so a "New York / SF" role is treated as New York, and a mediocre Montreal role is preferred over a perfect SF one because SF costs a visa and a move. A GitHub Action runs it six times a day on Eastern hours and commits `applied_jobs.json`, the dedup ledger, back to the repo so nothing is ever touched twice.
 
 It pulls postings from four kinds of source. Curated GitHub boards (the vanshb03 and speedyapply 2027 repos) supply jobs directly; several other boards — including SimplifyJobs and three Canadian repos — are read only to mine the company ATS board tokens hidden in their apply URLs. Those tokens are then enumerated against the public, unauthenticated JSON APIs of Greenhouse, Lever, and Ashby, which surfaces roles days before a volunteer copies them into a README. A separate scraper reads Workday's public "CxS" API — worth the trouble because Workday is 28% of Canadian postings and 22% of US ones, more than Greenhouse, Ashby, and Lever combined. Indeed is supported but off by default, since it sits behind Cloudflare and is almost always blocked from CI.
 
-## Scoring
+## 📊 Scoring
 
 Every posting gets three numbers, computed in `src/score.js` from an editable lexicon of skills, company tiers, and pay curves in `src/config.js`.
 
@@ -16,7 +18,7 @@ Every posting gets three numbers, computed in `src/score.js` from an editable le
 
 The apply queue sorts by city first, then by compatibility. All three scores ride along into the ledger and the dashboard, and into a one-line Slack explanation of the evidence behind them.
 
-## Applying
+## 📮 Applying
 
 Filling a form only happens on Greenhouse, Lever, and Ashby, whose public apply pages the generic Playwright filler understands. It fills the fields it recognizes — name, email, phone, résumé, a few links — and refuses to guess: an unrecognized *required* field aborts that one application rather than submitting something wrong. Everything else, Workday included, is routed to Slack for a human to finish by hand; Workday is scraped and surfaced but never auto-applied to. US postings are skipped unless they explicitly offer sponsorship.
 
