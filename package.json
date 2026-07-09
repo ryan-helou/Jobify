@@ -11,6 +11,7 @@
     "start": "node src/index.js",
     "dry-run": "DRY_RUN=true node src/index.js",
     "dashboard": "node scripts/serve-dashboard.js",
+    "dashboard:hosted": "node scripts/serve-hosted.js",
     "explain-resume": "node scripts/explain-resume.js",
     "test": "node --test test/"
   },
