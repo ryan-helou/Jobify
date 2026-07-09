@@ -34,6 +34,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Filter/dedup rules decide what we apply to — never run with them broken.
+      - name: Run tests
+        run: npm test
+
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 

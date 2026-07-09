@@ -37,7 +37,7 @@ export const DEV_INCLUDE =
 // Explicitly non-developer roles that can slip past DEV_INCLUDE (e.g. "GTM Engineer",
 // "Research Scientist", hardware/design/sales tracks). Skipped even if they say "engineer".
 export const NON_DEV_EXCLUDE =
-  /\b(research scientist|quantitative research|quant research|go[\s-]?to[\s-]?market|gtm|sales|marketing|recruit|talent|financial analyst|business analyst|data analyst|product manager|program manager|project manager|ux|ui\/ux|graphic|content|community|mechanical engineer|electrical engineer|hardware engineer|civil engineer|chemical engineer|biomedical|manufacturing|supply chain|operations analyst|accounting|legal|hr\b)\b/i;
+  /\b(research scientist|quantitative research|quant research|go[\s-]?to[\s-]?market|gtm|sales|marketing|recruit|talent|analyst|strategist|consultant|field application|solutions? architect|technical writer|product manager|program manager|project manager|ux|ui\/ux|graphic|content|community|mechanical engineer|electrical engineer|hardware engineer|civil engineer|chemical engineer|biomedical|manufacturing|supply chain|accounting|legal|hr)\b/i;
 
 // US postings must explicitly mention sponsorship, otherwise skipped.
 export const VISA_KEYWORDS = [
@@ -85,17 +85,58 @@ export const VISA_NEGATIONS = [
   'do not require sponsorship',
 ];
 
-// GitHub markdown job boards (raw README URLs).
+// GitHub job boards. Prefer each repo's structured listings.json over its README:
+// the JSON carries authoritative `active`, `season`, `sponsorship` and a proper
+// locations array, so we filter precisely and skip dead postings before opening
+// a browser. Only speedyapply lacks a JSON feed, so it stays on markdown parsing.
+//
+//   kind: 'internship' → title must say intern/co-op, and season must be Summer
+//   kind: 'newgrad'    → the whole board is entry-level, so no intern token is
+//                        required; instead reject senior/levelled titles
 export const GITHUB_SOURCES = [
   {
     name: 'vanshb03/Summer2027-Internships',
-    url: 'https://raw.githubusercontent.com/vanshb03/Summer2027-Internships/main/README.md',
+    type: 'listings',
+    kind: 'internship',
+    url: 'https://raw.githubusercontent.com/vanshb03/Summer2027-Internships/dev/.github/scripts/listings.json',
+  },
+  {
+    name: 'SimplifyJobs/New-Grad-Positions',
+    type: 'listings',
+    kind: 'newgrad',
+    url: 'https://raw.githubusercontent.com/SimplifyJobs/New-Grad-Positions/dev/.github/scripts/listings.json',
   },
   {
     name: 'speedyapply/2027-SWE-College-Jobs',
+    type: 'markdown',
+    kind: 'internship',
     url: 'https://raw.githubusercontent.com/speedyapply/2027-SWE-College-Jobs/main/README.md',
   },
 ];
+
+// Internship boards carry off-cycle seasons too — we only want Summer.
+export const WANTED_SEASON = /summer/i;
+
+// New-grad boards mix in levelled and senior roles ("Software Developer 2",
+// "Senior Model Validation Analyst"). Those are not entry-level.
+export const SENIOR_EXCLUDE =
+  /\b(senior|sr\.?|staff|principal|lead|manager|director|head of|vp|vice president|architect|distinguished|fellow)\b|\b(engineer|developer|scientist)\s*(ii|iii|iv|v|[2-9])\b/i;
+
+// Categories on the new-grad board that count as developer work.
+export const DEV_CATEGORIES = new Set([
+  'Software Engineering',
+  'Software',
+  'AI/ML/Data',
+  'Data Science, AI & Machine Learning',
+]);
+
+// Authoritative sponsorship values used by the SimplifyJobs-style feeds.
+// 'Other' (and anything unknown) means "not stated" → fall back to reading the page.
+export const SPONSORSHIP_VERDICT = {
+  'Offers Sponsorship': 'offers',
+  'Does Not Offer Sponsorship': 'denies',
+  'U.S. Citizenship is Required': 'denies',
+};
 
 export const APPLICANT = {
   name: process.env.APPLICANT_NAME || '',
