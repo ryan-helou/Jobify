@@ -9,6 +9,7 @@ import {
   SENIOR_EXCLUDE,
   DEV_CATEGORIES,
   WANTED_SEASON,
+  SPONSORSHIP_MARKERS,
 } from '../config.js';
 import { termForSource } from '../term.js';
 
@@ -45,9 +46,34 @@ function cellText(html) {
   return cheerio.load(html)('body').text().replace(/\s+/g, ' ').trim();
 }
 
+// Badge images and icons are links too, and they are never the apply URL.
+const BADGE_ASSET = /img\.shields\.io|badgen\.net|\.(?:png|svg|gif|jpe?g)(?:$|\?)/i;
+
+// Boards write the apply link three ways, and only the first is HTML:
+//
+//   <a href="https://…">Apply</a>          speedyapply, vanshb03
+//   [apply](https://…)                     sndsh404
+//   [![Apply](badge.svg)](https://…)       negarprh — an image *inside* a link
+//
+// Cheerio sees no anchor in the last two, so a naive `a[href]` lookup returns ''
+// and every row is silently dropped at the caller's `!url` guard. Falling back to
+// markdown link syntax fixes that; the badge filter is what keeps the third form
+// from yielding the shields.io image URL instead of the job.
 function cellLink(html) {
-  const $ = cheerio.load(html);
-  return $('a[href]').first().attr('href') || '';
+  const anchor = cheerio.load(html)('a[href]').first().attr('href');
+  if (anchor) return anchor;
+
+  const links = [...String(html).matchAll(/\]\(\s*(https?:\/\/[^\s)]+)\s*\)/g)]
+    .map((m) => m[1])
+    .filter((url) => !BADGE_ASSET.test(url));
+  // `[![alt](badge)](real)` nests the real link outermost, so it matches last.
+  return links.at(-1) || '';
+}
+
+// Markdown boards have no sponsorship column, but several flag it with an emoji in
+// the role title. Reading it saves rendering the posting to reach the same verdict.
+function markerSponsorship(title) {
+  return SPONSORSHIP_MARKERS.find((m) => m.re.test(title))?.value || null;
 }
 
 // ---- structured listings.json feeds -------------------------------------
@@ -133,7 +159,7 @@ export function parseBoard(markdown, source) {
       country: city.country,
       url,
       source: sourceName,
-      sponsorship: null, // markdown tables don't carry it
+      sponsorship: markerSponsorship(title),
       term: termForSource(typeof source === 'string' ? null : source, title),
     });
   }
@@ -157,7 +183,10 @@ function harvestMarkdownUrls(markdown) {
 
 async function scrapeSource(source) {
   const res = await fetch(source.url, { signal: AbortSignal.timeout(30000) });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    await res.body?.cancel().catch(() => {}); // an unread body wedges undici's parser
+    throw new Error(`HTTP ${res.status}`);
+  }
 
   let jobs;
   let postings;

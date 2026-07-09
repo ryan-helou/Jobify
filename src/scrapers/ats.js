@@ -1,8 +1,7 @@
-import * as cheerio from 'cheerio';
 import { ATS_CONCURRENCY } from '../config.js';
 import { isDevRole, matchCity } from './github.js';
 import { classifyPosting } from '../term.js';
-import { mapLimit, getJson } from './http.js';
+import { mapLimit, getJson, htmlToText } from './http.js';
 
 // Enumerates company job boards directly through the public ATS APIs.
 //
@@ -96,18 +95,6 @@ export function harvestBoardTokens(postings) {
     if (!tokens[name].get(token)) tokens[name].set(token, company);
   }
   return tokens;
-}
-
-// Greenhouse `content` is HTML with escaped entities; cheerio decodes them, then
-// we drop the tags so keyword matching sees prose.
-function htmlToText(html) {
-  if (!html) return '';
-  return cheerio
-    .load(String(html))
-    .text()
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
 }
 
 function candidate(company, title, location, url, ats, description, compensation = '') {
