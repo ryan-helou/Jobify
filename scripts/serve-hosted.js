@@ -4,26 +4,30 @@
 // else. A path that is not in ROUTES cannot be reached, so no résumé, no .env, no
 // src/, no .git, regardless of what ends up in the deployed image.
 //
+// THIS SITE IS UNAUTHENTICATED, by explicit choice. Anyone who reaches the hostname
+// reads the full application history, and /applied_jobs.json is a public JSON feed of
+// it. The hostname is not a secret: Railway's TLS certificate publishes it to
+// Certificate Transparency logs the moment a domain is attached. The noindex header
+// and robots.txt below keep compliant search engines out; they stop nothing else.
+// Restore the gate by putting basic auth back in front of the ROUTES lookup.
+//
 // The ledger is pulled from the private repo on demand rather than baked into the
 // image: applied_jobs.json is written by the Actions job and committed back, so a
 // deployed copy is frozen at build time and would never show a new application.
 //
 // Required env (the process refuses to start without them — see requireEnv):
-//   DASHBOARD_PASSWORD  gate for the whole site
-//   GITHUB_TOKEN        fine-grained PAT, Contents: Read on this repo only
-//   GITHUB_REPO         owner/name
+//   GITHUB_TOKEN  fine-grained PAT, Contents: Read on this repo only
+//   GITHUB_REPO   owner/name
 import http from 'node:http';
 import fs from 'node:fs';
-import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = parseInt(process.env.PORT || '8080', 10);
-const REALM = 'Jobify';
 
-// Fail closed. An unset password on a public URL is not "no auth", it is a leak of
-// every company this repo has applied to — the exposure pages.yml refuses.
+// A missing token would leave the page loading forever against a 401 from GitHub, so
+// die at boot with a readable reason rather than serve a permanently broken site.
 function requireEnv(name) {
   const v = process.env[name];
   if (!v) {
@@ -33,29 +37,10 @@ function requireEnv(name) {
   return v;
 }
 
-const PASSWORD = requireEnv('DASHBOARD_PASSWORD');
 const TOKEN = requireEnv('GITHUB_TOKEN');
 const REPO = requireEnv('GITHUB_REPO');
-const USER = process.env.DASHBOARD_USER || 'jobify';
 
 const INDEX_HTML = fs.readFileSync(path.join(ROOT, 'docs', 'index.html'));
-
-// Compare digests, not the secrets themselves: timingSafeEqual throws on a length
-// mismatch, which would otherwise turn "wrong length" into a fast rejection and leak
-// the password's length.
-const digest = (s) => crypto.createHash('sha256').update(s).digest();
-function secretsMatch(a, b) {
-  return crypto.timingSafeEqual(digest(a), digest(b));
-}
-
-function authorized(req) {
-  const header = req.headers.authorization || '';
-  if (!header.startsWith('Basic ')) return false;
-  const decoded = Buffer.from(header.slice(6), 'base64').toString('utf8');
-  const sep = decoded.indexOf(':');
-  if (sep === -1) return false;
-  return secretsMatch(decoded.slice(0, sep), USER) & secretsMatch(decoded.slice(sep + 1), PASSWORD);
-}
 
 // A GitHub blip should not blank the dashboard, and a page reload should not cost a
 // round trip to the API. Serve from cache for TTL, and fall back to a stale copy for
@@ -81,11 +66,19 @@ async function fetchLedger() {
   return body;
 }
 
+// Keeps compliant crawlers from indexing an unauthenticated page. Applied to every
+// response, since /applied_jobs.json is as sensitive as the page that renders it.
+const NOINDEX = 'noindex, nofollow, noarchive';
+
 const ROUTES = {
   // Served at "/", so the page's own `./applied_jobs.json` fetch lands on the route below.
   '/': (_req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': NOINDEX });
     res.end(INDEX_HTML);
+  },
+  '/robots.txt': (_req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('User-agent: *\nDisallow: /\n');
   },
   '/applied_jobs.json': async (_req, res) => {
     let body;
@@ -102,7 +95,11 @@ const ROUTES = {
     }
     // private + no-store: this is a log of a live job search. It must not sit in a
     // shared cache or a proxy between Railway and the browser.
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'private, no-store' });
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'private, no-store',
+      'X-Robots-Tag': NOINDEX,
+    });
     res.end(body);
   },
 };
@@ -116,15 +113,6 @@ http
     // before the platform will route traffic to a new deploy.
     if (route === '/healthz') {
       res.writeHead(200, { 'Content-Type': 'text/plain' }).end('ok');
-      return;
-    }
-
-    if (!authorized(req)) {
-      res.writeHead(401, {
-        'WWW-Authenticate': `Basic realm="${REALM}", charset="UTF-8"`,
-        'Content-Type': 'text/plain; charset=utf-8',
-      });
-      res.end('Authentication required.');
       return;
     }
 
@@ -144,5 +132,5 @@ http
   })
   // 0.0.0.0, not the default: Railway routes to the container from outside it.
   .listen(PORT, '0.0.0.0', () => {
-    console.log(`Jobify dashboard on :${PORT} — ledger from ${REPO}, basic auth as "${USER}"`);
+    console.log(`Jobify dashboard on :${PORT} — ledger from ${REPO}, PUBLIC (no authentication)`);
   });
