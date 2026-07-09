@@ -18,6 +18,22 @@ export function canonicalKey(url) {
   }
 }
 
+// The same posting appears on several boards under different URLs (a Greenhouse
+// link on one, the company careers page on another). Company + title + city
+// identifies the underlying job so we never apply to it twice.
+export function identityKey(job) {
+  // Strip accents and all punctuation/whitespace so boards that write the same
+  // employer differently ("M-Three" / "mthree", "Ether.fi" / "etherfi",
+  // "Naïve" / "Naive") still collapse to one identity.
+  const norm = (s) =>
+    (s || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '');
+  return `${norm(job.company)}|${norm(job.title)}|${norm(job.city)}`;
+}
+
 export function loadTracker() {
   let records = [];
   try {
@@ -27,17 +43,23 @@ export function loadTracker() {
     records = [];
   }
   const keys = new Set(records.map((r) => r.key));
+  const identities = new Set(records.map((r) => r.identity || identityKey(r)));
   return {
     records,
     has(url) {
       return keys.has(canonicalKey(url));
     },
+    hasIdentity(identity) {
+      return identities.has(identity);
+    },
     add(job, status, details = '') {
       const key = canonicalKey(job.url);
       if (keys.has(key)) return;
       keys.add(key);
+      identities.add(identityKey(job));
       records.push({
         key,
+        identity: identityKey(job),
         url: job.url,
         title: job.title,
         company: job.company,

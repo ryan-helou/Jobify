@@ -6,11 +6,11 @@ import {
   MAX_APPLICATIONS_PER_RUN,
   validateConfig,
 } from './config.js';
-import { loadTracker } from './tracker.js';
+import { loadTracker, identityKey, canonicalKey } from './tracker.js';
 import { scrapeGithubBoards } from './scrapers/github.js';
 import { scrapeIndeed, fetchIndeedJobDetails } from './scrapers/indeed.js';
 import { applyToJob, supportedAts } from './apply/index.js';
-import { mentionsSponsorship, fetchPostingText } from './visa.js';
+import { mentionsSponsorship, fetchPostingText, feedSponsorshipVerdict } from './visa.js';
 import { slack, notifyApplied, notifySummary } from './notify.js';
 
 const CITY_PRIORITY = Object.fromEntries(CITIES.map((c, i) => [c.key, i]));
@@ -46,12 +46,18 @@ async function main() {
     ]);
     if (!ENABLE_INDEED) console.log('Indeed scraping disabled (set ENABLE_INDEED=true to attempt it).');
 
-    // 2. Dedup against the ledger and within this run.
-    const seen = new Set();
+    // 2. Dedup against the ledger and within this run. The same posting shows up
+    //    on multiple boards under different URLs, so we also key on identity
+    //    (company + title + city) to avoid applying twice.
+    const seenUrls = new Set();
+    const seenIdentities = new Set();
     const fresh = [];
     for (const job of [...githubJobs, ...indeedJobs]) {
-      if (tracker.has(job.url) || seen.has(job.url)) continue;
-      seen.add(job.url);
+      const identity = identityKey(job);
+      if (tracker.has(job.url) || tracker.hasIdentity(identity)) continue;
+      if (seenUrls.has(canonicalKey(job.url)) || seenIdentities.has(identity)) continue;
+      seenUrls.add(canonicalKey(job.url));
+      seenIdentities.add(identity);
       fresh.push(job);
     }
     fresh.sort((a, b) => CITY_PRIORITY[a.city] - CITY_PRIORITY[b.city]); // Montreal first
@@ -80,12 +86,22 @@ async function main() {
         if (details.externalApplyUrl) job.applyUrl = details.externalApplyUrl;
       }
 
-      // US visa filter: posting must explicitly mention sponsorship.
+      // US visa filter: posting must explicitly offer sponsorship.
+      // The feed's curated `sponsorship` field is authoritative when it says
+      // anything definite, which saves rendering the page at all.
       if (job.country === 'US') {
-        if (!description) description = await fetchPostingText(context, job.applyUrl || job.url);
-        if (!mentionsSponsorship(description)) {
-          console.log('  → skipped: US posting with no explicit visa sponsorship mention');
-          if (!DRY_RUN) tracker.add(job, 'skipped_no_sponsorship');
+        const verdict = feedSponsorshipVerdict(job);
+        let sponsors = verdict === 'offers';
+
+        if (verdict === 'unknown') {
+          if (!description) description = await fetchPostingText(context, job.applyUrl || job.url);
+          sponsors = mentionsSponsorship(description);
+        }
+
+        if (!sponsors) {
+          const why = verdict === 'denies' ? `feed says "${job.sponsorship}"` : 'no explicit visa sponsorship mention';
+          console.log(`  → skipped: US posting — ${why}`);
+          if (!DRY_RUN) tracker.add(job, 'skipped_no_sponsorship', why);
           counts.skipped++;
           continue;
         }
