@@ -492,10 +492,17 @@ export const EDUCATION = {
   school: '',
   degree: '',
   major: '',
+  startMonth: '',
+  startYear: '',
   graduationMonth: '',
   graduationYear: '',
+  gpa: '',
   ...(profileFile().education || {}),
 };
+
+// How many co-op/internship terms are already finished. A string, because the forms
+// asking it are free-text and an empty value must stay empty rather than become "0".
+export const COMPLETED_WORK_TERMS = String(profileFile().completedWorkTerms ?? '');
 
 // Keyed by the country a question is about, not the country of the posting — a US
 // employer hiring in Toronto still asks "authorized to work in the US?". A country
@@ -661,6 +668,18 @@ export const COVER_LETTER_TXT_PATH = path.join(ROOT, 'assets', 'cover_letter.txt
 // Overridable so a test or a scratch run can point at a throwaway ledger instead
 // of the real one — writing to the real ledger marks jobs as handled for good.
 export const APPLIED_JOBS_PATH = process.env.APPLIED_JOBS_PATH || path.join(ROOT, 'applied_jobs.json');
+
+// The board: every posting ever seen, scored, with the attributes the pipeline used
+// to gate on stored as fields. Separate from applied_jobs.json, which was a ledger of
+// what the (now retired) applier did.
+export const BOARD_PATH = process.env.BOARD_PATH || path.join(ROOT, 'board.json');
+
+// The closed vocabularies the board writes and the dashboard renders. docs/index.html
+// cannot import from src/, so it embeds a copy and test/dashboard.test.js compares the
+// two. Add a value here without teaching the dashboard and the test fails, rather than
+// the column quietly rendering a raw slug.
+export const TERM_VALUES = ['2027', 'exempt', 'unstated', 'other-cycle'];
+export const SPONSORSHIP_VALUES = ['offers', 'denies', 'silent', 'n/a'];
 
 export const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || '';
 export const DRY_RUN = (process.env.DRY_RUN || 'true').toLowerCase() !== 'false';

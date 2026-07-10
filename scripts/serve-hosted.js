@@ -5,15 +5,17 @@
 // src/, no .git, regardless of what ends up in the deployed image.
 //
 // THIS SITE IS UNAUTHENTICATED, by explicit choice. Anyone who reaches the hostname
-// reads the full application history, and /applied_jobs.json is a public JSON feed of
-// it. The hostname is not a secret: Railway's TLS certificate publishes it to
-// Certificate Transparency logs the moment a domain is attached. The noindex header
+// reads the whole board, and /board.json is a public JSON feed of it. The board is a
+// catalogue of open postings, not a record of what its owner applied to — that state
+// lives in the visitor's own browser. The hostname is not a secret either: Railway's
+// TLS certificate publishes it to Certificate Transparency logs the moment a domain is
+// attached, so the URL is discoverable by anyone who looks. The noindex header
 // and robots.txt below keep compliant search engines out; they stop nothing else.
 // Restore the gate by putting basic auth back in front of the ROUTES lookup.
 //
-// The ledger is pulled from the private repo on demand rather than baked into the
-// image: applied_jobs.json is written by the Actions job and committed back, so a
-// deployed copy is frozen at build time and would never show a new application.
+// The board is pulled from the private repo on demand rather than baked into the
+// image: board.json is rewritten by the Actions job every two hours and committed
+// back, so a deployed copy would freeze at build time and never show a new posting.
 //
 // Required env (the process refuses to start without them — see requireEnv):
 //   GITHUB_TOKEN  fine-grained PAT, Contents: Read on this repo only
@@ -48,10 +50,10 @@ const INDEX_HTML = fs.readFileSync(path.join(ROOT, 'docs', 'index.html'));
 const TTL_MS = 30_000;
 let cache = { body: null, at: 0 };
 
-async function fetchLedger() {
+async function fetchBoard() {
   if (cache.body && Date.now() - cache.at < TTL_MS) return cache.body;
 
-  const res = await fetch(`https://api.github.com/repos/${REPO}/contents/applied_jobs.json`, {
+  const res = await fetch(`https://api.github.com/repos/${REPO}/contents/board.json`, {
     headers: {
       Authorization: `Bearer ${TOKEN}`,
       Accept: 'application/vnd.github.raw+json',
@@ -61,17 +63,17 @@ async function fetchLedger() {
   if (!res.ok) throw new Error(`GitHub responded ${res.status}`);
 
   const body = await res.text();
-  JSON.parse(body); // Never cache a truncated or non-JSON response as if it were the ledger.
+  JSON.parse(body); // Never cache a truncated or non-JSON response as if it were the board.
   cache = { body, at: Date.now() };
   return body;
 }
 
 // Keeps compliant crawlers from indexing an unauthenticated page. Applied to every
-// response, since /applied_jobs.json is as sensitive as the page that renders it.
+// response, since /board.json is as sensitive as the page that renders it.
 const NOINDEX = 'noindex, nofollow, noarchive';
 
 const ROUTES = {
-  // Served at "/", so the page's own `./applied_jobs.json` fetch lands on the route below.
+  // Served at "/", so the page's own `./board.json` fetch lands on the route below.
   '/': (_req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': NOINDEX });
     res.end(INDEX_HTML);
@@ -80,20 +82,20 @@ const ROUTES = {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('User-agent: *\nDisallow: /\n');
   },
-  '/applied_jobs.json': async (_req, res) => {
+  '/board.json': async (_req, res) => {
     let body;
     try {
-      body = await fetchLedger();
+      body = await fetchBoard();
     } catch (err) {
       if (!cache.body) {
         res.writeHead(502, { 'Content-Type': 'text/plain; charset=utf-8' });
-        res.end(`Could not read the ledger from GitHub: ${err.message}`);
+        res.end(`Could not read the board from GitHub: ${err.message}`);
         return;
       }
-      console.warn(`Serving stale ledger (${Math.round((Date.now() - cache.at) / 1000)}s old): ${err.message}`);
+      console.warn(`Serving stale board (${Math.round((Date.now() - cache.at) / 1000)}s old): ${err.message}`);
       body = cache.body;
     }
-    // private + no-store: this is a log of a live job search. It must not sit in a
+    // private + no-store: this is one person's live job search. It must not sit in a
     // shared cache or a proxy between Railway and the browser.
     res.writeHead(200, {
       'Content-Type': 'application/json; charset=utf-8',
@@ -132,5 +134,5 @@ http
   })
   // 0.0.0.0, not the default: Railway routes to the container from outside it.
   .listen(PORT, '0.0.0.0', () => {
-    console.log(`Jobify dashboard on :${PORT} — ledger from ${REPO}, PUBLIC (no authentication)`);
+    console.log(`Jobify dashboard on :${PORT} — board from ${REPO}, PUBLIC (no authentication)`);
   });
