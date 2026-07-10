@@ -22,6 +22,13 @@ const TEMPLATES = [
   (slug) => `https://jobs.lever.co/${slug}/0`,
   (slug) => `https://jobs.ashbyhq.com/${slug}/0`,
   (slug) => `https://jobs.smartrecruiters.com/${slug}/0`,
+  // The Tier-1 platforms whose board token is just the slug as a subdomain (or the
+  // first path segment on Workable). iCIMS/Eightfold/Personio/Phenom are left out:
+  // their hostnames don't follow a guessable slug pattern, so a probe would 404
+  // on every employer regardless.
+  (slug) => `https://apply.workable.com/${slug}/`,
+  (slug) => `https://${slug}.recruitee.com/`,
+  (slug) => `https://${slug}.bamboohr.com/careers`,
 ];
 
 // Boards are named inconsistently: "1Password" runs `1password`, Faire runs

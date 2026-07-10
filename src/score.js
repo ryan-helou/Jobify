@@ -287,9 +287,17 @@ const TIER_COMPETITION = { top: 0.4, strong: 0.7, unknown: 1.3 };
 
 // How early in a posting's life we reached it. A company's own ATS board lists a
 // job days before a volunteer copies it into a README, and applying early is one
-// of the few levers an applicant actually has.
+// of the few levers an applicant actually has. Every direct-employer scraper earns
+// that bonus equally — Greenhouse/Ashby/Lever (`ats:`), Workday/Oracle/SmartRecruiters,
+// and the Tier-1 additions (Workable, Recruitee, BambooHR, iCIMS, Eightfold, Personio,
+// Phenom) — because all of them read the source of record, not a downstream copy.
+const DIRECT_ATS_CHANNELS = new Set([
+  'ats', 'workday', 'oracle', 'smartrecruiters',
+  'workable', 'recruitee', 'bamboohr', 'icims', 'eightfold', 'personio', 'phenom',
+]);
 function channelMultiplier(source) {
-  if (String(source || '').startsWith('ats:')) return 1.25;
+  const channel = String(source || '').split(':')[0];
+  if (DIRECT_ATS_CHANNELS.has(channel)) return 1.25;
   if (source === 'indeed') return 0.8; // aggregator; the posting has been up a while
   return 1.0;
 }
