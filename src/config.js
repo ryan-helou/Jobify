@@ -759,6 +759,78 @@ export const ORACLE_MAX_PAGES = parseInt(process.env.ORACLE_MAX_PAGES || '5', 10
 export const ENABLE_SMARTRECRUITERS = (process.env.ENABLE_SMARTRECRUITERS || 'true').toLowerCase() !== 'false';
 export const SMARTRECRUITERS_MAX_PAGES = parseInt(process.env.SMARTRECRUITERS_MAX_PAGES || '5', 10);
 
+// Workable: the biggest ATS we couldn't previously read (222 postings in the feeds).
+// Two-pass like Greenhouse — the listing has no description. Its embedded API returns
+// a `nextPage` cursor only when a board overflows one response; the cap bounds that.
+export const ENABLE_WORKABLE = (process.env.ENABLE_WORKABLE || 'true').toLowerCase() !== 'false';
+export const WORKABLE_MAX_PAGES = parseInt(process.env.WORKABLE_MAX_PAGES || '10', 10);
+
+// Recruitee: one pass, the offers feed carries the description inline. Small in the
+// feeds (~10) but common among the smaller Canadian/European startups discovery finds.
+export const ENABLE_RECRUITEE = (process.env.ENABLE_RECRUITEE || 'true').toLowerCase() !== 'false';
+
+// BambooHR: two-pass (list, then a detail fetch per survivor). ~22 in the feeds.
+export const ENABLE_BAMBOOHR = (process.env.ENABLE_BAMBOOHR || 'true').toLowerCase() !== 'false';
+
+// iCIMS: the single biggest ATS gap (1,351 postings). No JSON API — we page the
+// hosted search HTML for job links, then read each job page's schema.org JobPosting.
+// Its pages hold ~10 links; the cap bounds paging per employer site.
+export const ENABLE_ICIMS = (process.env.ENABLE_ICIMS || 'true').toLowerCase() !== 'false';
+export const ICIMS_MAX_PAGES = parseInt(process.env.ICIMS_MAX_PAGES || '15', 10);
+
+// Eightfold: 152 postings, but its API demands the employer's corporate domain (which
+// the eightfold hostname doesn't give us) and soft-blocks datacenter IPs like Indeed.
+// Left on because a block yields empty, never wrong; assets/eightfold-domains.json
+// overrides the `{tenant}.com` domain guess where it's wrong (e.g. bnymellon → bny.com).
+export const ENABLE_EIGHTFOLD = (process.env.ENABLE_EIGHTFOLD || 'true').toLowerCase() !== 'false';
+export const EIGHTFOLD_MAX_PAGES = parseInt(process.env.EIGHTFOLD_MAX_PAGES || '5', 10);
+export const EIGHTFOLD_DOMAINS_PATH = path.join(ROOT, 'assets', 'eightfold-domains.json');
+
+// Personio: one pass over its XML feed. European-first, so nothing in the current
+// feeds points at it — it only fires on employers discovery turns up. Off costs
+// nothing; on is a cheap XML fetch per tenant.
+export const ENABLE_PERSONIO = (process.env.ENABLE_PERSONIO || 'true').toLowerCase() !== 'false';
+
+// Phenom: the Canadian banks and telcos. Vanity domains, so no token harvest is
+// possible — the sites are listed in assets/phenom-sites.json, seeded from there.
+// Pages hold 20 postings; the cap bounds paging per site.
+export const ENABLE_PHENOM = (process.env.ENABLE_PHENOM || 'true').toLowerCase() !== 'false';
+export const PHENOM_MAX_PAGES = parseInt(process.env.PHENOM_MAX_PAGES || '10', 10);
+export const PHENOM_SITES_PATH = path.join(ROOT, 'assets', 'phenom-sites.json');
+
+// ---- Tier 2: standalone job feeds ----------------------------------------
+// These aren't ATS token-harvesters — they're their own job boards (or, for
+// levels.fyi and HN, pure token mines that feed the ATS scrapers above). Each
+// returns { jobs, postings } like the GitHub sources, and runs in the same first
+// phase so its postings can seed the ATS harvest.
+
+// Canada Job Bank: the government feed, filtered by software NOC occupation codes
+// (the `term` query is ignored, so the NOC filter is what scopes it). 21231 software
+// developers/programmers, 21232 software engineers/designers, 21233 web developers,
+// 21234 web designers/developers, 21211 data scientists.
+export const ENABLE_JOBBANK = (process.env.ENABLE_JOBBANK || 'true').toLowerCase() !== 'false';
+export const JOBBANK_NOC_CODES = (process.env.JOBBANK_NOC_CODES || '21231,21232,21233,21234,21211').split(',');
+
+// The Muse: ~750 internships tagged Software Engineering. Unauthenticated callers are
+// throttled, not blocked; the cap bounds paging (pages hold 20).
+export const ENABLE_THEMUSE = (process.env.ENABLE_THEMUSE || 'true').toLowerCase() !== 'false';
+export const THEMUSE_MAX_PAGES = parseInt(process.env.THEMUSE_MAX_PAGES || '40', 10);
+
+// Adzuna: free aggregator API, but it needs a self-serve app_id/app_key. Absent
+// credentials → the scraper no-ops (no error). ca+us cover both target countries.
+export const ADZUNA_APP_ID = process.env.ADZUNA_APP_ID || '';
+export const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY || '';
+export const ADZUNA_MAX_PAGES = parseInt(process.env.ADZUNA_MAX_PAGES || '5', 10);
+export const ADZUNA_COUNTRIES = (process.env.ADZUNA_COUNTRIES || 'ca,us').split(',');
+
+// levels.fyi: ~14k internship rows mined for apply-URL board tokens only, like the
+// SimplifyJobs feeds. Not parsed as jobs (the rows are salary datapoints).
+export const ENABLE_LEVELSFYI = (process.env.ENABLE_LEVELSFYI || 'true').toLowerCase() !== 'false';
+
+// Hacker News "Who is hiring?": the monthly thread mined for apply URLs in its
+// comments (the prose is too irregular to parse into structured jobs).
+export const ENABLE_HN_HIRING = (process.env.ENABLE_HN_HIRING || 'true').toLowerCase() !== 'false';
+
 // Probe ATS boards for employers named in assets/employers.json, so a company can
 // be found without waiting for some job board to list it first.
 export const ENABLE_DISCOVERY = (process.env.ENABLE_DISCOVERY || 'true').toLowerCase() !== 'false';
@@ -891,41 +963,18 @@ export function validateConfig() {
   const fatal = [];
   const warnings = [];
 
-  if (!APPLICANT.name) fatal.push('APPLICANT_NAME is not set');
-  if (!APPLICANT.email) fatal.push('APPLICANT_EMAIL is not set');
-  if (!APPLICANT.phone) fatal.push('APPLICANT_PHONE is not set');
-
-  // The base résumé is the fallback for every posting we can't route, so a bad
-  // one poisons the whole run — and each application is recorded as applied, so
-  // it is never retried.
-  const resume = documentProblem('résumé', resumePath(DEFAULT_RESUME_VARIANT), { required: true });
-  if (resume) fatal.push(resume);
-
-  // Role-specific résumés are optional. Missing is a warning (we fall back to
-  // base); present-but-broken is fatal, because that file *will* be uploaded to
-  // an employer the moment a matching posting comes through.
-  for (const variant of RESUME_VARIANTS) {
-    if (variant === DEFAULT_RESUME_VARIANT) continue;
-    const file = resumePath(variant);
-    if (!fs.existsSync(file)) {
-      warnings.push(`no ${variant} résumé at ${file} — ${variant} postings will get the ${DEFAULT_RESUME_VARIANT} résumé`);
-      continue;
-    }
-    const problem = documentProblem(`${variant} résumé`, file, { required: false });
-    if (problem) fatal.push(problem);
-  }
-
-  // Only fatal when present-but-broken: the cover letter is optional, but if a file
-  // exists at that path the form filler will attach it.
-  const cover = documentProblem('cover letter PDF', COVER_LETTER_PDF_PATH, { required: false });
-  if (cover) fatal.push(cover);
-
-  if (!SLACK_WEBHOOK_URL) warnings.push('SLACK_WEBHOOK_URL is not set (notifications disabled)');
+  // Nothing is fatal for a board: it scrapes and scores, it never uploads a résumé
+  // or contacts anyone, so applicant identity and résumé files — which the retired
+  // applier required — are irrelevant. Requiring them here is what aborted the
+  // scheduled refresh, since the workflow (correctly) no longer sets them. The only
+  // thing worth checking is the scoring profile, and a weak profile just yields
+  // uninformative scores, not a broken run.
   if (CANDIDATE.unknownSkills.length) {
     warnings.push(`profile.json lists skills absent from SKILL_LEXICON, ignored: ${CANDIDATE.unknownSkills.join(', ')}`);
   }
   if (!CANDIDATE.skills.length) {
     warnings.push('profile.json declares no known skills — compatibility scores will be uninformative');
   }
+  if (!SLACK_WEBHOOK_URL) warnings.push('SLACK_WEBHOOK_URL is not set (notifications disabled)');
   return { fatal, warnings };
 }

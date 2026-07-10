@@ -2,10 +2,21 @@ import { chromium } from 'playwright';
 import {
   CANDIDATE,
   ENABLE_ATS,
+  ENABLE_BAMBOOHR,
   ENABLE_DISCOVERY,
+  ENABLE_EIGHTFOLD,
+  ENABLE_ICIMS,
+  ENABLE_HN_HIRING,
   ENABLE_INDEED,
+  ENABLE_JOBBANK,
+  ENABLE_LEVELSFYI,
   ENABLE_ORACLE,
+  ENABLE_PERSONIO,
+  ENABLE_PHENOM,
+  ENABLE_RECRUITEE,
   ENABLE_SMARTRECRUITERS,
+  ENABLE_THEMUSE,
+  ENABLE_WORKABLE,
   ENABLE_WORKDAY,
   validateConfig,
 } from './config.js';
@@ -16,10 +27,25 @@ import { scrapeAtsBoards } from './scrapers/ats.js';
 import { scrapeWorkday } from './scrapers/workday.js';
 import { scrapeOracle } from './scrapers/oracle.js';
 import { scrapeSmartRecruiters } from './scrapers/smartrecruiters.js';
+import { scrapeWorkable } from './scrapers/workable.js';
+import { scrapeRecruitee } from './scrapers/recruitee.js';
+import { scrapeBambooHR } from './scrapers/bamboohr.js';
+import { scrapeIcims } from './scrapers/icims.js';
+import { scrapeEightfold } from './scrapers/eightfold.js';
+import { scrapePersonio } from './scrapers/personio.js';
+import { scrapePhenom } from './scrapers/phenom.js';
+import { scrapeJobBank } from './scrapers/jobbank.js';
+import { scrapeTheMuse } from './scrapers/themuse.js';
+import { scrapeAdzuna } from './scrapers/adzuna.js';
+import { scrapeLevelsFyi } from './scrapers/levelsfyi.js';
+import { scrapeHnHiring } from './scrapers/hnhiring.js';
 import { guessBoardPostings } from './scrapers/discover.js';
 import { scrapeIndeed } from './scrapers/indeed.js';
 import { scoreJob } from './score.js';
 import { slack } from './notify.js';
+
+// A disabled feed source contributes neither jobs nor postings.
+const NO_FEED = { jobs: [], postings: [] };
 
 // Jobify builds a board. It scrapes every source it knows, scores every posting
 // against assets/profile.json, and writes the lot to board.json for the dashboard.
@@ -59,16 +85,51 @@ async function main() {
   }
 
   try {
-    // 1. Scrape. GitHub boards run first: their apply URLs are what tell us which
-    //    company ATS boards exist. Discovery adds employers no board has named.
-    const { jobs: githubJobs, postings: boardPostings } = await scrapeGithubBoards();
+    // 1. Feed sources. These run first and each returns { jobs, postings }: the jobs
+    //    go straight on the board, and the postings' apply URLs are what tell us which
+    //    company ATS boards exist. GitHub is the original; the Tier 2 feeds add their
+    //    own jobs (Job Bank, The Muse, Adzuna) and their own token mines (levels.fyi,
+    //    HN "Who is hiring"). Running them all here means every source's URLs seed the
+    //    ATS harvest below. Discovery adds employers no feed has named.
+    const feeds = await Promise.all([
+      scrapeGithubBoards(),
+      ENABLE_JOBBANK ? scrapeJobBank() : NO_FEED,
+      ENABLE_THEMUSE ? scrapeTheMuse() : NO_FEED,
+      scrapeAdzuna(), // no-ops without credentials
+      ENABLE_LEVELSFYI ? scrapeLevelsFyi() : NO_FEED,
+      ENABLE_HN_HIRING ? scrapeHnHiring() : NO_FEED,
+    ]);
+    const feedJobs = feeds.flatMap((f) => f.jobs);
+    const boardPostings = feeds.flatMap((f) => f.postings);
     const postings = ENABLE_DISCOVERY ? [...boardPostings, ...guessBoardPostings()] : boardPostings;
 
-    const [atsJobs, workdayJobs, oracleJobs, srJobs, indeedJobs] = await Promise.all([
+    const [
+      atsJobs,
+      workdayJobs,
+      oracleJobs,
+      srJobs,
+      workableJobs,
+      recruiteeJobs,
+      bambooJobs,
+      icimsJobs,
+      eightfoldJobs,
+      personioJobs,
+      phenomJobs,
+      indeedJobs,
+    ] = await Promise.all([
       ENABLE_ATS ? scrapeAtsBoards(postings) : Promise.resolve([]),
       ENABLE_WORKDAY ? scrapeWorkday(postings) : Promise.resolve([]),
       ENABLE_ORACLE ? scrapeOracle(postings) : Promise.resolve([]),
       ENABLE_SMARTRECRUITERS ? scrapeSmartRecruiters(postings) : Promise.resolve([]),
+      ENABLE_WORKABLE ? scrapeWorkable(postings) : Promise.resolve([]),
+      ENABLE_RECRUITEE ? scrapeRecruitee(postings) : Promise.resolve([]),
+      ENABLE_BAMBOOHR ? scrapeBambooHR(postings) : Promise.resolve([]),
+      ENABLE_ICIMS ? scrapeIcims(postings) : Promise.resolve([]),
+      ENABLE_EIGHTFOLD ? scrapeEightfold(postings) : Promise.resolve([]),
+      ENABLE_PERSONIO ? scrapePersonio(postings) : Promise.resolve([]),
+      // Phenom reads its own curated site list (assets/phenom-sites.json), not the
+      // harvested postings — its employers use vanity domains nothing points at.
+      ENABLE_PHENOM ? scrapePhenom() : Promise.resolve([]),
       ENABLE_INDEED ? scrapeIndeed(context) : Promise.resolve([]),
     ]);
 
@@ -78,7 +139,21 @@ async function main() {
     const seenUrls = new Set();
     const seenIdentities = new Set();
     const scraped = [];
-    for (const job of [...githubJobs, ...atsJobs, ...workdayJobs, ...oracleJobs, ...srJobs, ...indeedJobs]) {
+    for (const job of [
+      ...feedJobs,
+      ...atsJobs,
+      ...workdayJobs,
+      ...oracleJobs,
+      ...srJobs,
+      ...workableJobs,
+      ...recruiteeJobs,
+      ...bambooJobs,
+      ...icimsJobs,
+      ...eightfoldJobs,
+      ...personioJobs,
+      ...phenomJobs,
+      ...indeedJobs,
+    ]) {
       const identity = identityKey(job);
       if (seenUrls.has(canonicalKey(job.url)) || seenIdentities.has(identity)) continue;
       seenUrls.add(canonicalKey(job.url));
@@ -92,8 +167,11 @@ async function main() {
 
     console.log(
       `${scraped.length} postings scraped ` +
-        `(${githubJobs.length} github, ${atsJobs.length} ats, ${workdayJobs.length} workday, ` +
-        `${oracleJobs.length} oracle, ${srJobs.length} smartrecruiters, ${indeedJobs.length} indeed)`
+        `(${feedJobs.length} feeds, ${atsJobs.length} ats, ${workdayJobs.length} workday, ` +
+        `${oracleJobs.length} oracle, ${srJobs.length} smartrecruiters, ${workableJobs.length} workable, ` +
+        `${recruiteeJobs.length} recruitee, ${bambooJobs.length} bamboohr, ${icimsJobs.length} icims, ` +
+        `${eightfoldJobs.length} eightfold, ${personioJobs.length} personio, ${phenomJobs.length} phenom, ` +
+        `${indeedJobs.length} indeed)`
     );
 
     // 4. Merge and write. Nothing is filtered out — that is the dashboard's job now.
