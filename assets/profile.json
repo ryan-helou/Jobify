@@ -43,9 +43,13 @@
     "school": "Concordia University",
     "degree": "Bachelor's Degree",
     "major": "Software Engineering",
+    "startMonth": "September",
+    "startYear": "2024",
     "graduationMonth": "April",
-    "graduationYear": "2028"
+    "graduationYear": "2028",
+    "gpa": "3.7"
   },
+  "completedWorkTerms": "2",
   "_workAuthorizationComment": [
     "Answers to the work-authorization questions nearly every form asks. These are",
     "typed verbatim into real employment applications, so they must be true.",

@@ -18,27 +18,4 @@ export async function slack(text) {
   }
 }
 
-export async function notifyApplied(job, resumeVariant = '') {
-  const s = job.scores;
-  await slack(
-    `:white_check_mark: Applied to *${job.title}* at *${job.company}* (${job.location})\n` +
-      `<${job.url}|Job posting> — ${new Date().toISOString()}` +
-      (resumeVariant ? `\nRésumé: *${resumeVariant}*` : '') +
-      (s ? `\n_${explainScore(s)}_` : '')
-  );
-}
 
-export async function notifySummary({ found, applied, manual, skipped, wrongTerm = 0, lowFit = 0, dryRun }) {
-  const prefix = dryRun ? ':test_tube: [DRY RUN] ' : '';
-  if (found === 0) {
-    await slack(`${prefix}:mag: Jobify run finished — no new matching jobs found this run.`);
-    return;
-  }
-  await slack(
-    `${prefix}:clipboard: Jobify run finished — ${found} new job(s) found, ${applied} applied, ` +
-      `${manual} need manual review, ${skipped} skipped` +
-      (wrongTerm ? `, ${wrongTerm} from the wrong hiring cycle` : '') +
-      (lowFit ? `, ${lowFit} below the compatibility floor` : '') +
-      '.'
-  );
-}

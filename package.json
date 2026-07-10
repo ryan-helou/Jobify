@@ -1,7 +1,7 @@
 {
   "name": "jobify",
   "version": "0.1.0",
-  "description": "Auto-apply to Summer 2027 software internships/entry-level roles. Scrapes Indeed + GitHub boards, applies with Playwright, tracks state, notifies Slack.",
+  "description": "Scrapes Summer 2027 software internships from GitHub boards, Greenhouse/Ashby/Lever, Workday, Oracle and SmartRecruiters; scores each posting against your profile; publishes a filterable board. Applies to nothing.",
   "type": "module",
   "private": true,
   "engines": {
@@ -9,7 +9,6 @@
   },
   "scripts": {
     "start": "node src/index.js",
-    "dry-run": "DRY_RUN=true node src/index.js",
     "dashboard": "node scripts/serve-dashboard.js",
     "dashboard:hosted": "node scripts/serve-hosted.js",
     "explain-resume": "node scripts/explain-resume.js",

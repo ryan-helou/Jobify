@@ -200,6 +200,51 @@ function roleFit(title, profile) {
 //
 // City preference still decides the apply order — it's the primary sort key in
 // index.js — it just isn't part of how well you *fit* the work.
+// A posting the candidate cannot hold. Compatibility read skills and city but never
+// the *level* of the role, so Marvell's "Analog Engineer Intern — PhD" scored 66 and
+// D2L's "Software Developer — New Graduate" scored 72 — above real internships an
+// undergraduate could actually take. Skill overlap is irrelevant when the door is
+// shut, so these multiply rather than subtract.
+//
+// Graduate-only and new-grad postings are near-disqualifying, not merely worse: a
+// second-year undergraduate is not eligible, and a full-time new-grad role is not an
+// internship at all. `advanced` also catches "Master's or PhD required".
+export const LEVEL_PATTERNS = {
+  phd: /\bph\.?d\b|\bdoctoral\b|\bdoctorate\b/i,
+  masters: /\bmaster'?s?\b(?!\s*of\s*none)|\bm\.?s\.?c?\.?\s+(?:required|student|candidate)/i,
+  // "New Grads" plural: `grad(uate)?\b` fails between the d and the s, so a posting
+  // titled "Software Engineer - 2027 New Grads" scored 85 on a real board.
+  newGrad: /\bnew\s*grad(?:uate)?s?\b|\bentry[\s-]*level\b|\bcampus\s*hire\b|\bgraduate\s+(?:programme?|scheme)\b/i,
+  senior: /\bsenior\b|\bstaff\b|\bprincipal\b|\blead\s+engineer\b|\b\d+\+?\s*years?\s+of\s+experience\b/i,
+};
+
+// A body that merely *mentions* a PhD proves nothing: "BS, MS, or PhD in Computer
+// Science" lists a doctorate as acceptable, not required, and matching on the bare
+// word demoted 22 postings on a real board — including a plain "Fullstack Engineer
+// Intern". So the body must state a requirement, and must not also welcome an
+// undergraduate degree.
+const PHD_REQUIRED =
+  /\b(?:requires?|required|must\s+(?:be|have|hold)|open\s+only\s+to)\b[^.]{0,60}\bph\.?d\b|\bph\.?d\b[^.]{0,40}\b(?:is\s+)?(?:required|mandatory|only)\b/i;
+const UNDERGRAD_WELCOME = /\bbachelor'?s?\b|\bb\.?s\.?c?\.?\b|\bundergrad(?:uate)?\b/i;
+
+// A posting that says "intern" is an internship even if the body namechecks a PhD.
+// The title is the contract; the body is context.
+function levelMismatch(title, description) {
+  const t = String(title || '');
+  const body = String(description || '');
+
+  if (LEVEL_PATTERNS.phd.test(t)) return { factor: 0.15, reason: 'requires a PhD' };
+  if (LEVEL_PATTERNS.newGrad.test(t)) return { factor: 0.2, reason: 'new-grad role, not an internship' };
+  if (LEVEL_PATTERNS.senior.test(t)) return { factor: 0.15, reason: 'senior role' };
+  if (LEVEL_PATTERNS.masters.test(t)) return { factor: 0.35, reason: "requires a Master's" };
+
+  // Body evidence is weaker than a title, so it dampens rather than disqualifies.
+  if (PHD_REQUIRED.test(body) && !UNDERGRAD_WELCOME.test(body)) {
+    return { factor: 0.7, reason: 'posting states a PhD is required' };
+  }
+  return { factor: 1, reason: null };
+}
+
 function eligibilityMultiplier(job, description) {
   const term = job.term === '2027' || job.term === 'exempt' ? 1 : job.term === 'unstated' ? 0.9 : 0.3;
 
@@ -210,7 +255,9 @@ function eligibilityMultiplier(job, description) {
     else if (verdict === 'denies') visa = 0.4;
     else visa = mentionsSponsorship(description) ? 1 : 0.85; // silence ≠ refusal
   }
-  return term * visa;
+
+  const level = levelMismatch(job.title, description);
+  return { multiplier: term * visa * level.factor, levelReason: level.reason };
 }
 
 const COMPAT_WEIGHTS = { skill: 0.6, role: 0.4 };
@@ -261,7 +308,7 @@ export function scoreJob(job, profile = CANDIDATE, description = null) {
   // --- compatibility
   const skill = skillFit(text, profile);
   const role = roleFit(job.title, profile);
-  const eligibility = eligibilityMultiplier(job, desc);
+  const { multiplier: eligibility, levelReason } = eligibilityMultiplier(job, desc);
 
   const compatibility = round((skill.score * COMPAT_WEIGHTS.skill + role.score * COMPAT_WEIGHTS.role) * eligibility);
 
@@ -293,20 +340,28 @@ export function scoreJob(job, profile = CANDIDATE, description = null) {
   // well the rest of the posting reads.
   if (flags.length) quality = Math.min(quality, RED_FLAG_CEILING);
 
-  // --- interview odds (see the header comment: a prior, not a forecast)
-  const compatMult = 0.4 + 1.4 * Math.pow(compatibility / 100, 1.3);
-  const qualityMult = 1.1 - 0.25 * (quality / 100); // desirable roles draw more applicants
-  const odds = clamp(
-    ODDS_BASE_RATE * compatMult * TIER_COMPETITION[tier] * channelMultiplier(job.source) * qualityMult,
-    ODDS_FLOOR,
-    ODDS_CEILING
-  );
-  const interviewOdds = Math.max(1, Math.round(odds * 100));
-
   // How much text the scores actually rest on. `low` means the posting had no
   // description, so `quality` is mostly company tier and `compatibility` is
   // mostly title and location.
   const confidence = !desc.trim() ? 'low' : desc.length > 800 && !skill.thin ? 'high' : 'medium';
+
+  // --- interview odds (see the header comment: a prior, not a forecast)
+  //
+  // Two changes make this less dishonest than it was, without pretending it is
+  // calibrated. It now inherits the level penalty through `compatibility`, so a
+  // PhD-only posting no longer advertises a double-digit chance at an interview.
+  // And it shrinks toward the base rate in proportion to the evidence behind it:
+  // a posting with no description moves the prior barely at all, because every
+  // factor below was computed from a title and a company name.
+  const compatMult = 0.4 + 1.4 * Math.pow(compatibility / 100, 1.3);
+  const qualityMult = 1.1 - 0.25 * (quality / 100); // desirable roles draw more applicants
+  const raw = ODDS_BASE_RATE * compatMult * TIER_COMPETITION[tier] * channelMultiplier(job.source) * qualityMult;
+
+  const evidence = { high: 1, medium: 0.7, low: 0.4 }[confidence];
+  const shrunk = ODDS_BASE_RATE + (raw - ODDS_BASE_RATE) * evidence;
+
+  const odds = clamp(shrunk, ODDS_FLOOR, ODDS_CEILING);
+  const interviewOdds = Math.max(1, Math.round(odds * 100));
 
   return {
     compatibility,
@@ -320,6 +375,9 @@ export function scoreJob(job, profile = CANDIDATE, description = null) {
       tier,
       pay: parsedPay ? parsedPay.raw : null,
       flags,
+      // Why an otherwise-good posting scored near zero. Without this a PhD-only
+      // role just looks mysteriously bad on the board.
+      levelReason,
     },
   };
 }

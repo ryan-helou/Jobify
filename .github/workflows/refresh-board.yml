@@ -1,0 +1,67 @@
+name: Refresh Board
+
+# Scrapes every source, scores every posting, and commits board.json. It applies to
+# nothing — the applier was retired after it reached 8 of 239 postings and reported
+# nine submissions no employer ever received. A human works the board by hand.
+#
+# Every two hours, not hourly: a private repo gets 2,000 free Actions minutes a month,
+# and hourly runs at ~3 minutes each would spend roughly 2,200 of them. Postings do not
+# appear and vanish within an hour.
+
+on:
+  schedule:
+    # 00:10, 02:10, … UTC. Ten past the hour because GitHub delays runs scheduled on
+    # the hour, when everyone else's crons fire.
+    - cron: '10 */2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-board
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        env:
+          # The board never opens a browser: only the (disabled) Indeed scraper needs
+          # one, and downloading chromium would add a minute to every run, twelve times
+          # a day, for nothing.
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+        run: npm ci
+
+      # The scoring model and the term classifier decide what the board says. Never
+      # publish a board built from broken ones.
+      - name: Run tests
+        run: npm test
+
+      - name: Refresh the board
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: node src/index.js
+
+      # Runs even when the refresh exits non-zero, so a crash partway through a scrape
+      # still records the postings it did find.
+      - name: Commit board.json
+        if: always()
+        run: |
+          git config user.name "jobify-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add board.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: refresh board.json"
+            git pull --rebase origin ${{ github.ref_name }}
+            git push
+          fi

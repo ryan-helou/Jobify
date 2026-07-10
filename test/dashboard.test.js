@@ -4,69 +4,76 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { STATUS_META, TERMINAL_STATUSES, STATUS_RETRY_DAYS, DEFAULT_RETRY_DAYS, CITIES } from '../src/config.js';
+import { TERM_VALUES, SPONSORSHIP_VALUES, CITIES } from '../src/config.js';
+import { classifyTerm } from '../src/term.js';
+import { sponsorshipOf } from '../src/board.js';
 
-// docs/index.html is a single self-contained file — it is served straight to the
-// browser by scripts/serve-hosted.js and copied verbatim into the Pages artifact —
-// so it cannot import from src/. It instead carries a copy of the status vocabulary
-// as JSON, and these tests are what keep that copy honest.
+// docs/index.html is a single self-contained file — served straight to the browser by
+// scripts/serve-hosted.js — so it cannot import from src/. It instead embeds a copy of
+// the vocabularies the pipeline writes, and these tests are what keep that copy honest.
 //
-// The failure this prevents is quiet and bad: add a status to config.js, forget the
-// dashboard, and every job with that status renders under a raw snake_case label
-// with a 30-day expiry the runner never actually uses.
+// The failure this prevents is quiet and bad: add a term or sponsorship value in
+// config.js, forget the dashboard, and every posting carrying it renders under a raw
+// slug in a column the reader cannot interpret.
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const HTML = fs.readFileSync(path.join(ROOT, 'docs', 'index.html'), 'utf8');
 
-function dashboardVocabulary() {
-  const m = HTML.match(/<script type="application\/json" id="ledger-vocabulary">([\s\S]*?)<\/script>/);
-  assert.ok(m, 'docs/index.html must embed a #ledger-vocabulary JSON block');
+function vocabulary() {
+  const m = HTML.match(/<script type="application\/json" id="board-vocabulary">([\s\S]*?)<\/script>/);
+  assert.ok(m, 'docs/index.html must embed a #board-vocabulary JSON block');
   return JSON.parse(m[1]);
 }
 
-test('the dashboard knows every status the runner can write', () => {
-  const vocab = dashboardVocabulary();
-  assert.deepEqual(Object.keys(vocab.statuses).sort(), Object.keys(STATUS_META).sort());
+test('the dashboard knows every hiring term the classifier can produce', () => {
+  assert.deepEqual(Object.keys(vocabulary().terms).sort(), [...TERM_VALUES].sort());
 });
 
-test('status labels and kinds agree with config.js', () => {
-  const vocab = dashboardVocabulary();
-  for (const [status, { label, kind }] of Object.entries(STATUS_META)) {
-    assert.equal(vocab.statuses[status].label, label, `${status} label`);
-    assert.equal(vocab.statuses[status].kind, kind, `${status} kind`);
+test('the dashboard knows every sponsorship value the board can write', () => {
+  assert.deepEqual(Object.keys(vocabulary().sponsorship).sort(), [...SPONSORSHIP_VALUES].sort());
+});
+
+// TERM_VALUES is a hand-maintained list; these are the values the code really emits.
+test('TERM_VALUES covers what classifyTerm actually returns', () => {
+  const produced = new Set([
+    classifyTerm('Software Engineer Intern, Summer 2027'),
+    classifyTerm('Software Engineer Winter Co-Op 2026'),
+    classifyTerm('Software Engineer Intern'),
+  ]);
+  for (const t of produced) assert.ok(TERM_VALUES.includes(t), `classifyTerm returned "${t}", absent from TERM_VALUES`);
+});
+
+test('SPONSORSHIP_VALUES covers what sponsorshipOf actually returns', () => {
+  const produced = new Set([
+    sponsorshipOf({ country: 'CA' }, ''),
+    sponsorshipOf({ country: 'US' }, 'We offer visa sponsorship.'),
+    sponsorshipOf({ country: 'US' }, 'We cannot sponsor.'),
+    sponsorshipOf({ country: 'US' }, 'Write Go.'),
+  ]);
+  for (const s of produced) {
+    assert.ok(SPONSORSHIP_VALUES.includes(s), `sponsorshipOf returned "${s}", absent from SPONSORSHIP_VALUES`);
   }
 });
 
-test('every status explains itself to the reader', () => {
-  const vocab = dashboardVocabulary();
-  for (const [status, { blurb }] of Object.entries(vocab.statuses)) {
-    assert.ok(blurb && blurb.length > 20, `${status} needs a blurb explaining what happened`);
-  }
+test('every city the scrapers target has a display label', () => {
+  const labels = vocabulary().cities;
+  for (const city of CITIES) assert.ok(labels[city.key], `no dashboard label for city "${city.key}"`);
 });
 
-// The accent colour is reserved for "a human has to do something". If a second
-// status ever claims it, the signal stops meaning anything.
-test('only manual_review is painted as needing a human', () => {
-  const vocab = dashboardVocabulary();
-  const attention = Object.entries(vocab.statuses).filter(([, m]) => m.kind === 'attention');
-  assert.deepEqual(attention.map(([s]) => s), ['manual_review']);
+// A wrong colspan collapses the "no results" row and silently breaks the empty state.
+test('COLSPAN matches the number of table headers', () => {
+  const headers = (HTML.match(/<th\b/g) || []).length;
+  assert.equal(vocabulary().columns, headers, 'board-vocabulary.columns must equal the <th> count');
 });
 
-test('the dashboard computes verdict expiry from the same numbers as the tracker', () => {
-  const vocab = dashboardVocabulary();
-  assert.deepEqual(vocab.retryDays, STATUS_RETRY_DAYS);
-  assert.equal(vocab.defaultRetryDays, DEFAULT_RETRY_DAYS);
-  assert.deepEqual([...vocab.terminalStatuses].sort(), [...TERMINAL_STATUSES].sort());
+test('the dashboard reads board.json, not the retired applier ledger', () => {
+  assert.ok(HTML.includes('board.json'), 'dashboard must fetch board.json');
+  assert.ok(!HTML.includes('applied_jobs.json'), 'applied_jobs.json belongs to the retired applier');
 });
 
-test('a terminal status never carries a retry window', () => {
-  const vocab = dashboardVocabulary();
-  for (const status of vocab.terminalStatuses) {
-    assert.ok(!(status in vocab.retryDays), `${status} is permanent and must not expire`);
-  }
-});
-
-test('the dashboard names every city the scrapers target', () => {
-  const vocab = dashboardVocabulary();
-  assert.deepEqual(Object.keys(vocab.cities).sort(), CITIES.map((c) => c.key).sort());
+// Applied/dismissed state is the user's, and this page is served from a public URL
+// with no authentication. It must never leave the browser.
+test('tracking state stays in the browser', () => {
+  assert.ok(HTML.includes('localStorage'), 'track state should live in localStorage');
+  assert.ok(!/method:\s*['"]POST/i.test(HTML), 'the page must not POST anything anywhere');
 });
