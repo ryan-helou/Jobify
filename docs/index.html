@@ -20,9 +20,9 @@
       --raised: #151c28;
       --line: #212a3a;
       --line-soft: #19212e;
-      --ink: #eaedf4;
-      --muted: #8592a8;
-      --faint: #59647a;
+      --ink: #f2f5fa;
+      --muted: #aab4c6;
+      --faint: #7f8ba1;
       --amber: #ff9e2c;
       --amber-soft: rgba(255, 158, 44, .13);
       --go: #3fe0a1;
@@ -141,26 +141,28 @@
     th:last-child, td:last-child { padding-right: 12px; }
     thead th {
       position: sticky; top: 0; z-index: 2; background: #0c1119;
-      font: 600 10px var(--mono); letter-spacing: .13em; text-transform: uppercase; color: var(--faint);
+      font: 600 11px var(--disp); letter-spacing: .04em; text-transform: uppercase; color: var(--muted);
       cursor: pointer; user-select: none; border-bottom: 1px solid var(--line);
     }
-    thead th:hover { color: var(--muted); }
+    thead th:hover { color: var(--ink); }
     thead th.on { color: var(--amber); }
     thead th.on::after { content: " ▾"; }
     thead th.on.asc::after { content: " ▴"; }
-    tbody td { font-size: 13px; }
-    tbody tr { transition: background .1s; }
-    tbody tr:hover { background: var(--raised); }
-    tbody tr:last-child td { border-bottom: none; }
-    tr.done { opacity: .4; }
+    tbody td { font-size: 14px; color: var(--ink); }
+    tbody tr.row { transition: background .1s; cursor: pointer; }
+    tbody tr.row:hover { background: var(--raised); }
+    tbody tr.row:last-child td { border-bottom: none; }
+    tr.done { opacity: .45; }
     tr.done td.title { text-decoration: line-through; text-decoration-color: var(--faint); }
-    td.title { white-space: normal; font-weight: 600; max-width: 232px; min-width: 150px; letter-spacing: -.01em; }
-    td.company { white-space: normal; max-width: 118px; color: var(--muted); }
-    td.city { font: 500 12px var(--mono); color: var(--muted); }
+    td.title { white-space: normal; font-weight: 600; max-width: 250px; min-width: 158px; letter-spacing: -.005em; line-height: 1.35; }
+    td.title .caret { color: var(--faint); font-weight: 400; margin-right: 5px; display: inline-block; transition: transform .12s; }
+    tr.open td.title .caret { transform: rotate(90deg); color: var(--amber); }
+    td.company { white-space: normal; max-width: 130px; color: var(--muted); }
+    td.city { color: var(--muted); }
     .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
     /* Instrument gauge for a score cell */
-    td.score { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 600; cursor: help; }
+    td.score { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 14px; }
     td.score.none { color: var(--faint); font-weight: 400; }
     .gauge {
       display: inline-block; width: 30px; height: 6px; border-radius: 2px; margin-right: 7px; vertical-align: middle;
@@ -180,23 +182,64 @@
     .lo { --sig: var(--faint); color: var(--muted); }
 
     /* Status tags */
-    .tag { display: inline-block; padding: 3px 9px 2px; border-radius: 5px; font: 600 10.5px var(--mono); letter-spacing: .05em; border: 1px solid transparent; }
+    .tag { display: inline-block; padding: 3px 9px; border-radius: 6px; font: 600 12px var(--disp); letter-spacing: 0; border: 1px solid transparent; white-space: nowrap; }
     .tag.good { color: var(--go); background: rgba(63,224,161,.1); border-color: rgba(63,224,161,.25); }
     .tag.warn { color: var(--warn); background: rgba(228,181,60,.1); border-color: rgba(228,181,60,.22); }
     .tag.info { color: var(--cool); background: rgba(90,169,255,.1); border-color: rgba(90,169,255,.22); }
     .tag.off { color: var(--off); background: rgba(240,112,138,.09); border-color: rgba(240,112,138,.22); }
     .tag.flat { color: var(--muted); background: var(--raised); border-color: var(--line); }
-    td.platform { font: 500 12px var(--mono); color: var(--muted); }
-    td.pay { font: 500 12px var(--mono); color: var(--ink); }
-    td.seen { font: 500 12px var(--mono); color: var(--faint); }
+    td.platform { color: var(--muted); }
+    td.pay { color: var(--ink); }
+    td.seen { color: var(--faint); }
 
-    a.apply { color: var(--amber); text-decoration: none; font: 600 12px var(--mono); letter-spacing: .04em; white-space: nowrap; }
+    a.apply { color: var(--amber); text-decoration: none; font: 600 13px var(--disp); white-space: nowrap; }
     a.apply:hover { text-decoration: underline; }
     .act {
       background: none; border: 1px solid var(--line); border-radius: 6px; cursor: pointer;
-      font: 500 11px var(--mono); padding: 3px 7px; color: var(--muted); transition: all .12s;
+      font: 500 12px var(--disp); padding: 4px 9px; color: var(--muted); transition: all .12s;
     }
-    .act + .act { margin-left: 4px; }
+    .act + .act { margin-left: 5px; }
+
+    /* ── Go deep: the row detail panel ──────────────────────────────────────── */
+    tr.detail > td { padding: 0; border-bottom: 1px solid var(--line); background: #0c1017; }
+    /* The detail cell spans the full (wide) table, so pin its content to the viewport
+       and cap its width — otherwise on a phone the panel is as wide as the scrolling
+       table and its text runs off the right edge. */
+    .detail-inner {
+      position: sticky; left: 0; box-sizing: border-box;
+      width: min(100%, calc(100vw - 40px));
+      padding: 18px 20px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px 28px; animation: slidein .16s ease;
+    }
+    @media (max-width: 780px) { .detail-inner { grid-template-columns: 1fr; } }
+    @keyframes slidein { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+    .detail-inner h4 { margin: 0 0 3px; font: 700 16px var(--disp); letter-spacing: -.01em; }
+    .detail-inner .sub { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+    .detail-actions { display: flex; gap: 10px; align-items: center; margin-top: 4px; flex-wrap: wrap; }
+    .detail-inner .apply-lg {
+      display: inline-block; padding: 9px 16px; border-radius: 8px;
+      background: var(--amber); color: #1a1206; font: 700 13px var(--disp); text-decoration: none;
+    }
+    .detail-inner .apply-lg:hover { filter: brightness(1.08); }
+    .detail-actions .mark {
+      padding: 9px 16px; border-radius: 8px; font: 600 13px var(--disp);
+      border: 1px solid var(--line); background: var(--raised); color: var(--muted); cursor: pointer;
+    }
+    .detail-actions .mark:hover { border-color: var(--go); color: var(--go); }
+    .detail-actions .mark.on { background: rgba(63,224,161,.12); border-color: var(--go); color: var(--go); }
+    .facts { display: flex; flex-wrap: wrap; gap: 7px 8px; margin: 12px 0 4px; }
+    .fact { font: 500 12px var(--disp); color: var(--muted); background: var(--raised); border: 1px solid var(--line); border-radius: 6px; padding: 4px 9px; }
+    .fact b { color: var(--ink); font-weight: 600; }
+    .why { font-size: 13px; line-height: 1.6; }
+    .why .wrow { display: flex; gap: 10px; padding: 4px 0; border-bottom: 1px solid var(--line-soft); }
+    .why .wrow:last-child { border-bottom: none; }
+    .why .wk { color: var(--faint); min-width: 118px; flex: none; }
+    .why .wv { color: var(--ink); }
+    .why .warn-line { color: var(--warn); }
+    .excerpt { grid-column: 1 / -1; color: var(--muted); font-size: 13px; line-height: 1.65; border-top: 1px solid var(--line-soft); padding-top: 14px; white-space: pre-wrap; }
+    .scorepips { display: flex; gap: 20px; margin: 6px 0 2px; }
+    .pip .pv { font: 700 22px var(--mono); font-variant-numeric: tabular-nums; }
+    .pip .pl { font: 500 11px var(--disp); color: var(--faint); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+    .pip.hi .pv { color: var(--go); } .pip.mid .pv { color: var(--warn); } .pip.lo .pv { color: var(--muted); }
     .act:hover { border-color: var(--amber); color: var(--amber); }
     .act[aria-pressed=true] { background: var(--amber-soft); border-color: var(--amber); color: var(--amber); }
 
@@ -365,19 +408,63 @@
       return `<td class="score ${cls}"><span class="gauge"><i style="width:${width}%"></i></span>${v}${s.suffix}</td>`;
     }
 
-    function tooltip(j) {
+    // The "go deep" panel: everything the pipeline knows about a posting, laid out to
+    // read rather than crammed into a hover tooltip. Rendered lazily on expand.
+    const tier = (v, hi, mid) => (v >= hi ? 'hi' : v >= mid ? 'mid' : 'lo');
+    function buildDetail(j) {
       const s = j.scoreSignals || {};
-      const bits = [];
-      if (s.levelReason) bits.push(`⚠ ${s.levelReason}`);
-      if (s.matchedSkills?.length) bits.push(`Your skills matched: ${s.matchedSkills.join(', ')}`);
-      if (s.requiredSkills?.length) bits.push(`Posting asks for: ${s.requiredSkills.join(', ')}`);
-      if (s.family) bits.push(`Role type: ${s.family}`);
-      if (s.pay) bits.push(`Pay: ${s.pay}`);
-      if (s.tier && s.tier !== 'unknown') bits.push(`Company: ${s.tier} tier`);
-      if (s.flags?.length) bits.push(`Flags: ${s.flags.join(', ')}`);
-      if (j.scoreConfidence) bits.push(`Confidence: ${j.scoreConfidence}`);
-      if (j.excerpt) bits.push(`\n${j.excerpt.slice(0, 300)}`);
-      return bits.join('\n') || 'No scoring signals recorded.';
+      const pip = (label, v, hi, mid, suffix = '') => {
+        const val = typeof v === 'number' ? v + suffix : '—';
+        return `<div class="pip ${typeof v === 'number' ? tier(v, hi, mid) : 'lo'}"><div class="pv">${val}</div><div class="pl">${label}</div></div>`;
+      };
+      const facts = [];
+      if (j.location) facts.push(`<span class="fact"><b>${esc(j.location)}</b></span>`);
+      if (s.family) facts.push(`<span class="fact">role <b>${esc(s.family)}</b></span>`);
+      if (s.tier && s.tier !== 'unknown') facts.push(`<span class="fact"><b>${esc(s.tier)}</b> tier</span>`);
+      if (j.source) facts.push(`<span class="fact">via <b>${esc(j.source)}</b></span>`);
+      facts.push(`<span class="fact">first seen <b>${esc(fmtDate(j.firstSeenAt))}</b></span>`);
+      if (j.scoreConfidence) facts.push(`<span class="fact">confidence <b>${esc(j.scoreConfidence)}</b></span>`);
+
+      const why = [];
+      if (s.levelReason) why.push(`<div class="wrow"><span class="wk">Heads up</span><span class="wv warn-line">⚠ ${esc(s.levelReason)}</span></div>`);
+      if (s.matchedSkills?.length) why.push(`<div class="wrow"><span class="wk">Your skills matched</span><span class="wv">${esc(s.matchedSkills.join(', '))}</span></div>`);
+      if (s.requiredSkills?.length) why.push(`<div class="wrow"><span class="wk">Posting asks for</span><span class="wv">${esc(s.requiredSkills.join(', '))}</span></div>`);
+      if (s.pay) why.push(`<div class="wrow"><span class="wk">Pay</span><span class="wv">${esc(s.pay)}</span></div>`);
+      if (s.flags?.length) why.push(`<div class="wrow"><span class="wk">Flags</span><span class="wv">${esc(s.flags.join(', '))}</span></div>`);
+
+      const applied = track[j.url] === 'applied';
+      const left = `<div>
+        <h4>${esc(j.title)}</h4>
+        <div class="sub">${esc(j.company)} · ${esc(CITY_LABEL[j.city] || j.city || '')}</div>
+        <div class="scorepips">
+          ${pip('Fit', j.compatibility, 70, 45)}
+          ${pip('Quality', j.quality, 70, 45)}
+          ${pip('Odds', j.interviewOdds, 20, 8, '%')}
+        </div>
+        <div class="facts">${facts.join('')}</div>
+        <div class="detail-actions">
+          <a class="apply-lg" href="${esc(j.applyUrl)}" target="_blank" rel="noopener">Open posting ↗</a>
+          <button class="act mark${applied ? ' on' : ''}" data-url="${esc(j.url)}" data-state="applied" aria-pressed="${applied}">
+            ${applied ? '✓ Applied' : 'Mark as applied'}
+          </button>
+        </div>
+      </div>`;
+      const right = `<div class="why">${why.join('') || '<div class="wrow"><span class="wv">No scoring signals recorded — this posting had no description to read.</span></div>'}</div>`;
+      const excerpt = j.excerpt ? `<div class="excerpt">${esc(j.excerpt)}</div>` : '';
+      return `<td colspan="${COLSPAN}"><div class="detail-inner">${left}${right}${excerpt}</div></td>`;
+    }
+
+    function toggleDetail(row) {
+      const open = row.classList.toggle('open');
+      row.setAttribute('aria-expanded', open ? 'true' : 'false');
+      const next = row.nextElementSibling;
+      if (!open) { if (next && next.classList.contains('detail')) next.remove(); return; }
+      const j = jobs.find((x) => x.url === row.dataset.url);
+      if (!j) return;
+      const dr = document.createElement('tr');
+      dr.className = 'detail';
+      dr.innerHTML = buildDetail(j);
+      row.after(dr);
     }
 
     const mean = (ns) => (ns.length ? Math.round(ns.reduce((a, b) => a + b, 0) / ns.length) : null);
@@ -480,10 +567,9 @@
       } else {
         tbody.innerHTML = rows.map((j) => {
           const state = track[j.url];
-          const tip = esc(tooltip(j));
           const tag = (v, label, kind) => `<span class="tag ${kind[v] || 'flat'}">${esc(label[v] || v || '—')}</span>`;
-          return `<tr class="${state ? 'done' : ''}" title="${tip}">
-            <td class="title">${esc(j.title)}</td>
+          return `<tr class="row ${state ? 'done' : ''}" data-url="${esc(j.url)}" tabindex="0" aria-expanded="false">
+            <td class="title"><span class="caret">▸</span>${esc(j.title)}</td>
             <td class="company">${esc(j.company)}</td>
             <td class="city">${esc(CITY_LABEL[j.city] || j.city || '—')}</td>
             ${scoreCell(j.compatibility, 'score')}
@@ -566,7 +652,15 @@
       $('exportCsv').addEventListener('click', exportCsv);
       $('tbody').addEventListener('click', (e) => {
         const btn = e.target.closest('button.act');
-        if (btn) toggleTrack(btn.dataset.url, btn.dataset.state);
+        if (btn) { toggleTrack(btn.dataset.url, btn.dataset.state); return; }
+        if (e.target.closest('a')) return;           // let the open link work
+        const row = e.target.closest('tr.row');
+        if (row) toggleDetail(row);
+      });
+      $('tbody').addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const row = e.target.closest('tr.row');
+        if (row && e.target === row) { e.preventDefault(); toggleDetail(row); }
       });
       document.querySelectorAll('th[data-sort]').forEach((th) => {
         th.addEventListener('click', () => {
