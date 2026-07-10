@@ -40,6 +40,27 @@ export const CITIES = [
     match: /toronto|mississauga|markham|north york|etobicoke|vaughan|waterloo, ?on/i,
   },
   {
+    key: 'vancouver',
+    name: 'Vancouver, BC',
+    country: 'CA',
+    indeedDomain: 'ca.indeed.com',
+    match: /vancouver|burnaby|richmond, ?bc|victoria, ?bc/i,
+  },
+  {
+    key: 'ottawa',
+    name: 'Ottawa, ON',
+    country: 'CA',
+    indeedDomain: 'ca.indeed.com',
+    match: /ottawa|gatineau|kanata/i,
+  },
+  {
+    key: 'calgary',
+    name: 'Calgary, AB',
+    country: 'CA',
+    indeedDomain: 'ca.indeed.com',
+    match: /calgary|edmonton/i,
+  },
+  {
     key: 'nyc',
     name: 'New York, NY',
     country: 'US',
@@ -54,6 +75,25 @@ export const CITIES = [
     match: /san francisco|\bsf\b|bay area|san jose|sunnyvale|palo alto|mountain view|menlo park|santa clara|cupertino|redwood city|south san francisco|foster city/i,
   },
 ];
+
+// Any Canadian location that CITIES doesn't place to a specific hub still belongs on
+// the board — the target is "anywhere in Canada", and a role tagged only "Canada",
+// "Remote - Canada" or a smaller city (Waterloo, Halifax, Quebec City) was being
+// dropped outright. Cohere, for one, tags its interns just "Canada". This matches a
+// province name/abbreviation, the word Canada, or a remote-in-Canada phrasing.
+//
+// Deliberately narrow so it never claims a US posting: bare "ON"/"QC" must be a
+// standalone token, and US-only signals are excluded first by matchCity trying the
+// US CITIES entries. "Ontario, CA" (California) is guarded by requiring Canada
+// context, not a bare province, when the string also names a US state.
+// "Ontario" is also a city in California, so that one province name is guarded
+// against a following US-state context; the rest don't collide with US place names.
+export const CANADA_ANY =
+  /\bcanad(?:a|ian)\b|\bontario\b(?!\s*,?\s*(?:ca\b|calif))|\b(?:quebec|qu[eé]bec|british columbia|alberta|manitoba|saskatchewan|nova scotia|new brunswick|newfoundland|prince edward)\b|,\s*(?:QC|ON|BC|AB|MB|SK|NS|NB|NL|PE)\b|\b(?:QC|ON|BC|AB|MB|SK|NS|NB|NL|PE),?\s*canada\b|\b(?:kitchener|waterloo|halifax|winnipeg|quebec city|qu[eé]bec city|mississauga|hamilton, ?on|london, ?on)\b/i;
+
+// The bucket a Canadian posting lands in when no specific hub matched. Not a member
+// of CITIES (nothing searches it; Indeed iterates CITIES), just a resolved label.
+export const CANADA_FALLBACK = { key: 'canada', name: 'Canada (other)', country: 'CA' };
 
 export const SEARCH_QUERY = 'software engineering internship summer 2027';
 
