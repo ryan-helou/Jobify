@@ -50,8 +50,15 @@ export function matchCity(locations) {
   return null;
 }
 
+// A table cell's visible text. Cells mix HTML and markdown: a company may be an
+// `<a>` tag, plain text, or a markdown `**[Name](url)**` (resumax writes the last).
+// Collapse the markdown link to its text and drop emphasis markers before letting
+// cheerio strip any HTML, so the company reads "Gumloop", not "**[Gumloop](…)**".
 function cellText(html) {
-  return cheerio.load(html)('body').text().replace(/\s+/g, ' ').trim();
+  const demarkdowned = String(html)
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1') // [text](url) → text
+    .replace(/[*`]/g, ''); // bold/italic/code emphasis markers
+  return cheerio.load(demarkdowned)('body').text().replace(/\s+/g, ' ').trim();
 }
 
 // Badge images and icons are links too, and they are never the apply URL.
@@ -199,7 +206,12 @@ async function scrapeSource(source) {
   let jobs;
   let postings;
   if (source.type === 'listings') {
-    const listings = await res.json();
+    const raw = await res.json();
+    // Some feeds aren't the SimplifyJobs array shape — zshah101 keys its jobs by id
+    // and calls the fields `company`/`location`/`is_open`. A source's optional `map`
+    // normalizes its payload into the { url, company_name, title, locations, ... }
+    // shape parseListings and the harvester below both expect.
+    const listings = source.map ? source.map(raw) : raw;
     // Every posting on the board, not just the ones we want — an apply URL for a
     // Seattle PM role still tells us that company's Greenhouse board token, and
     // its company_name is how we learn that token's real display name.

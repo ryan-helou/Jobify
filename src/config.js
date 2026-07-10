@@ -268,6 +268,58 @@ export const GITHUB_SOURCES = [
     harvestOnly: true,
     url: 'https://raw.githubusercontent.com/Dannny-Babs/Canadian-Tech-Internships-2025/main/README.md',
   },
+  // A 2027-scoped Canadian board that — unlike the three above — publishes a
+  // structured current_jobs.json we can read directly, so it's a real job source,
+  // not just a token mine. Its rows are mostly Canadian Workday postings (TD,
+  // Autodesk, Ciena…), which parseListings turns into jobs and whose apply URLs
+  // also seed the Workday harvester. term:'detect' because the feed carries no
+  // season field we filter on — each posting is classified from its own title
+  // (a "(Fall 2026)" title is rejected by isDevRole, a "Summer 2027" one accepted).
+  {
+    name: 'zapplyjobs/Canada-Internships-2027',
+    type: 'listings',
+    kind: 'internship',
+    term: 'detect',
+    url: 'https://raw.githubusercontent.com/zapplyjobs/Canada-Internships-2027/main/.github/data/current_jobs.json',
+  },
+  // A clean 2027-cycle markdown board with real Ashby/Greenhouse apply links. A job
+  // source (not harvest-only): its table is the standard Company/Role/Location/Apply
+  // shape parseBoard reads. term:'detect' — the repo name isn't proof of the cycle,
+  // so each posting classifies from its title.
+  {
+    name: 'resumax/tech-internships',
+    type: 'markdown',
+    kind: 'internship',
+    term: 'detect',
+    url: 'https://raw.githubusercontent.com/resumax/tech-internships/main/README.md',
+  },
+  // Two more actively-maintained 2027 markdown boards mined for board tokens only.
+  // Their postings overlap the US feeds above, but their apply URLs still name ATS
+  // boards those feeds miss — perixtar is an OA/interview tracker whose rows aren't
+  // clean job postings, so it is harvest-only by nature.
+  {
+    name: 'zapplyjobs/Internships-2027',
+    type: 'markdown',
+    harvestOnly: true,
+    url: 'https://raw.githubusercontent.com/zapplyjobs/Internships-2027/main/README.md',
+  },
+  {
+    name: 'perixtar/Summer-2027-Internships-Hourly-Update',
+    type: 'markdown',
+    harvestOnly: true,
+    url: 'https://raw.githubusercontent.com/perixtar/Summer-2027-Internships-Hourly-Update/main/README.md',
+  },
+  // zshah101 keys its jobs by id and names the fields differently (company/location/
+  // is_open), so a `map` normalizes the payload to the shape the harvester reads.
+  // Harvest-only: its ~118 rows are mostly Ashby/Greenhouse URLs whose tokens are the
+  // value; the handful of open Summer-2027 jobs already appear in the larger US feeds.
+  {
+    name: 'zshah101/Automated-List-Of-Summer-2027-and-Fall-2026-Tech-Internships',
+    type: 'listings',
+    harvestOnly: true,
+    map: (raw) => Object.values(raw || {}).map((j) => ({ url: j.url, company_name: j.company })),
+    url: 'https://raw.githubusercontent.com/zshah101/Automated-List-Of-Summer-2027-and-Fall-2026-Tech-Internships/main/data/jobs.json',
+  },
 ];
 
 // ---- hiring-term classification ------------------------------------------
