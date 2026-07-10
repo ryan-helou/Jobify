@@ -4,154 +4,288 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Jobify — Job Board</title>
+  <title>Jobify — Summer 2027 Board</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
+    /* ── Mission-control console for a Summer 2027 internship hunt ──────────────
+       One person, 295 postings, a months-long grind. Amber is the identity/live
+       colour and is NEVER used for data, so it stays meaningful. Scores are
+       encoded mint→gold→muted; rose means "blocked", cool means "no visa needed".
+       Space Grotesk carries text; IBM Plex Mono carries every number and label. */
     :root {
-      --bg: #f6f7f9; --panel: #fff; --border: #e4e7ec; --text: #1a1d23; --muted: #6b7280;
-      --accent: #4f46e5; --accent-soft: #eef2ff;
-      --good-bg: #dcfce7; --good-fg: #166534;
-      --warn-bg: #fef3c7; --warn-fg: #92400e;
-      --info-bg: #dbeafe; --info-fg: #1e40af;
-      --flat-bg: #eef1f4; --flat-fg: #4b5563;
-      --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.04);
+      --field: #0a0d14;
+      --panel: #0f141e;
+      --raised: #151c28;
+      --line: #212a3a;
+      --line-soft: #19212e;
+      --ink: #eaedf4;
+      --muted: #8592a8;
+      --faint: #59647a;
+      --amber: #ff9e2c;
+      --amber-soft: rgba(255, 158, 44, .13);
+      --go: #3fe0a1;
+      --warn: #e4b53c;
+      --cool: #5aa9ff;
+      --off: #f0708a;
+      --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      --disp: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0e1116; --panel: #171b22; --border: #262c36; --text: #e6e9ef; --muted: #9aa4b2;
-        --accent: #818cf8; --accent-soft: #1e213a;
-        --good-bg: #14331f; --good-fg: #86efac;
-        --warn-bg: #3a2c0a; --warn-fg: #fcd34d;
-        --info-bg: #16294d; --info-fg: #93c5fd;
-        --flat-bg: #21262e; --flat-fg: #9aa4b2;
-        --shadow: none;
-      }
-    }
+    /* The board is a dark instrument by design; a light theme would fight the
+       identity. Kept for print/forced-colors only. */
     * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--text);
-      font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      -webkit-font-smoothing: antialiased; }
-    .wrap { max-width: 1400px; margin: 0 auto; padding: 28px 18px 64px; }
-    header.top { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-    h1 { font-size: 23px; margin: 0; letter-spacing: -.02em; }
-    h1 .dot { color: var(--accent); }
-    .updated { color: var(--muted); font-size: 13px; }
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin: 20px 0; }
-    .stat { background: var(--panel); border: 1px solid var(--border); border-radius: 11px; padding: 13px 15px; box-shadow: var(--shadow); }
-    .stat .n { font-size: 25px; font-weight: 700; letter-spacing: -.02em; }
-    .stat .l { color: var(--muted); font-size: 12.5px; margin-top: 1px; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0; background: var(--field); color: var(--ink);
+      font: 400 15px/1.55 var(--disp);
+      background-image:
+        radial-gradient(1200px 600px at 78% -8%, rgba(255,158,44,.05), transparent 60%),
+        radial-gradient(900px 500px at 8% 0%, rgba(90,169,255,.045), transparent 55%);
+      background-attachment: fixed;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 1440px; margin: 0 auto; padding: 26px 20px 72px; }
 
-    .filters { background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-      padding: 14px; box-shadow: var(--shadow); margin-bottom: 14px; }
-    .row { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; }
-    .row + .row { margin-top: 10px; }
+    /* ── Masthead: the readout cluster ──────────────────────────────────────── */
+    .masthead {
+      border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(255,158,44,.04), transparent 40%),
+        var(--panel);
+    }
+    .brandbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      flex-wrap: wrap; padding: 16px 20px; border-bottom: 1px solid var(--line-soft);
+    }
+    .brand { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+    .wordmark {
+      font-family: var(--disp); font-weight: 700; font-size: clamp(22px, 3.4vw, 30px);
+      letter-spacing: -.03em; line-height: 1; margin: 0;
+    }
+    .wordmark b { color: var(--amber); font-weight: 700; }
+    .eyebrow {
+      font-family: var(--mono); font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--muted); font-weight: 500;
+    }
+    .live { display: flex; align-items: center; gap: 9px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+    .led {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--amber);
+      box-shadow: 0 0 0 0 rgba(255,158,44,.55); animation: pulse 2.4s ease-out infinite; flex: none;
+    }
+    .live b { color: var(--go); font-weight: 600; letter-spacing: .14em; }
+    .live .sep { color: var(--faint); }
+    .live #countdown { color: var(--ink); font-variant-numeric: tabular-nums; }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255,158,44,.5); }
+      70% { box-shadow: 0 0 0 7px rgba(255,158,44,0); }
+      100% { box-shadow: 0 0 0 0 rgba(255,158,44,0); }
+    }
+
+    .readout {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 1px; background: var(--line-soft);
+    }
+    .tile { background: var(--panel); padding: 16px 18px 15px; }
+    .tile .n {
+      font-family: var(--mono); font-weight: 600; font-size: clamp(24px, 3.8vw, 34px);
+      line-height: 1; letter-spacing: -.01em; font-variant-numeric: tabular-nums;
+    }
+    .tile .l {
+      font-family: var(--mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--muted); margin-top: 9px;
+    }
+    .tile .g { height: 3px; border-radius: 2px; background: var(--line); margin-top: 9px; overflow: hidden; }
+    .tile .g > i { display: block; height: 100%; background: var(--amber); border-radius: 2px; }
+    .tile.accent .n { color: var(--amber); }
+    @media (max-width: 720px) {
+      .readout { grid-template-columns: repeat(2, 1fr); }
+      .tile:last-child { grid-column: span 2; }
+    }
+
+    /* ── Console: filters ───────────────────────────────────────────────────── */
+    .console { margin: 14px 0; display: flex; flex-direction: column; gap: 10px; }
+    .rack { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .field-lbl { font-family: var(--mono); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--faint); margin-right: 2px; }
     input[type=search], select {
-      background: var(--bg); color: var(--text); border: 1px solid var(--border);
-      border-radius: 8px; padding: 8px 10px; font-size: 13.5px; outline: none; }
-    input[type=search] { flex: 1 1 260px; min-width: 190px; }
-    input[type=search]:focus, select:focus { border-color: var(--accent); }
-    label.rng { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); }
-    label.rng output { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; min-width: 20px; }
-    input[type=range] { width: 108px; accent-color: var(--accent); }
-    button.chip { background: var(--bg); border: 1px solid var(--border); color: var(--muted);
-      border-radius: 999px; padding: 6px 12px; font-size: 13px; cursor: pointer; font-weight: 500; }
-    button.chip[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-    button.link { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 13px; padding: 6px 4px; }
+      background: var(--raised); color: var(--ink); border: 1px solid var(--line);
+      border-radius: 8px; padding: 8px 11px; font: 500 13px var(--mono); outline: none;
+      transition: border-color .12s, box-shadow .12s;
+    }
+    input[type=search] { flex: 1 1 240px; min-width: 180px; }
+    input[type=search]::placeholder { color: var(--faint); }
+    select { cursor: pointer; }
+    input[type=search]:focus, select:focus { border-color: var(--amber); box-shadow: 0 0 0 3px var(--amber-soft); }
+    label.rng { display: inline-flex; align-items: center; gap: 8px; font: 500 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    label.rng output { color: var(--amber); font-weight: 600; min-width: 22px; text-align: right; }
+    input[type=range] { width: 96px; accent-color: var(--amber); background: transparent; }
+    button.chip {
+      background: var(--raised); border: 1px solid var(--line); color: var(--muted);
+      border-radius: 999px; padding: 7px 13px; font: 500 12px var(--mono); letter-spacing: .04em; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 7px; transition: all .12s;
+    }
+    button.chip::before {
+      content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--line);
+      border: 1px solid var(--faint); transition: all .12s;
+    }
+    button.chip[aria-pressed=true] { border-color: var(--amber); color: var(--ink); background: var(--amber-soft); }
+    button.chip[aria-pressed=true]::before { background: var(--amber); border-color: var(--amber); box-shadow: 0 0 6px var(--amber); }
+    button.ghost { background: none; border: none; color: var(--muted); cursor: pointer; font: 500 12px var(--mono); letter-spacing: .06em; padding: 7px 6px; }
+    button.ghost:hover { color: var(--amber); }
 
-    .table-wrap { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; box-shadow: var(--shadow); }
-    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-    th, td { text-align: left; padding: 10px 11px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-    th { color: var(--muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em;
-      cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--panel); z-index: 1; }
-    th.sort-asc::after { content: " ▲"; color: var(--accent); }
-    th.sort-desc::after { content: " ▼"; color: var(--accent); }
+    /* ── The grid ───────────────────────────────────────────────────────────── */
+    .grid-wrap { border: 1px solid var(--line); border-radius: 12px; overflow-x: auto; background: var(--panel); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 9px 7px; white-space: nowrap; border-bottom: 1px solid var(--line-soft); }
+    th:first-child, td:first-child { padding-left: 12px; }
+    th:last-child, td:last-child { padding-right: 12px; }
+    thead th {
+      position: sticky; top: 0; z-index: 2; background: #0c1119;
+      font: 600 10px var(--mono); letter-spacing: .13em; text-transform: uppercase; color: var(--faint);
+      cursor: pointer; user-select: none; border-bottom: 1px solid var(--line);
+    }
+    thead th:hover { color: var(--muted); }
+    thead th.on { color: var(--amber); }
+    thead th.on::after { content: " ▾"; }
+    thead th.on.asc::after { content: " ▴"; }
+    tbody td { font-size: 13px; }
+    tbody tr { transition: background .1s; }
+    tbody tr:hover { background: var(--raised); }
     tbody tr:last-child td { border-bottom: none; }
-    tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
-    tr.done { opacity: .42; }
-    td.title { white-space: normal; font-weight: 600; max-width: 280px; min-width: 170px; }
-    td.company { white-space: normal; max-width: 160px; }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
-    .badge.good { background: var(--good-bg); color: var(--good-fg); }
-    .badge.warn { background: var(--warn-bg); color: var(--warn-fg); }
-    .badge.info { background: var(--info-bg); color: var(--info-fg); }
-    .badge.flat { background: var(--flat-bg); color: var(--flat-fg); }
-    .city { text-transform: capitalize; }
-    td.score { font-variant-numeric: tabular-nums; cursor: help; padding-left: 7px; padding-right: 7px; }
-    td.score.none { color: var(--muted); }
-    .meter { display: inline-block; width: 30px; height: 5px; border-radius: 999px; background: var(--flat-bg);
-      margin-right: 6px; vertical-align: middle; overflow: hidden; }
-    .meter > i { display: block; height: 100%; border-radius: 999px; background: var(--flat-fg); }
-    .meter.hi > i { background: var(--good-fg); }
-    .meter.mid > i { background: var(--warn-fg); }
-    a.link { color: var(--accent); text-decoration: none; font-weight: 600; }
-    a.link:hover { text-decoration: underline; }
-    .act { background: none; border: 1px solid var(--border); border-radius: 7px; cursor: pointer;
-      font-size: 12px; padding: 3px 8px; color: var(--muted); }
-    .act:hover { border-color: var(--accent); color: var(--accent); }
-    .act[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-    .empty, .error { text-align: center; padding: 44px 20px; color: var(--muted); }
-    .error { color: var(--warn-fg); }
-    .note { color: var(--muted); font-size: 12.5px; margin-top: 12px; }
-    code { background: var(--flat-bg); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+    tr.done { opacity: .4; }
+    tr.done td.title { text-decoration: line-through; text-decoration-color: var(--faint); }
+    td.title { white-space: normal; font-weight: 600; max-width: 232px; min-width: 150px; letter-spacing: -.01em; }
+    td.company { white-space: normal; max-width: 118px; color: var(--muted); }
+    td.city { font: 500 12px var(--mono); color: var(--muted); }
+    .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+    /* Instrument gauge for a score cell */
+    td.score { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 600; cursor: help; }
+    td.score.none { color: var(--faint); font-weight: 400; }
+    .gauge {
+      display: inline-block; width: 30px; height: 6px; border-radius: 2px; margin-right: 7px; vertical-align: middle;
+      background:
+        repeating-linear-gradient(90deg, transparent 0 3px, rgba(10,13,20,.85) 3px 4px),
+        var(--line);
+      overflow: hidden; position: relative;
+    }
+    .gauge > i {
+      display: block; height: 100%;
+      background:
+        repeating-linear-gradient(90deg, transparent 0 3px, rgba(10,13,20,.85) 3px 4px),
+        var(--sig, var(--muted));
+    }
+    .hi { --sig: var(--go); color: var(--go); }
+    .mid { --sig: var(--warn); color: var(--warn); }
+    .lo { --sig: var(--faint); color: var(--muted); }
+
+    /* Status tags */
+    .tag { display: inline-block; padding: 3px 9px 2px; border-radius: 5px; font: 600 10.5px var(--mono); letter-spacing: .05em; border: 1px solid transparent; }
+    .tag.good { color: var(--go); background: rgba(63,224,161,.1); border-color: rgba(63,224,161,.25); }
+    .tag.warn { color: var(--warn); background: rgba(228,181,60,.1); border-color: rgba(228,181,60,.22); }
+    .tag.info { color: var(--cool); background: rgba(90,169,255,.1); border-color: rgba(90,169,255,.22); }
+    .tag.off { color: var(--off); background: rgba(240,112,138,.09); border-color: rgba(240,112,138,.22); }
+    .tag.flat { color: var(--muted); background: var(--raised); border-color: var(--line); }
+    td.platform { font: 500 12px var(--mono); color: var(--muted); }
+    td.pay { font: 500 12px var(--mono); color: var(--ink); }
+    td.seen { font: 500 12px var(--mono); color: var(--faint); }
+
+    a.apply { color: var(--amber); text-decoration: none; font: 600 12px var(--mono); letter-spacing: .04em; white-space: nowrap; }
+    a.apply:hover { text-decoration: underline; }
+    .act {
+      background: none; border: 1px solid var(--line); border-radius: 6px; cursor: pointer;
+      font: 500 11px var(--mono); padding: 3px 7px; color: var(--muted); transition: all .12s;
+    }
+    .act + .act { margin-left: 4px; }
+    .act:hover { border-color: var(--amber); color: var(--amber); }
+    .act[aria-pressed=true] { background: var(--amber-soft); border-color: var(--amber); color: var(--amber); }
+
+    .footline { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .count { font: 500 11.5px var(--mono); letter-spacing: .08em; color: var(--muted); text-transform: uppercase; }
+    .empty, .error { text-align: center; padding: 52px 20px; color: var(--muted); font-family: var(--mono); font-size: 13px; }
+    .error { color: var(--off); }
+    .fineprint { color: var(--faint); font-size: 12px; line-height: 1.6; margin-top: 18px; max-width: 760px; }
+    .fineprint b { color: var(--muted); font-weight: 600; }
+    kbd { font: 500 11px var(--mono); background: var(--raised); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; color: var(--muted); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .led { animation: none; }
+      * { scroll-behavior: auto; }
+    }
+    :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 4px; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <header class="top">
-      <h1>Jobify<span class="dot">.</span> <span style="font-weight:500;color:var(--muted);font-size:15px">job board</span></h1>
-      <div class="updated" id="updated">Loading…</div>
+    <header class="masthead">
+      <div class="brandbar">
+        <div class="brand">
+          <h1 class="wordmark">JOBIFY<b>.</b></h1>
+          <span class="eyebrow">Summer 2027 · Software Internship Board</span>
+        </div>
+        <div class="live">
+          <span class="led" aria-hidden="true"></span>
+          <b>LIVE</b>
+          <span class="sep">·</span>
+          <span id="livemeta">loading…</span>
+        </div>
+      </div>
+      <div class="readout" id="readout"></div>
     </header>
 
-    <div class="stats" id="stats"></div>
-
-    <div class="filters">
-      <div class="row">
-        <input type="search" id="q" placeholder="Search title, company, or location…" />
-        <select id="city"><option value="">All cities</option></select>
-        <select id="term"><option value="">Any hiring term</option></select>
-        <select id="sponsorship"><option value="">Any sponsorship</option></select>
-        <select id="platform"><option value="">Any platform</option></select>
-        <select id="source"><option value="">Any source</option></select>
+    <section class="console" aria-label="Filters">
+      <div class="rack">
+        <input type="search" id="q" placeholder="search title, company, location…" aria-label="Search" />
+        <select id="city" aria-label="City"><option value="">all cities</option></select>
+        <select id="term" aria-label="Hiring term"><option value="">any term</option></select>
+        <select id="sponsorship" aria-label="Sponsorship"><option value="">any sponsorship</option></select>
+        <select id="platform" aria-label="Platform"><option value="">any platform</option></select>
+        <select id="source" aria-label="Source"><option value="">any source</option></select>
       </div>
-      <div class="row">
-        <label class="rng">Min fit <input type="range" id="minFit" min="0" max="100" step="5" value="0" /><output id="minFitOut">0</output></label>
-        <label class="rng">Min quality <input type="range" id="minQual" min="0" max="100" step="5" value="0" /><output id="minQualOut">0</output></label>
-        <button class="chip" id="paidOnly" aria-pressed="false">Pay stated</button>
-        <button class="chip" id="hideDone" aria-pressed="true">Hide applied &amp; dismissed</button>
-        <button class="link" id="reset">Reset filters</button>
+      <div class="rack">
+        <label class="rng">fit ≥ <input type="range" id="minFit" min="0" max="100" step="5" value="0" /><output id="minFitOut">0</output></label>
+        <label class="rng">qual ≥ <input type="range" id="minQual" min="0" max="100" step="5" value="0" /><output id="minQualOut">0</output></label>
+        <button class="chip" id="paidOnly" aria-pressed="false">pay stated</button>
+        <button class="chip" id="hideDone" aria-pressed="true">hide worked</button>
+        <button class="ghost" id="reset">↺ reset</button>
         <span style="flex:1"></span>
-        <button class="link" id="exportCsv">Export CSV</button>
+        <button class="ghost" id="exportCsv">↓ export csv</button>
       </div>
-    </div>
+    </section>
 
-    <div class="table-wrap">
+    <div class="grid-wrap">
       <table id="table">
         <thead>
           <tr>
             <th data-sort="title">Role</th>
             <th data-sort="company">Company</th>
             <th data-sort="city">City</th>
-            <th data-sort="compatibility" title="How well the posting matches assets/profile.json — skills, role family, city, hiring term, eligibility. Postings you cannot hold (PhD-only, new-grad, senior) score near zero regardless of skill overlap.">Fit</th>
-            <th data-sort="quality" title="How good the internship looks: pay, return offer, mentorship, real production work, company tier.">Quality</th>
-            <th data-sort="interviewOdds" title="A hand-built prior, NOT a calibrated probability — no interview outcomes are recorded anywhere, so nothing was fitted to data. It shrinks toward the base rate when a posting has no description. Use it to rank two postings, not to predict one.">Odds *</th>
+            <th data-sort="compatibility" title="Fit against your profile — skills, role family, city, term, eligibility. Roles you can't hold (PhD-only, new-grad, senior) score near zero regardless of skill overlap.">Fit</th>
+            <th data-sort="quality" title="How good the internship looks: pay, return offer, mentorship, real production work, company tier.">Qual</th>
+            <th data-sort="interviewOdds" title="A hand-built prior, NOT a calibrated probability — no interview outcomes are recorded, so nothing is fitted to data. Shrinks toward the base rate when a posting has no description. Rank two postings with it; don't predict one.">Odds</th>
             <th data-sort="term">Term</th>
-            <th data-sort="sponsorship">Sponsorship</th>
+            <th data-sort="sponsorship">Visa</th>
             <th data-sort="platform">Apply via</th>
             <th data-sort="pay">Pay</th>
-            <th data-sort="firstSeenAt">First seen</th>
-            <th>Link</th>
+            <th data-sort="firstSeenAt">Seen</th>
+            <th>Open</th>
             <th>Track</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
-    <div class="note" id="count"></div>
-    <div class="note">
-      <strong>*</strong> <em>Odds</em> is a heuristic prior, not a forecast. No interview outcomes are recorded
-      anywhere in this project, so nothing has been fitted to real data. Hover any row to see the signals behind
-      its scores. <em>Applied</em> and <em>Hide</em> are stored in this browser only — they never leave your
-      device and no employer is contacted. Jobify does not apply to anything; you do.
+
+    <div class="footline">
+      <span class="count" id="count"></span>
     </div>
+
+    <p class="fineprint">
+      <b>Odds</b> is a heuristic prior, not a forecast — no interview outcomes are recorded, so nothing is fitted to
+      real data. Hover any row for the signals behind its scores. <b>Applied</b> and <b>hide</b> live in this browser
+      only (<kbd>localStorage</kbd>) — they never leave your device and no employer is contacted. Jobify finds and
+      ranks; you apply.
+    </p>
   </div>
 
   <!--
@@ -185,6 +319,8 @@
 
   <script>
     const STORE_KEY = 'jobify.track.v1';
+    const REFRESH_MS = 2 * 60 * 60 * 1000; // the cron cadence — see refresh-board.yml
+    const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const VOCAB = JSON.parse(document.getElementById('board-vocabulary').textContent);
     const COLSPAN = VOCAB.columns;
@@ -206,6 +342,7 @@
     let track = {};           // url -> 'applied' | 'dismissed'
     let sortKey = 'compatibility';
     let sortDir = -1;
+    let updatedAt = null;
 
     const $ = (id) => document.getElementById(id);
     const esc = (s) => (s == null ? '' : String(s)).replace(/[&<>"']/g, (c) =>
@@ -221,17 +358,16 @@
     }
 
     function scoreCell(v, scale) {
-      if (typeof v !== 'number' || !isFinite(v)) return '<td class="score none">—</td>';
+      if (typeof v !== 'number' || !isFinite(v)) return '<td class="score none">—·—</td>';
       const s = SCALES[scale];
       const cls = v >= s.hi ? 'hi' : v >= s.mid ? 'mid' : 'lo';
-      const width = Math.max(3, Math.min(100, (v / s.max) * 100));
-      return `<td class="score"><span class="meter ${cls}"><i style="width:${width}%"></i></span>${v}${s.suffix}</td>`;
+      const width = Math.max(4, Math.min(100, (v / s.max) * 100));
+      return `<td class="score ${cls}"><span class="gauge"><i style="width:${width}%"></i></span>${v}${s.suffix}</td>`;
     }
 
     function tooltip(j) {
       const s = j.scoreSignals || {};
       const bits = [];
-      // The single most useful thing a near-zero score can tell you.
       if (s.levelReason) bits.push(`⚠ ${s.levelReason}`);
       if (s.matchedSkills?.length) bits.push(`Your skills matched: ${s.matchedSkills.join(', ')}`);
       if (s.requiredSkills?.length) bits.push(`Posting asks for: ${s.requiredSkills.join(', ')}`);
@@ -246,17 +382,43 @@
 
     const mean = (ns) => (ns.length ? Math.round(ns.reduce((a, b) => a + b, 0) / ns.length) : null);
 
-    function renderStats(rows) {
+    // Count-up on load — tabular figures mean no layout shift. Static under
+    // reduced-motion: a number that animates is decoration, and this reader opted out.
+    function countUp(el, to, suffix = '') {
+      if (REDUCED || !to) { el.textContent = to + suffix; return; }
+      const start = performance.now(), dur = 620;
+      const step = (t) => {
+        const p = Math.min(1, (t - start) / dur);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(to * eased) + suffix;
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+
+    function renderReadout() {
       const applied = Object.values(track).filter((v) => v === 'applied').length;
-      const eligible = jobs.filter((j) => j.term === '2027' || j.term === 'exempt' || j.term === 'unstated').length;
-      const cards = [
-        { n: jobs.length, l: 'Postings tracked' },
-        { n: rows.length, l: 'Matching filters' },
-        { n: eligible, l: 'Right or unstated term' },
-        { n: applied, l: 'You applied' },
-        { n: mean(jobs.map((j) => j.compatibility).filter((v) => typeof v === 'number')) ?? '—', l: 'Avg fit' },
+      const canadian = jobs.filter((j) => j.country === 'CA').length;
+      const actionable = jobs.filter((j) => j.term === '2027' || j.term === 'exempt' || j.term === 'unstated').length;
+      const avgFit = mean(jobs.map((j) => j.compatibility).filter((v) => typeof v === 'number'));
+      const total = jobs.length || 1;
+      // Each tile carries a small gauge showing its share, except avg-fit which is
+      // already a 0–100 reading. Applied is measured against what's actionable — the
+      // only postings worth applying to — not the whole board.
+      const tiles = [
+        { n: jobs.length, l: 'Postings', g: 1 },
+        { n: canadian, l: 'Canadian', g: canadian / total },
+        { n: actionable, l: 'Actionable', g: actionable / total },
+        { n: applied, l: 'Applied', g: actionable ? applied / actionable : 0, accent: true },
+        { n: avgFit ?? 0, l: 'Avg fit', g: (avgFit ?? 0) / 100, suffix: '' },
       ];
-      $('stats').innerHTML = cards.map((c) => `<div class="stat"><div class="n">${c.n}</div><div class="l">${c.l}</div></div>`).join('');
+      $('readout').innerHTML = tiles.map((t) =>
+        `<div class="tile${t.accent ? ' accent' : ''}">
+           <div class="n" data-to="${t.n}">0</div>
+           <div class="g"><i style="width:${Math.round(Math.max(0, Math.min(1, t.g)) * 100)}%"></i></div>
+           <div class="l">${t.l}</div>
+         </div>`).join('');
+      $('readout').querySelectorAll('.n').forEach((el) => countUp(el, +el.dataset.to));
     }
 
     function fillFilter(id, values, labelFn) {
@@ -314,38 +476,38 @@
       const rows = currentRows();
       const tbody = $('tbody');
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="${COLSPAN}"><div class="empty">No postings match these filters.</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${COLSPAN}"><div class="empty">No postings match these filters. Loosen a filter or hit reset.</div></td></tr>`;
       } else {
         tbody.innerHTML = rows.map((j) => {
           const state = track[j.url];
           const tip = esc(tooltip(j));
-          const badge = (v, label, kind) => `<span class="badge ${kind[v] || 'flat'}">${esc(label[v] || v || '—')}</span>`;
+          const tag = (v, label, kind) => `<span class="tag ${kind[v] || 'flat'}">${esc(label[v] || v || '—')}</span>`;
           return `<tr class="${state ? 'done' : ''}" title="${tip}">
             <td class="title">${esc(j.title)}</td>
             <td class="company">${esc(j.company)}</td>
-            <td class="city">${esc(CITY_LABEL[j.city] || j.city || '')}</td>
+            <td class="city">${esc(CITY_LABEL[j.city] || j.city || '—')}</td>
             ${scoreCell(j.compatibility, 'score')}
             ${scoreCell(j.quality, 'score')}
             ${scoreCell(j.interviewOdds, 'odds')}
-            <td>${badge(j.term, TERM_LABEL, TERM_KIND)}</td>
-            <td>${badge(j.sponsorship, SPON_LABEL, SPON_KIND)}</td>
-            <td>${esc(j.platform)}</td>
-            <td>${esc(j.pay || '—')}</td>
-            <td>${esc(fmtDate(j.firstSeenAt))}</td>
-            <td><a class="link" href="${esc(j.applyUrl)}" target="_blank" rel="noopener">Apply ↗</a></td>
+            <td>${tag(j.term, TERM_LABEL, TERM_KIND)}</td>
+            <td>${tag(j.sponsorship, SPON_LABEL, SPON_KIND)}</td>
+            <td class="platform">${esc(j.platform)}</td>
+            <td class="pay">${esc(j.pay || '—')}</td>
+            <td class="seen">${esc(fmtDate(j.firstSeenAt))}</td>
+            <td><a class="apply" href="${esc(j.applyUrl)}" target="_blank" rel="noopener">open ↗</a></td>
             <td>
-              <button class="act" data-url="${esc(j.url)}" data-state="applied" aria-pressed="${state === 'applied'}">Applied</button>
-              <button class="act" data-url="${esc(j.url)}" data-state="dismissed" aria-pressed="${state === 'dismissed'}">Hide</button>
+              <button class="act" data-url="${esc(j.url)}" data-state="applied" aria-pressed="${state === 'applied'}">applied</button>
+              <button class="act" data-url="${esc(j.url)}" data-state="dismissed" aria-pressed="${state === 'dismissed'}">hide</button>
             </td>
           </tr>`;
         }).join('');
       }
-      $('count').textContent = `Showing ${rows.length} of ${jobs.length} posting${jobs.length === 1 ? '' : 's'}.`;
+      $('count').textContent = `${rows.length} / ${jobs.length} shown`;
       document.querySelectorAll('th[data-sort]').forEach((th) => {
-        th.classList.remove('sort-asc', 'sort-desc');
-        if (th.dataset.sort === sortKey) th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+        th.classList.toggle('on', th.dataset.sort === sortKey);
+        th.classList.toggle('asc', th.dataset.sort === sortKey && sortDir === 1);
       });
-      renderStats(rows);
+      renderReadout();
     }
 
     function toggleTrack(url, state) {
@@ -367,6 +529,23 @@
       URL.revokeObjectURL(a.href);
     }
 
+    // The one true animated moment: a live countdown to the next 2-hour refresh, off
+    // the real cron cadence. Information, not decoration, so it runs even under
+    // reduced-motion — just without the sub-second tick.
+    function tickCountdown() {
+      const meta = $('livemeta');
+      if (!updatedAt) { meta.textContent = 'no refresh recorded yet'; return; }
+      const base = new Date(updatedAt);
+      const upd = base.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+      let next = base.getTime() + REFRESH_MS;
+      const now = Date.now();
+      while (next <= now) next += REFRESH_MS; // survive a missed run
+      const left = next - now;
+      const h = Math.floor(left / 3.6e6), m = Math.floor((left % 3.6e6) / 6e4), s = Math.floor((left % 6e4) / 1000);
+      const cd = REDUCED ? `${h}h ${String(m).padStart(2, '0')}m` : `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      meta.innerHTML = `updated ${esc(upd)} <span class="sep">·</span> next refresh <span id="countdown">${cd}</span>`;
+    }
+
     function wire() {
       ['q', 'city', 'term', 'sponsorship', 'platform', 'source'].forEach((id) => $(id).addEventListener('input', render));
       for (const [id, out] of [['minFit', 'minFitOut'], ['minQual', 'minQualOut']]) {
@@ -385,13 +564,10 @@
         render();
       });
       $('exportCsv').addEventListener('click', exportCsv);
-
-      // Delegated: rows are re-rendered on every interaction.
       $('tbody').addEventListener('click', (e) => {
         const btn = e.target.closest('button.act');
         if (btn) toggleTrack(btn.dataset.url, btn.dataset.state);
       });
-
       document.querySelectorAll('th[data-sort]').forEach((th) => {
         th.addEventListener('click', () => {
           const k = th.dataset.sort;
@@ -421,15 +597,15 @@
       try {
         const data = await fetchBoard();
         jobs = Array.isArray(data.jobs) ? data.jobs : [];
-        $('updated').textContent = data.updatedAt
-          ? 'Updated ' + fmtDate(data.updatedAt) + ' · ' + new Date(data.updatedAt).toLocaleTimeString()
-          : 'No refresh recorded yet';
+        updatedAt = data.updatedAt || null;
         buildFilters();
         render();
+        tickCountdown();
+        setInterval(tickCountdown, REDUCED ? 30000 : 1000);
       } catch (err) {
-        $('stats').innerHTML = '';
-        $('tbody').innerHTML = `<tr><td colspan="${COLSPAN}"><div class="error">Could not load <code>board.json</code> (${esc(err.message)}).</div></td></tr>`;
-        $('updated').textContent = '';
+        $('readout').innerHTML = '';
+        $('livemeta').textContent = 'offline';
+        $('tbody').innerHTML = `<tr><td colspan="${COLSPAN}"><div class="error">Could not load board.json — ${esc(err.message)}</div></td></tr>`;
       }
     }
 
