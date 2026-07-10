@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-09T19:32:30.454Z",
+  "updatedAt": "2026-07-10T13:22:24.798Z",
   "jobs": [
     {
       "key": "https://stripe.com/jobs/search?gh_jid=7991718",
@@ -482,6 +482,2815 @@
       },
       "attempts": 1,
       "recordedAt": "2026-07-09T19:31:03.392Z"
+    },
+    {
+      "key": "https://mlse.wd3.myworkdayjobs.com/mlse/job/toronto-ontario/software-engineer-intern_jr0000554-2",
+      "identity": "mapleleafsportsentertainmentpartnershipmlse|softwareengineerintern|toronto",
+      "url": "https://mlse.wd3.myworkdayjobs.com/MLSE/job/Toronto-Ontario/Software-Engineer-Intern_JR0000554-2",
+      "title": "Software Engineer Intern",
+      "company": "Maple Leaf Sports & Entertainment Partnership (MLSE)",
+      "location": "Toronto, Ontario",
+      "city": "toronto",
+      "source": "workday:mlse",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 84,
+      "quality": 53,
+      "interviewOdds": 11,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "javascript",
+          "typescript",
+          "react",
+          "node",
+          "sql",
+          "nosql",
+          "aws",
+          "docker",
+          "git",
+          "rest",
+          "testing"
+        ],
+        "requiredSkills": [
+          "javascript",
+          "typescript",
+          "react",
+          "node",
+          "sql",
+          "nosql",
+          "aws",
+          "gcp",
+          "azure",
+          "docker",
+          "git",
+          "rest",
+          "ml",
+          "nlp",
+          "testing"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Powered by Passion. United by Purpose. Build for Impact. At Maple Leaf Sports & Entertainment Partnership (MLSE), we exist to deliver the ultimate fan experience by lifting trophies, spirits, and communities – united as one. We're more than a workplace. We are a team of passionate people, boldly building the future of sport and entertainment, together. We believe in the power of play, the strength of collaboration, and the energy that comes from showing up with purpose. From the ice to the pitch, the hardwood to the digital arena, we’re proud to be the driving force behind the Toronto Maple…",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:16:49.907Z",
+      "recordedAt": "2026-07-10T13:16:49.907Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:16:49.907Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://bmo.wd3.myworkdayjobs.com/campus/job/toronto-on-can/application-developer_r260017918-1",
+      "identity": "bmo|applicationdeveloper|toronto",
+      "url": "https://bmo.wd3.myworkdayjobs.com/Campus/job/Toronto-ON-CAN/Application-developer_R260017918-1",
+      "title": "Application developer",
+      "company": "BMO",
+      "location": "Toronto, ON, CAN",
+      "city": "toronto",
+      "source": "workday:bmo",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 82,
+      "quality": 56,
+      "interviewOdds": 11,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [
+          "algorithms",
+          "testing"
+        ],
+        "requiredSkills": [
+          "algorithms",
+          "testing"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Application Deadline:07/11/2026Address:33 Dundas Street WestJob Family Group:TechnologyUnderstands that the success of a developer is to understand the core business processes of the business unit and business requirements as well as the architecture patterns and technology strategy (e.g., Transformation, SmartCore, DevOps). Conceive and write detailed software implementations/code while ensuring that their code/configurations adhere to the security, logging, error handling, and performance standards and non-functional requirements. Writes, configures, and integrates code to create the…",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:16:49.909Z",
+      "recordedAt": "2026-07-10T13:16:49.909Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:16:49.909Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.ashbyhq.com/human-computer-lab/3ceb956a-f231-4238-bb2e-365515b930a7",
+      "identity": "humancomputerlab|interncontrolsengineer|toronto",
+      "url": "https://jobs.ashbyhq.com/human-computer-lab/3ceb956a-f231-4238-bb2e-365515b930a7",
+      "title": "Intern - Controls Engineer",
+      "company": "Human Computer Lab",
+      "location": "San Francisco ; Toronto",
+      "city": "toronto",
+      "source": "ats:ashby",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 81,
+      "quality": 49,
+      "interviewOdds": 14,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "python",
+          "c++",
+          "algorithms"
+        ],
+        "requiredSkills": [
+          "python",
+          "c++",
+          "embedded",
+          "algorithms"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Human Computer Lab is a robotics startup and research lab building expressive robots that feel alive and responsive. Our first robot, LeLamp, explores a new category of consumer robotics where everyday objects become interactive and help us reshape our attachment to technology. Our goal is to push the frontier of human-robot interaction by making technology more legible, emotionally intuitive, and human-centered. We are building the foundation for a new generation of robots designed for everyday environments. What to expect We’re looking for a controls/mechatronics engineer who wants to own…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): What is one project you're really proud of?; Why do you want to join the team?",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:16:57.045Z",
+      "recordedAt": "2026-07-10T13:16:57.045Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:16:57.045Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): What is one project you're really proud of?; Why do you want to join the team?"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.ashbyhq.com/super.com/6a0dc25b-6eb2-411e-a862-6b083d9bad3c",
+      "identity": "super|paymentsengineeringintern12month|toronto",
+      "url": "https://jobs.ashbyhq.com/super.com/6a0dc25b-6eb2-411e-a862-6b083d9bad3c",
+      "title": "Payments Engineering Intern (12-month)",
+      "company": "Super",
+      "location": "Canada ; Toronto",
+      "city": "toronto",
+      "source": "ats:ashby",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 80,
+      "quality": 58,
+      "interviewOdds": 13,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "typescript",
+          "python",
+          "react",
+          "sql",
+          "nosql",
+          "aws",
+          "ci",
+          "git"
+        ],
+        "requiredSkills": [
+          "typescript",
+          "python",
+          "react",
+          "django",
+          "sql",
+          "nosql",
+          "aws",
+          "kubernetes",
+          "ci",
+          "git",
+          "spark",
+          "distributed"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": "CA$34.50 – CA$40.00 per hour",
+        "flags": []
+      },
+      "excerpt": "At Super.com http://Super.com, we’re on a mission to help people save more, earn more, and get more out of life. That goes for both our customers and our team. For our employees, Super.com http://Super.com is more than just a workplace - it’s an opportunity to grow, make an impact, and unlock your full potential. We invest in learning, celebrate bold ideas, and create pathways for career growth. We move fast, think big, and always put people first. Your career should be as rewarding as the work you do, and at Super.com http://Super.com, we’re here to make every day Super. Term: This…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): Can you please confirm how many internships/work terms you’ve completed so far?",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:17:04.491Z",
+      "recordedAt": "2026-07-10T13:17:04.491Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:17:04.491Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): Can you please confirm how many internships/work terms you’ve completed so far?"
+        }
+      ]
+    },
+    {
+      "key": "https://job-boards.greenhouse.io/cresta/jobs/4123841008",
+      "identity": "cresta|softwareengineerintern|toronto",
+      "url": "https://job-boards.greenhouse.io/cresta/jobs/4123841008",
+      "title": "Software Engineer Intern",
+      "company": "Cresta",
+      "location": "Toronto Canada",
+      "city": "toronto",
+      "source": "ats:greenhouse",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 76,
+      "quality": 67,
+      "interviewOdds": 13,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "javascript",
+          "typescript",
+          "python",
+          "java"
+        ],
+        "requiredSkills": [
+          "javascript",
+          "typescript",
+          "python",
+          "java",
+          "ml",
+          "nlp",
+          "distributed"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": "$30-50/hour",
+        "flags": []
+      },
+      "excerpt": "Cresta unlocks the true potential of the customer experience, turning every conversation into a competitive advantage. Cresta’s unified AI platform combines conversational AI agents, real-time human agent augmentation, and comprehensive conversation intelligence to drive revenue and efficiency gains across every channel. The world’s leading companies, including United Airlines, Cox Communications, and Marriott, use Cresta to power world-class customer experiences every day.&nbsp; Born from the Stanford AI Lab, Cresta has raised more than $270 million from the world’s leading investors,…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): To help us find the best team match, please include a brief note on the type of problems you most en",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:17:08.016Z",
+      "recordedAt": "2026-07-10T13:17:08.016Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:17:08.016Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): To help us find the best team match, please include a brief note on the type of problems you most en"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.ashbyhq.com/viggle/d181a1c3-a874-4a2d-a4b2-de8b94b6463b",
+      "identity": "viggle|softwareengineerinterncoop|toronto",
+      "url": "https://jobs.ashbyhq.com/viggle/d181a1c3-a874-4a2d-a4b2-de8b94b6463b",
+      "title": "Software Engineer (intern/co-op)",
+      "company": "viggle",
+      "location": "Toronto",
+      "city": "toronto",
+      "source": "ats:ashby",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 76,
+      "quality": 51,
+      "interviewOdds": 13,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "typescript",
+          "python",
+          "react",
+          "node"
+        ],
+        "requiredSkills": [
+          "typescript",
+          "python",
+          "rust",
+          "react",
+          "node",
+          "pytorch",
+          "distributed"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": "CA$5K – CA$8K per month",
+        "flags": []
+      },
+      "excerpt": "\"Learning fast is an engineer’s superpower in the AI era.\" About Us Viggle AI is a startup backed by top-tier investors such as a16z and TSFV. We're at the forefront of the GenAI revolution, building the foundation model for the world — and the products that put it in everyone's hands, from first-time meme makers to professional studios. The result is one of the most loved creative platforms in AI: over 45 million users, one of the largest communities on Discord, and creators spanning Hollywood professionals to TikTokers. Behind it is a Toronto-based team that lives by one principle — serious…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): Please introduce a product / open-source prototype / demo that you have solo developed",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:17:15.073Z",
+      "recordedAt": "2026-07-10T13:17:15.073Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:17:15.073Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): Please introduce a product / open-source prototype / demo that you have solo developed"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.ashbyhq.com/super.com/8179b5ad-9074-4d96-aa92-366cf12ab5d5",
+      "identity": "super|softwareengineeringinternproductfullstack|toronto",
+      "url": "https://jobs.ashbyhq.com/super.com/8179b5ad-9074-4d96-aa92-366cf12ab5d5",
+      "title": "Software Engineering Intern - Product (Full-Stack)",
+      "company": "Super",
+      "location": "Canada ; Toronto",
+      "city": "toronto",
+      "source": "ats:ashby",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 75,
+      "quality": 54,
+      "interviewOdds": 13,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "typescript",
+          "python",
+          "react",
+          "sql",
+          "nosql",
+          "aws",
+          "ci",
+          "git"
+        ],
+        "requiredSkills": [
+          "typescript",
+          "python",
+          "react",
+          "vue",
+          "angular",
+          "django",
+          "sql",
+          "nosql",
+          "aws",
+          "kubernetes",
+          "ci",
+          "git",
+          "distributed"
+        ],
+        "family": "fullstack",
+        "tier": "unknown",
+        "pay": "CA$20.25 – CA$39.25 per hour",
+        "flags": []
+      },
+      "excerpt": "At Super.com http://Super.com, we’re on a mission to help people save more, earn more, and get more out of life. That goes for both our customers and our team. For our employees, Super.com http://Super.com is more than just a workplace - it’s an opportunity to grow, make an impact, and unlock your full potential. We invest in learning, celebrate bold ideas, and create pathways for career growth. We move fast, think big, and always put people first. Your career should be as rewarding as the work you do, and at Super.com http://Super.com, we’re here to make every day Super. Term: This…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): Can you please confirm how many internships/work terms you’ve completed so far?",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:17:22.405Z",
+      "recordedAt": "2026-07-10T13:17:22.405Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:17:22.405Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): Can you please confirm how many internships/work terms you’ve completed so far?"
+        }
+      ]
+    },
+    {
+      "key": "https://www.d2l.com/careers/jobs/?job_id=7455458&gh_jid=7455458",
+      "identity": "d2l|softwaredevelopernewgraduate|toronto",
+      "url": "https://www.d2l.com/careers/jobs/?job_id=7455458&gh_jid=7455458",
+      "title": "Software Developer - New Graduate",
+      "company": "D2L",
+      "location": "Kitchener, ON, Canada, Toronto, ON, Canada, Vancouver, British Columbia, Canada, Winnipeg, MB, Canada",
+      "city": "toronto",
+      "source": "ats:greenhouse",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 72,
+      "quality": 49,
+      "interviewOdds": 13,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "java",
+          "c++",
+          "algorithms"
+        ],
+        "requiredSkills": [
+          "java",
+          "c++",
+          "c#",
+          "distributed",
+          "algorithms"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "D2L is a cloud company that is modernizing education and building the Future of Work. The old models of teaching and learning are in the midst of the largest transformation in history, and D2L is at the heart of that fundamental shift.&nbsp; New models of teaching and learning enable a personalized, student-centric experience – and deliver&nbsp;improved retention, engagement, satisfaction, and results for learners of all ages – in schools, campuses, and companies. D2L is disrupting the way the world learns, by providing the next generation learning environment and solutions to engage and…",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:17:22.411Z",
+      "recordedAt": "2026-07-10T13:17:22.411Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:17:22.411Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.ashbyhq.com/super.com/7d7eaa47-39d4-4677-aea9-f5d9f6c25ed8",
+      "identity": "super|softwaredevelopmentengineeringinterninfrastructuredevops12months|toronto",
+      "url": "https://jobs.ashbyhq.com/super.com/7d7eaa47-39d4-4677-aea9-f5d9f6c25ed8",
+      "title": "Software Development Engineering Intern - Infrastructure (DevOps) -  12 Months",
+      "company": "Super",
+      "location": "Canada ; Toronto",
+      "city": "toronto",
+      "source": "ats:ashby",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 67,
+      "quality": 54,
+      "interviewOdds": 12,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "python",
+          "sql",
+          "nosql",
+          "aws",
+          "docker",
+          "ci",
+          "git"
+        ],
+        "requiredSkills": [
+          "python",
+          "sql",
+          "nosql",
+          "aws",
+          "docker",
+          "kubernetes",
+          "terraform",
+          "ci",
+          "git",
+          "distributed"
+        ],
+        "family": "infra",
+        "tier": "unknown",
+        "pay": "CA$20.25 – CA$39.25 per hour",
+        "flags": []
+      },
+      "excerpt": "At Super.com http://Super.com, we’re on a mission to help people save more, earn more, and get more out of life. That goes for both our customers and our team. For our employees, Super.com http://Super.com is more than just a workplace - it’s an opportunity to grow, make an impact, and unlock your full potential. We invest in learning, celebrate bold ideas, and create pathways for career growth. We move fast, think big, and always put people first. Your career should be as rewarding as the work you do, and at Super.com http://Super.com, we’re here to make every day Super. Term: This…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): Can you please confirm how many internships/work terms you’ve completed so far?",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:17:29.592Z",
+      "recordedAt": "2026-07-10T13:17:29.592Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:17:29.592Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): Can you please confirm how many internships/work terms you’ve completed so far?"
+        }
+      ]
+    },
+    {
+      "key": "https://job-boards.greenhouse.io/tribalscale/jobs/4687337006",
+      "identity": "tribalscale|agilesoftwareengineercoop|toronto",
+      "url": "https://job-boards.greenhouse.io/tribalscale/jobs/4687337006",
+      "title": "Agile Software Engineer - Co-op",
+      "company": "TribalScale",
+      "location": "Toronto, Ontario, Canada",
+      "city": "toronto",
+      "source": "ats:greenhouse",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 66,
+      "quality": 66,
+      "interviewOdds": 11,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "react",
+          "node"
+        ],
+        "requiredSkills": [
+          "react",
+          "node",
+          "nlp",
+          "ios",
+          "android"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Shape the Future with TribalScale At TribalScale, we're not just participating in digital transformation—we're driving it. As global leaders in innovation, we combine Agile methodologies and cutting-edge AI, including Large Language Models (LLMs), to create digital solutions that propel enterprises into the future. Based in Toronto with a hybrid workforce across the Americas, we're on an ambitious mission to \"Right the Future.\" If you're a bold innovator ready to push the boundaries of what's possible, we invite you to join our team of digital pioneers. Our Digital Expertise Transformation…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): Country; unlabeled field; Start date month; Start date year",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:17:33.434Z",
+      "recordedAt": "2026-07-10T13:17:33.434Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:17:33.434Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): Country; unlabeled field; Start date month; Start date year"
+        }
+      ]
+    },
+    {
+      "key": "https://marvell.wd1.myworkdayjobs.com/marvellcareers2/job/toronto-canada/analog-engineer-intern---phd_2502426",
+      "identity": "marvell|analogengineerinternphd|toronto",
+      "url": "https://marvell.wd1.myworkdayjobs.com/marvellcareers2/job/Toronto-Canada/Analog-Engineer-Intern---PhD_2502426",
+      "title": "Analog Engineer Intern - PhD",
+      "company": "Marvell",
+      "location": "Toronto, Canada",
+      "city": "toronto",
+      "source": "workday:marvell",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 66,
+      "quality": 53,
+      "interviewOdds": 9,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [],
+        "requiredSkills": [],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "About MarvellMarvell’s semiconductor solutions are the essential building blocks of the data infrastructure that connects our world. Across enterprise, cloud and AI, and carrier architectures, our innovative technology is enabling new possibilities. At Marvell, you can affect the arc of individual lives, lift the trajectory of entire industries, and fuel the transformative potential of tomorrow. For those looking to make their mark on purposeful and enduring innovation, above and beyond fleeting trends, Marvell is a place to thrive, learn, and lead. This is an existing vacancy.Your Team, Your…",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:17:33.437Z",
+      "recordedAt": "2026-07-10T13:17:33.437Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:17:33.437Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://rakuten.wd1.myworkdayjobs.com/kobo/job/toronto-canada/dev-ops-engineer--12-month-co-op-_1033844",
+      "identity": "kobo|devopsengineer12monthcoop|toronto",
+      "url": "https://rakuten.wd1.myworkdayjobs.com/Kobo/job/Toronto-Canada/Dev-Ops-Engineer--12-month-Co-op-_1033844",
+      "title": "Dev Ops Engineer (12-month Co-op)",
+      "company": "Kobo",
+      "location": "Toronto, Canada",
+      "city": "toronto",
+      "source": "workday:rakuten",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 66,
+      "quality": 49,
+      "interviewOdds": 9,
+      "scoreConfidence": "low",
+      "scoreSignals": {
+        "matchedSkills": [],
+        "requiredSkills": [],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:17:33.437Z",
+      "recordedAt": "2026-07-10T13:17:33.437Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:17:33.437Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://ejov.fa.ca2.oraclecloud.com/hcmui/candidateexperience/en/sites/cx/job/26420",
+      "identity": "ghd|indigenousengineerinterncoop|toronto",
+      "url": "https://ejov.fa.ca2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/26420",
+      "title": "Indigenous Engineer Intern/co-op",
+      "company": "GHD",
+      "location": "Toronto, ON, Canada",
+      "city": "toronto",
+      "source": "oracle:ejov",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 66,
+      "quality": 55,
+      "interviewOdds": 9,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [],
+        "requiredSkills": [],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "GHD is currently seeking an Intern to work with our groups on projects related to Environment, Transportation, Water, Architecture, and Construction Inspection services. This position is a paid internship position. Our teams work with a wide range of public and private sector clients across Ontario to support sustainable infrastructure, environmental stewardship, and community development. The objective of GHD’s Internship Program is to provide students who self-identify as members of Indigenous communities the opportunity to gain experience in a consulting environment and contribute to a…",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:17:33.439Z",
+      "recordedAt": "2026-07-10T13:17:33.439Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:17:33.439Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://job-boards.greenhouse.io/tenstorrentuniversity/jobs/4873659007",
+      "identity": "tenstorrent|aicompilersoftwareinternpey|toronto",
+      "url": "https://job-boards.greenhouse.io/tenstorrentuniversity/jobs/4873659007",
+      "title": "AI Compiler Software Intern (PEY)",
+      "company": "Tenstorrent",
+      "location": "Toronto, Ontario, Canada",
+      "city": "toronto",
+      "source": "ats:greenhouse",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 59,
+      "quality": 62,
+      "interviewOdds": 10,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "python",
+          "c++",
+          "algorithms"
+        ],
+        "requiredSkills": [
+          "python",
+          "c++",
+          "ml",
+          "embedded",
+          "algorithms"
+        ],
+        "family": "ml",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Tenstorrent is leading the industry on cutting-edge AI technology, revolutionizing performance expectations, ease of use, and cost efficiency. With AI redefining the computing paradigm, solutions must evolve to unify innovations in software models, compilers, platforms, networking, and semiconductors. Our diverse team of technologists have developed a high performance RISC-V CPU from scratch, and share a passion for AI and a deep desire to build the best AI platform possible. We value collaboration, curiosity, and a commitment to solving hard problems. We are growing our team and looking for…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): Country; unlabeled field; Start date month; Start date year; End date month; End date year; How did you hear about the role?; What is your cumulative GPA?  If you are in the 1st year of a Master's or PhD program, please submit; When do you expect to graduate?; Austin, TX; Santa Clara, CA; Boston, MA; Fort Collins, CO; Toronto, Canada; Remote Only; Are you willing to work in our Toronto office for 5 days per week?; 12 months; 16 months; Flexible; In the event that the position requires it, are you open a PEY role based out of one of our US offic; All of the above; I have read and understand the Export Control statement included in the job description above.",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:17:37.692Z",
+      "recordedAt": "2026-07-10T13:17:37.692Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:17:37.692Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): Country; unlabeled field; Start date month; Start date year; End date month; End date year; How did you hear about the role?; What is your cumulative GPA?  If you are in the 1st year of a Master's or PhD program, please submit; When do you expect to graduate?; Austin, TX; Santa Clara, CA; Boston, MA; Fort Collins, CO; Toronto, Canada; Remote Only; Are you willing to work in our Toronto office for 5 days per week?; 12 months; 16 months; Flexible; In the event that the position requires it, are you open a PEY role based out of one of our US offic; All of the above; I have read and understand the Export Control statement included in the job description above."
+        }
+      ]
+    },
+    {
+      "key": "https://job-boards.greenhouse.io/tenstorrentuniversity/jobs/5106644007",
+      "identity": "tenstorrent|appliedaiinternpeopleoperations|toronto",
+      "url": "https://job-boards.greenhouse.io/tenstorrentuniversity/jobs/5106644007",
+      "title": "Applied AI Intern, People Operations",
+      "company": "Tenstorrent",
+      "location": "Toronto, Ontario, Canada",
+      "city": "toronto",
+      "source": "ats:greenhouse",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 51,
+      "quality": 58,
+      "interviewOdds": 9,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [],
+        "requiredSkills": [],
+        "family": "ml",
+        "tier": "unknown",
+        "pay": "$38/hr",
+        "flags": []
+      },
+      "excerpt": "Tenstorrent is leading the industry on cutting-edge AI technology, revolutionizing performance expectations, ease of use, and cost efficiency. With AI redefining the computing paradigm, solutions must evolve to unify innovations in software models, compilers, platforms, networking, and semiconductors. Our diverse team of technologists have developed a high performance RISC-V CPU from scratch, and share a passion for AI and a deep desire to build the best AI platform possible. We value collaboration, curiosity, and a commitment to solving hard problems. We are growing our team and looking for…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): Country; unlabeled field; Start date month; Start date year; End date month; End date year; How did you hear about the role?; What is your current GPA? If you are in the 1st year of a Master's or PhD program, please submit you; Austin, TX; Santa Clara, CA; Boston, MA; Fort Collins, CO; Toronto, Canada; Remote Only; What length of internship are you available for?; Winter/Spring; Summer; Fall; Are you available to work 40 hours?; In compliance with federal and state laws, all persons hired will be required to verify identity and; I have read and understand the Export Control statement included in the job description above.",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:17:41.579Z",
+      "recordedAt": "2026-07-10T13:17:41.579Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:17:41.579Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): Country; unlabeled field; Start date month; Start date year; End date month; End date year; How did you hear about the role?; What is your current GPA? If you are in the 1st year of a Master's or PhD program, please submit you; Austin, TX; Santa Clara, CA; Boston, MA; Fort Collins, CO; Toronto, Canada; Remote Only; What length of internship are you available for?; Winter/Spring; Summer; Fall; Are you available to work 40 hours?; In compliance with federal and state laws, all persons hired will be required to verify identity and; I have read and understand the Export Control statement included in the job description above."
+        }
+      ]
+    },
+    {
+      "key": "https://brookfield.wd5.myworkdayjobs.com/brookfieldprivate/job/toronto-ontario/intern--ai-value-creation-office_r2048790",
+      "identity": "brookfield|internaivaluecreationoffice|toronto",
+      "url": "https://brookfield.wd5.myworkdayjobs.com/brookfieldprivate/job/Toronto-Ontario/Intern--AI-Value-Creation-Office_R2048790",
+      "title": "Intern, AI Value Creation Office",
+      "company": "Brookfield",
+      "location": "Toronto, Ontario",
+      "city": "toronto",
+      "source": "workday:brookfield",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 51,
+      "quality": 49,
+      "interviewOdds": 7,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [],
+        "requiredSkills": [],
+        "family": "ml",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "LocationBrookfield Place - 181 Bay StreetBrookfield CultureBrookfield has a unique and dynamic culture. We seek team members who have a long-term focus and whose values align with our Attributes of a Brookfield Leader: Entrepreneurial, Collaborative and Disciplined. Brookfield is committed to the development of our people through challenging work assignments and exposure to diverse businesses.Job DescriptionPosition SummaryBrookfield is recruiting for AI Value Creation Office Intern in our Toronto office. The intern will gain hands-on experience implementing AI within a global renewable…",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:17:41.581Z",
+      "recordedAt": "2026-07-10T13:17:41.581Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:17:41.581Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://autodesk.wd1.myworkdayjobs.com/ext/job/toronto-on-can/intern--machine-learning-developer_25wd92311-2",
+      "identity": "autodesk|internmachinelearningdeveloper|toronto",
+      "url": "https://autodesk.wd1.myworkdayjobs.com/Ext/job/Toronto-ON-CAN/Intern--Machine-Learning-Developer_25WD92311-2",
+      "title": "Intern, Machine Learning Developer",
+      "company": "Autodesk",
+      "location": "Toronto, ON, CAN",
+      "city": "toronto",
+      "source": "workday:autodesk",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 48,
+      "quality": 65,
+      "interviewOdds": 7,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "python",
+          "aws",
+          "git"
+        ],
+        "requiredSkills": [
+          "python",
+          "aws",
+          "azure",
+          "git",
+          "ml",
+          "pytorch",
+          "nlp",
+          "datascience"
+        ],
+        "family": "ml",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Job Requisition ID #25WD92311Position OverviewAt Autodesk, we're reimagining what's possible. As a global leader in 3D design, engineering, and entertainment software, we help people everywhere imagine, design, and create a better world.As an Artificial Intelligence / Machine Learning (AI/ML) Intern atAutodesk, you will contribute to the development of our AI platformcapabilities — building shared frameworks and tools that enable productteams to develop safe, observable, and scalable AI agents. You will workalongside ML Engineers and Data Engineers to design systems thatstandardize context…",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:17:41.582Z",
+      "recordedAt": "2026-07-10T13:17:41.582Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:17:41.582Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://job-boards.greenhouse.io/cresta/jobs/4123863008",
+      "identity": "cresta|machinelearningengineeringintern|toronto",
+      "url": "https://job-boards.greenhouse.io/cresta/jobs/4123863008",
+      "title": "Machine Learning Engineering Intern",
+      "company": "Cresta",
+      "location": "Toronto, Canada (Hybrid)",
+      "city": "toronto",
+      "source": "ats:greenhouse",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 46,
+      "quality": 66,
+      "interviewOdds": 8,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "python"
+        ],
+        "requiredSkills": [
+          "python",
+          "ml",
+          "pytorch"
+        ],
+        "family": "ml",
+        "tier": "unknown",
+        "pay": "$45-$70 per hour",
+        "flags": []
+      },
+      "resume": {
+        "variant": "ai",
+        "reason": "ai (title reads as ml, LLM work, ML frameworks)"
+      },
+      "excerpt": "Cresta unlocks the true potential of the customer experience, turning every conversation into a competitive advantage. Cresta’s unified AI platform combines conversational AI agents, real-time human agent augmentation, and comprehensive conversation intelligence to drive revenue and efficiency gains across every channel. The world’s leading companies, including United Airlines, Cox Communications, and Marriott, use Cresta to power world-class customer experiences every day.&nbsp; Born from the Stanford AI Lab, Cresta has raised more than $270 million from the world’s leading investors,…",
+      "status": "submitted_unconfirmed",
+      "details": "submitted, no confirmation text detected",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:17:52.425Z",
+      "recordedAt": "2026-07-10T13:17:52.425Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:17:52.425Z",
+          "status": "submitted_unconfirmed",
+          "details": "submitted, no confirmation text detected"
+        }
+      ]
+    },
+    {
+      "key": "https://job-boards.greenhouse.io/cresta/jobs/5106468008",
+      "identity": "cresta|forwarddeployedengineeringinternaiagent|toronto",
+      "url": "https://job-boards.greenhouse.io/cresta/jobs/5106468008",
+      "title": "Forward Deployed Engineering Intern (AI Agent)",
+      "company": "Cresta",
+      "location": "Toronto, Canada (Hybrid)",
+      "city": "toronto",
+      "source": "ats:greenhouse",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 46,
+      "quality": 65,
+      "interviewOdds": 8,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "python"
+        ],
+        "requiredSkills": [
+          "python",
+          "ml",
+          "nlp"
+        ],
+        "family": "ml",
+        "tier": "unknown",
+        "pay": "$30-50/hour",
+        "flags": []
+      },
+      "resume": {
+        "variant": "ai",
+        "reason": "ai (title reads as ml, LLM work, machine learning)"
+      },
+      "excerpt": "Cresta unlocks the true potential of the customer experience, turning every conversation into a competitive advantage. Cresta’s unified AI platform combines conversational AI agents, real-time human agent augmentation, and comprehensive conversation intelligence to drive revenue and efficiency gains across every channel. The world’s leading companies, including United Airlines, Cox Communications, and Marriott, use Cresta to power world-class customer experiences every day.&nbsp; Born from the Stanford AI Lab, Cresta has raised more than $270 million from the world’s leading investors,…",
+      "status": "submitted_unconfirmed",
+      "details": "submitted, no confirmation text detected",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:18:03.289Z",
+      "recordedAt": "2026-07-10T13:18:03.289Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:18:03.289Z",
+          "status": "submitted_unconfirmed",
+          "details": "submitted, no confirmation text detected"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.ashbyhq.com/preference-model/44642065-e592-44ba-810d-a019703463b6",
+      "identity": "preferencemodel|memberoftechnicalstaffmachinelearningcapabilitiesnewgraduates|toronto",
+      "url": "https://jobs.ashbyhq.com/Preference-Model/44642065-e592-44ba-810d-a019703463b6",
+      "title": "Member of Technical Staff - Machine Learning Capabilities, New Graduates",
+      "company": "Preference Model",
+      "location": "San Francisco ; Toronto ; Seattle",
+      "city": "toronto",
+      "source": "ats:ashby",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 43,
+      "quality": 57,
+      "interviewOdds": 8,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "python",
+          "aws"
+        ],
+        "requiredSkills": [
+          "python",
+          "aws",
+          "gcp",
+          "azure",
+          "ml",
+          "pytorch",
+          "nlp"
+        ],
+        "family": "ml",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "ABOUT US Preference Model is building automated ML research engineering. Existing frontier models are brittle when applied to real-world ML tasks. The present bottleneck is the lack of high-quality RL training environments. Our first step is to build RL environments that reflect real-world complexity, with diverse tasks and robust reward functions. Our founding team has previous experience on Anthropic’s data team building data infrastructure, and datasets behind Claude. We are partnering with leading AI labs to push AI closer to achieving its transformative potential. ABOUT THE ROLE We’re…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): Why are you interested in Preference Model and what we do?; What's something you  excel at that you can teach us?; How did you hear about us?",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:18:10.307Z",
+      "recordedAt": "2026-07-10T13:18:10.307Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:18:10.307Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): Why are you interested in Preference Model and what we do?; What's something you  excel at that you can teach us?; How did you hear about us?"
+        }
+      ]
+    },
+    {
+      "key": "https://job-boards.greenhouse.io/cresta/jobs/5047247008",
+      "identity": "cresta|aiqualityassuranceintern|toronto",
+      "url": "https://job-boards.greenhouse.io/cresta/jobs/5047247008",
+      "title": "AI Quality Assurance Intern",
+      "company": "Cresta",
+      "location": "Toronto, Ontario",
+      "city": "toronto",
+      "source": "ats:greenhouse",
+      "term": "unstated",
+      "country": "CA",
+      "compatibility": 41,
+      "quality": 52,
+      "interviewOdds": 8,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [],
+        "requiredSkills": [
+          "nlp"
+        ],
+        "family": "ml",
+        "tier": "unknown",
+        "pay": "$30-$50 per hour",
+        "flags": []
+      },
+      "resume": {
+        "variant": "ai",
+        "reason": "ai (title reads as ml)"
+      },
+      "excerpt": "Cresta unlocks the true potential of the customer experience, turning every conversation into a competitive advantage. Cresta’s unified AI platform combines conversational AI agents, real-time human agent augmentation, and comprehensive conversation intelligence to drive revenue and efficiency gains across every channel. The world’s leading companies, including United Airlines, Cox Communications, and Marriott, use Cresta to power world-class customer experiences every day.&nbsp; Born from the Stanford AI Lab, Cresta has raised more than $270 million from the world’s leading investors,…",
+      "status": "submitted_unconfirmed",
+      "details": "submitted, no confirmation text detected",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:18:21.227Z",
+      "recordedAt": "2026-07-10T13:18:21.227Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:18:21.227Z",
+          "status": "submitted_unconfirmed",
+          "details": "submitted, no confirmation text detected"
+        }
+      ]
+    },
+    {
+      "key": "https://job-boards.greenhouse.io/walleyecapital-external-students/jobs/4679434006",
+      "identity": "walleyecapital|volatilitytradingdeveloperinternsummer2027|nyc",
+      "url": "https://job-boards.greenhouse.io/walleyecapital-external-students/jobs/4679434006",
+      "title": "Volatility Trading Developer Intern (Summer 2027)",
+      "company": "Walleye Capital",
+      "location": "New York, New York",
+      "city": "nyc",
+      "source": "ats:greenhouse",
+      "term": "2027",
+      "country": "US",
+      "compatibility": 85,
+      "quality": 79,
+      "interviewOdds": 13,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "python",
+          "java",
+          "c++"
+        ],
+        "requiredSkills": [
+          "python",
+          "java",
+          "c++"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": "$14,000/month",
+        "flags": []
+      },
+      "excerpt": "Position: Volatility Trading Developer Intern (Summer 2027) Location: New York, NY Firm Overview: Walleye Capital is a ~$16 billion+ multi-strategy investment firm headquartered in New York City, with over 350 employees across five main offices. Founded in 2005 as an options market maker, we have organically grown into a global investment firm specializing in Fundamental Equities, Quant, and Volatility strategies.&nbsp; At Walleye, we continuously innovate by focusing on three core principles: approach, platform, and people. Our approach is to allocate risk capital where we believe there is…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): Country; unlabeled field; Start date month; Start date year; End date month; End date year; Will you now or in the future require work authorization sponsorship to work in the United States?; What motivates you to pursue an opportunity with Walleye Capital?",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:18:24.882Z",
+      "recordedAt": "2026-07-10T13:18:24.882Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:18:24.882Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): Country; unlabeled field; Start date month; Start date year; End date month; End date year; Will you now or in the future require work authorization sponsorship to work in the United States?; What motivates you to pursue an opportunity with Walleye Capital?"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.ashbyhq.com/ellipsislabs/256c2ec2-01c8-4ff6-9ad0-b926fe40472d",
+      "identity": "ellipsislabs|softwareengineer2027newgrads|nyc",
+      "url": "https://jobs.ashbyhq.com/ellipsislabs/256c2ec2-01c8-4ff6-9ad0-b926fe40472d",
+      "title": "Software Engineer - 2027 New Grads",
+      "company": "Ellipsis Labs",
+      "location": "New York, New York",
+      "city": "nyc",
+      "source": "ats:ashby",
+      "term": "2027",
+      "country": "US",
+      "compatibility": 85,
+      "quality": 56,
+      "interviewOdds": 14,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "javascript",
+          "typescript",
+          "python",
+          "java",
+          "c++",
+          "react",
+          "docker",
+          "ci",
+          "git",
+          "algorithms"
+        ],
+        "requiredSkills": [
+          "javascript",
+          "typescript",
+          "python",
+          "java",
+          "c++",
+          "rust",
+          "react",
+          "docker",
+          "ci",
+          "git",
+          "algorithms"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Ellipsis Labs is a profitable, venture-backed New York-based startup building sustainable and efficient DeFi protocols on high-throughput decentralized infrastructure. Our long-term goal is to build a better financial system. Our flagship product, Phoenix Perpetuals, brings professional-grade perpetual futures to Solana. Building on our experience developing efficient markets, Ellipsis Labs also operates SolFi, a proprietary automated market maker that provides efficient liquidity for key trading pairs. Our foundational product, Phoenix Legacy, is a limit order book on the Solana blockchain…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): How did you hear about us?; Why does this role interest you (please don't use AI)?",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:18:31.496Z",
+      "recordedAt": "2026-07-10T13:18:31.496Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:18:31.496Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): How did you hear about us?; Why does this role interest you (please don't use AI)?"
+        }
+      ]
+    },
+    {
+      "key": "https://www.tower-research.com/open-positions/?gh_jid=8044334",
+      "identity": "towerresearchcapital|quantitativedeveloperinternsummer2027|nyc",
+      "url": "https://www.tower-research.com/open-positions/?gh_jid=8044334",
+      "title": "Quantitative Developer Intern - Summer 2027",
+      "company": "Tower Research Capital",
+      "location": "New York, Chicago",
+      "city": "nyc",
+      "source": "ats:greenhouse",
+      "term": "2027",
+      "country": "US",
+      "compatibility": 76,
+      "quality": 62,
+      "interviewOdds": 4,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "python",
+          "c++",
+          "linux"
+        ],
+        "requiredSkills": [
+          "python",
+          "c++",
+          "linux",
+          "ml"
+        ],
+        "family": "swe",
+        "tier": "top",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Tower Research Capital is a leading quantitative trading firm founded in 1998. Tower has built its business on a high-performance platform and independent trading teams. We have a 25+ year track record of innovation and a reputation for discovering unique market opportunities. Tower is home to some of the world’s best systematic trading and engineering talent. We empower portfolio managers to build their teams and strategies independently while providing the economies of scale that come from a large, global organization.&nbsp; Engineers thrive at Tower while developing electronic trading…",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:18:31.498Z",
+      "recordedAt": "2026-07-10T13:18:31.498Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:18:31.498Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://job-boards.greenhouse.io/sigmacomputing/jobs/7690411003",
+      "identity": "sigmacomputing|softwareengineernewgradprogram|nyc",
+      "url": "https://job-boards.greenhouse.io/sigmacomputing/jobs/7690411003",
+      "title": "Software Engineer (New Grad Program)",
+      "company": "Sigma Computing",
+      "location": "San Francisco, CA and New York City, NY",
+      "city": "nyc",
+      "source": "ats:greenhouse",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 74,
+      "quality": 76,
+      "interviewOdds": 12,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "javascript",
+          "python",
+          "java",
+          "sql",
+          "algorithms",
+          "testing"
+        ],
+        "requiredSkills": [
+          "javascript",
+          "python",
+          "java",
+          "sql",
+          "spark",
+          "algorithms",
+          "testing"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": "$65.00 per hour",
+        "flags": []
+      },
+      "excerpt": "&nbsp; &nbsp; Sigma unlocks the value of data by delivering cloud-scale analytics and business intelligence with the simplicity of a spreadsheet, complete with pivot tables and next generation dashboards. We empower business professionals, non-technical users, and data teams to quickly explore, analyze, visualize, and collaborate, leveraging all of their data across the organization.&nbsp; Our New Grad (Temp-to-Hire) Program at Sigma: Sigma’s early career program is the launchpad for the next generation of engineers and innovators. As a Software Engineering New Grad at Sigma, you’ll work on…",
+      "status": "skipped_no_sponsorship",
+      "details": "posting states it will not sponsor",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:18:31.499Z",
+      "recordedAt": "2026-07-10T13:18:31.499Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:18:31.499Z",
+          "status": "skipped_no_sponsorship",
+          "details": "posting states it will not sponsor"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.ashbyhq.com/n1/298585c3-96b1-4728-8d37-31482f85a064",
+      "identity": "n1|softwareengineerinternfullstack|nyc",
+      "url": "https://jobs.ashbyhq.com/n1/298585c3-96b1-4728-8d37-31482f85a064",
+      "title": "Software Engineer Intern (Fullstack)",
+      "company": "N1",
+      "location": "New York City",
+      "city": "nyc",
+      "source": "ats:ashby",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 74,
+      "quality": 49,
+      "interviewOdds": 13,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "typescript",
+          "react",
+          "node"
+        ],
+        "requiredSkills": [
+          "typescript",
+          "react",
+          "node"
+        ],
+        "family": "fullstack",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "About N1: N1 is the first hyper-performant and horizontally scalable blockchain network designed to enable trustless computing at internet scale. N1 is comprised of a team spanning backgrounds from Harvard, CMU, DFINITY, VMWare, Galaxy Digital, and more, and is backed by top-tier institutions like Founders Fund, Kraken Ventures, SALT, Amber Group, and more. Position Overview: We're seeking a Software Engineer intern, Full-Stack to join our engineering team full-time. This role is involves developing front-end, server-side, and database applications with a focus on blockchain products. The…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): Why N1?",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:18:38.112Z",
+      "recordedAt": "2026-07-10T13:18:38.112Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:18:38.112Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): Why N1?"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.ashbyhq.com/n1/73724fe2-9a93-4a60-b349-4fd3d2efa94a",
+      "identity": "n1|newgradsoftwareengineerfullstack|nyc",
+      "url": "https://jobs.ashbyhq.com/n1/73724fe2-9a93-4a60-b349-4fd3d2efa94a",
+      "title": "New Grad Software Engineer (Full Stack)",
+      "company": "N1",
+      "location": "New York City",
+      "city": "nyc",
+      "source": "ats:ashby",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 74,
+      "quality": 49,
+      "interviewOdds": 13,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "typescript",
+          "react",
+          "node"
+        ],
+        "requiredSkills": [
+          "typescript",
+          "react",
+          "node"
+        ],
+        "family": "fullstack",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "About N1: N1 is the first hyper-performant and horizontally scalable blockchain network designed to enable trustless computing at internet scale. N1 is comprised of a team spanning backgrounds from Harvard, CMU, DFINITY, VMWare, Galaxy Digital, and more, and is backed by top-tier institutions like Founders Fund, Kraken Ventures, SALT, Amber Group, and more. Position Overview: We are seeking a Software Engineer, Full-Stack to join our engineering team full-time. This role involves developing front-end, server-side, and database applications with a focus on blockchain products. The ideal…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): Why N1?",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:18:44.760Z",
+      "recordedAt": "2026-07-10T13:18:44.760Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:18:44.760Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): Why N1?"
+        }
+      ]
+    },
+    {
+      "key": "https://www.workatastartup.com/jobs/94211",
+      "identity": "dimehealthai|forwarddeployedengineeringintern|nyc",
+      "url": "https://www.workatastartup.com/jobs/94211",
+      "title": "Forward Deployed Engineering Intern",
+      "company": "DimeHealth AI",
+      "location": "New York, NY",
+      "city": "nyc",
+      "source": "vanshb03/Summer2027-Internships",
+      "term": "2027",
+      "country": "US",
+      "sponsorship": "Offers Sponsorship",
+      "compatibility": 73,
+      "quality": 49,
+      "interviewOdds": 10,
+      "scoreConfidence": "low",
+      "scoreSignals": {
+        "matchedSkills": [],
+        "requiredSkills": [],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:18:44.761Z",
+      "recordedAt": "2026-07-10T13:18:44.761Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:18:44.761Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://boards.greenhouse.io/point72/jobs/7297666002?gh_jid=7297666002",
+      "identity": "cubistsystematicstrategies|quantitativesoftwaredeveloperintern|nyc",
+      "url": "https://boards.greenhouse.io/point72/jobs/7297666002?gh_jid=7297666002",
+      "title": "Quantitative Software Developer Intern",
+      "company": "Cubist Systematic Strategies",
+      "location": "New York, London, or Paris",
+      "city": "nyc",
+      "source": "ats:greenhouse",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 73,
+      "quality": 56,
+      "interviewOdds": 12,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "python",
+          "java",
+          "c++",
+          "sql",
+          "git",
+          "linux"
+        ],
+        "requiredSkills": [
+          "python",
+          "java",
+          "c++",
+          "sql",
+          "git",
+          "linux",
+          "embedded"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Job Description We are seeking a small number of highly talented interns to assist in the development, optimization, and monitoring of our production trading platform and research infrastructure. Interns will work on small, highly collaborative teams.&nbsp; Desirable Candidates Undergraduate or graduate candidates in computer science or engineering Significant experience in Python, C++, C, or Java Serious interest in systems programming (e.g. Linux kernel development, compilers, embedded systems, networking, file systems, debuggers) In-depth understanding of how userland programs run on Linux…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): unlabeled field; End date month; End date year; New York; London; Paris; Have you previously applied to work at Point72?; Are you legally authorized to work in the United States?; Will you now or in the future require sponsorship for employment visa status?; Have you served in the military?; Privacy",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:18:48.441Z",
+      "recordedAt": "2026-07-10T13:18:48.441Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:18:48.441Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): unlabeled field; End date month; End date year; New York; London; Paris; Have you previously applied to work at Point72?; Are you legally authorized to work in the United States?; Will you now or in the future require sponsorship for employment visa status?; Have you served in the military?; Privacy"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.lever.co/palantir/7d69cf8a-06fd-4f05-bd84-27149db29c4d",
+      "identity": "palantir|softwareengineerinternship|nyc",
+      "url": "https://jobs.lever.co/palantir/7d69cf8a-06fd-4f05-bd84-27149db29c4d",
+      "title": "Software Engineer, Internship",
+      "company": "Palantir",
+      "location": "New York, NY",
+      "city": "nyc",
+      "source": "ats:lever",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 73,
+      "quality": 72,
+      "interviewOdds": 4,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "typescript",
+          "java",
+          "react",
+          "nosql",
+          "git"
+        ],
+        "requiredSkills": [
+          "typescript",
+          "java",
+          "react",
+          "nosql",
+          "git",
+          "spark"
+        ],
+        "family": "swe",
+        "tier": "top",
+        "pay": "$10,500/month",
+        "flags": []
+      },
+      "excerpt": "A World-Changing Company Palantir builds the world’s leading software for data-driven decisions and operations. By bringing the right data to the people who need it, our platforms empower our partners to develop lifesaving drugs, forecast supply chain disruptions, locate missing children, and more. The Role Software Engineers at Palantir build software at scale to transform how organizations around the world use data. As a Software Engineer Intern, you’ll have an opportunity to grow more quickly than you ever envisioned, as you contribute high-quality code directly to Palantir Gotham,…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): English (ENG); Spanish (SPA); French (FRA); German (DEU); Japanese (JPN); Cantonese (CANT); Mandarin (MAN); Dutch (NLD); Hindi (HIN); Arabic (ARA); Danish (DAN); Turkish (TUR); Portuguese (POR); Hebrew (HEB); Swedish (SWE); Norwegian (NOR); Italian (ITA); Vietnamese (VIE); Tagalog (TGL); Khmer (KHM); Hmong (HMN); Telugu (TEL); Bengali (BNE); Marathi (MAR); Urdu (URD); Gujarati (GUJ); Lithuanian (LIT); Korean (KOR); American Sign Language (ASL); British Sign Language (BSL); Choose not to disclose; Polish; Other; Yes; No; New York, NY; Washington, DC; Palo Alto, CA; Seattle, WA; Denver, CO; cards[dbe30cab-7c88-4981-b9c9-a1ed816d52e0][field1]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field0]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field1]; cards[3da58b41-acf5-40a1-945e-c7f047ef8050][field0]; cards[026d7ce7-7ca4-44ed-9db6-1c7857707f0e][field0]; cards[037683ac-0e2a-4adf-82d9-49bd682697cc][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field1]; Yes, I consent; No, I do not consent",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:18:52.565Z",
+      "recordedAt": "2026-07-10T13:18:52.565Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:18:52.565Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): English (ENG); Spanish (SPA); French (FRA); German (DEU); Japanese (JPN); Cantonese (CANT); Mandarin (MAN); Dutch (NLD); Hindi (HIN); Arabic (ARA); Danish (DAN); Turkish (TUR); Portuguese (POR); Hebrew (HEB); Swedish (SWE); Norwegian (NOR); Italian (ITA); Vietnamese (VIE); Tagalog (TGL); Khmer (KHM); Hmong (HMN); Telugu (TEL); Bengali (BNE); Marathi (MAR); Urdu (URD); Gujarati (GUJ); Lithuanian (LIT); Korean (KOR); American Sign Language (ASL); British Sign Language (BSL); Choose not to disclose; Polish; Other; Yes; No; New York, NY; Washington, DC; Palo Alto, CA; Seattle, WA; Denver, CO; cards[dbe30cab-7c88-4981-b9c9-a1ed816d52e0][field1]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field0]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field1]; cards[3da58b41-acf5-40a1-945e-c7f047ef8050][field0]; cards[026d7ce7-7ca4-44ed-9db6-1c7857707f0e][field0]; cards[037683ac-0e2a-4adf-82d9-49bd682697cc][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field1]; Yes, I consent; No, I do not consent"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.lever.co/palantir/8bcf4f33-0a79-4248-bbfd-49ac4be9dd8e",
+      "identity": "palantir|softwareengineerinternshipdefensetech|nyc",
+      "url": "https://jobs.lever.co/palantir/8bcf4f33-0a79-4248-bbfd-49ac4be9dd8e",
+      "title": "Software Engineer, Internship - Defense Tech",
+      "company": "Palantir",
+      "location": "New York, NY",
+      "city": "nyc",
+      "source": "ats:lever",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 73,
+      "quality": 72,
+      "interviewOdds": 4,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "typescript",
+          "java",
+          "react",
+          "nosql",
+          "git"
+        ],
+        "requiredSkills": [
+          "typescript",
+          "java",
+          "react",
+          "nosql",
+          "git",
+          "spark"
+        ],
+        "family": "swe",
+        "tier": "top",
+        "pay": "$10,500/month",
+        "flags": []
+      },
+      "excerpt": "A World-Changing Company Palantir builds the world’s leading software for data-driven decisions and operations. By bringing the right data to the people who need it, our platforms empower our partners to develop lifesaving drugs, forecast supply chain disruptions, locate missing children, and more. The Role Software Engineers at Palantir build software at scale to transform how organizations around the world use data. As a Defense Tech Software Engineer Intern, you’ll have an opportunity to grow more quickly than you ever envisioned, as you contribute high-quality code directly to Palantir's…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): English (ENG); Spanish (SPA); French (FRA); German (DEU); Japanese (JPN); Cantonese (CANT); Mandarin (MAN); Dutch (NLD); Hindi (HIN); Arabic (ARA); Danish (DAN); Turkish (TUR); Portuguese (POR); Hebrew (HEB); Swedish (SWE); Norwegian (NOR); Italian (ITA); Vietnamese (VIE); Tagalog (TGL); Khmer (KHM); Hmong (HMN); Telugu (TEL); Bengali (BNE); Marathi (MAR); Urdu (URD); Gujarati (GUJ); Lithuanian (LIT); Korean (KOR); American Sign Language (ASL); British Sign Language (BSL); Choose not to disclose; Polish; Other; Yes; No; New York, NY; Washington, DC; Palo Alto, CA; Seattle, WA; Denver, CO; cards[dbe30cab-7c88-4981-b9c9-a1ed816d52e0][field1]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field0]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field1]; cards[3da58b41-acf5-40a1-945e-c7f047ef8050][field0]; cards[026d7ce7-7ca4-44ed-9db6-1c7857707f0e][field0]; cards[037683ac-0e2a-4adf-82d9-49bd682697cc][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field1]; Yes, I consent; No, I do not consent",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:18:56.813Z",
+      "recordedAt": "2026-07-10T13:18:56.813Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:18:56.813Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): English (ENG); Spanish (SPA); French (FRA); German (DEU); Japanese (JPN); Cantonese (CANT); Mandarin (MAN); Dutch (NLD); Hindi (HIN); Arabic (ARA); Danish (DAN); Turkish (TUR); Portuguese (POR); Hebrew (HEB); Swedish (SWE); Norwegian (NOR); Italian (ITA); Vietnamese (VIE); Tagalog (TGL); Khmer (KHM); Hmong (HMN); Telugu (TEL); Bengali (BNE); Marathi (MAR); Urdu (URD); Gujarati (GUJ); Lithuanian (LIT); Korean (KOR); American Sign Language (ASL); British Sign Language (BSL); Choose not to disclose; Polish; Other; Yes; No; New York, NY; Washington, DC; Palo Alto, CA; Seattle, WA; Denver, CO; cards[dbe30cab-7c88-4981-b9c9-a1ed816d52e0][field1]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field0]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field1]; cards[3da58b41-acf5-40a1-945e-c7f047ef8050][field0]; cards[026d7ce7-7ca4-44ed-9db6-1c7857707f0e][field0]; cards[037683ac-0e2a-4adf-82d9-49bd682697cc][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field1]; Yes, I consent; No, I do not consent"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.lever.co/palantir/94984771-0704-446c-88c6-91ce748f6d92",
+      "identity": "palantir|softwareengineernewgrad|nyc",
+      "url": "https://jobs.lever.co/palantir/94984771-0704-446c-88c6-91ce748f6d92",
+      "title": "Software Engineer, New Grad",
+      "company": "Palantir",
+      "location": "New York, NY",
+      "city": "nyc",
+      "source": "ats:lever",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 73,
+      "quality": 76,
+      "interviewOdds": 4,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "typescript",
+          "java",
+          "react",
+          "nosql",
+          "git"
+        ],
+        "requiredSkills": [
+          "typescript",
+          "java",
+          "react",
+          "nosql",
+          "git",
+          "spark"
+        ],
+        "family": "swe",
+        "tier": "top",
+        "pay": "$145,000 - $155,000/year",
+        "flags": []
+      },
+      "excerpt": "A World-Changing Company Palantir builds the world’s leading software for data-driven decisions and operations. By bringing the right data to the people who need it, our platforms empower our partners to develop lifesaving drugs, forecast supply chain disruptions, locate missing children, and more. The Role Software Engineers at Palantir build software at scale to transform how organizations around the world use data. In this role, you’ll have an opportunity to grow more quickly than you ever envisioned as you contribute high-quality code directly to Palantir Gotham, Palantir Apollo, or…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): English (ENG); Spanish (SPA); French (FRA); German (DEU); Japanese (JPN); Cantonese (CANT); Mandarin (MAN); Dutch (NLD); Hindi (HIN); Arabic (ARA); Danish (DAN); Turkish (TUR); Portuguese (POR); Hebrew (HEB); Swedish (SWE); Norwegian (NOR); Italian (ITA); Vietnamese (VIE); Tagalog (TGL); Khmer (KHM); Hmong (HMN); Telugu (TEL); Bengali (BNE); Marathi (MAR); Urdu (URD); Gujarati (GUJ); Lithuanian (LIT); Korean (KOR); American Sign Language (ASL); British Sign Language (BSL); Choose not to disclose; Polish; Other; Yes; No; New York, NY; Washington, DC; Palo Alto, CA; Seattle, WA; Denver, CO; cards[dbe30cab-7c88-4981-b9c9-a1ed816d52e0][field1]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field0]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field1]; cards[3da58b41-acf5-40a1-945e-c7f047ef8050][field0]; cards[026d7ce7-7ca4-44ed-9db6-1c7857707f0e][field0]; cards[a6197d84-549e-4a91-8bb0-6af972510013][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field1]; Yes, I consent; No, I do not consent",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:19:00.952Z",
+      "recordedAt": "2026-07-10T13:19:00.952Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:19:00.952Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): English (ENG); Spanish (SPA); French (FRA); German (DEU); Japanese (JPN); Cantonese (CANT); Mandarin (MAN); Dutch (NLD); Hindi (HIN); Arabic (ARA); Danish (DAN); Turkish (TUR); Portuguese (POR); Hebrew (HEB); Swedish (SWE); Norwegian (NOR); Italian (ITA); Vietnamese (VIE); Tagalog (TGL); Khmer (KHM); Hmong (HMN); Telugu (TEL); Bengali (BNE); Marathi (MAR); Urdu (URD); Gujarati (GUJ); Lithuanian (LIT); Korean (KOR); American Sign Language (ASL); British Sign Language (BSL); Choose not to disclose; Polish; Other; Yes; No; New York, NY; Washington, DC; Palo Alto, CA; Seattle, WA; Denver, CO; cards[dbe30cab-7c88-4981-b9c9-a1ed816d52e0][field1]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field0]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field1]; cards[3da58b41-acf5-40a1-945e-c7f047ef8050][field0]; cards[026d7ce7-7ca4-44ed-9db6-1c7857707f0e][field0]; cards[a6197d84-549e-4a91-8bb0-6af972510013][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field1]; Yes, I consent; No, I do not consent"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.lever.co/palantir/0a838e66-1ab0-4fc4-b4d3-4671c0352278",
+      "identity": "palantir|softwareengineernewgraddefense|nyc",
+      "url": "https://jobs.lever.co/palantir/0a838e66-1ab0-4fc4-b4d3-4671c0352278",
+      "title": "Software Engineer, New Grad - Defense",
+      "company": "Palantir",
+      "location": "New York, NY",
+      "city": "nyc",
+      "source": "ats:lever",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 73,
+      "quality": 76,
+      "interviewOdds": 4,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "typescript",
+          "java",
+          "react",
+          "nosql",
+          "git"
+        ],
+        "requiredSkills": [
+          "typescript",
+          "java",
+          "react",
+          "nosql",
+          "git",
+          "spark"
+        ],
+        "family": "swe",
+        "tier": "top",
+        "pay": "$145,000 - $155,000/year",
+        "flags": []
+      },
+      "excerpt": "A World-Changing Company Palantir builds the world’s leading software for data-driven decisions and operations. By bringing the right data to the people who need it, our platforms empower our partners to develop lifesaving drugs, forecast supply chain disruptions, locate missing children, and more. The Role Software Engineers at Palantir build software at scale to transform how organizations around the world use data. In this role, you’ll have an opportunity to grow more quickly than you ever envisioned as you contribute high-quality code directly to Palantir Gotham: products that are…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): English (ENG); Spanish (SPA); French (FRA); German (DEU); Japanese (JPN); Cantonese (CANT); Mandarin (MAN); Dutch (NLD); Hindi (HIN); Arabic (ARA); Danish (DAN); Turkish (TUR); Portuguese (POR); Hebrew (HEB); Swedish (SWE); Norwegian (NOR); Italian (ITA); Vietnamese (VIE); Tagalog (TGL); Khmer (KHM); Hmong (HMN); Telugu (TEL); Bengali (BNE); Marathi (MAR); Urdu (URD); Gujarati (GUJ); Lithuanian (LIT); Korean (KOR); American Sign Language (ASL); British Sign Language (BSL); Choose not to disclose; Polish; Other; Yes; No; New York, NY; Washington, DC; Palo Alto, CA; Seattle, WA; Denver, CO; cards[dbe30cab-7c88-4981-b9c9-a1ed816d52e0][field1]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field0]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field1]; cards[3da58b41-acf5-40a1-945e-c7f047ef8050][field0]; cards[026d7ce7-7ca4-44ed-9db6-1c7857707f0e][field0]; cards[a6197d84-549e-4a91-8bb0-6af972510013][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field1]; Yes, I consent; No, I do not consent",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:19:05.595Z",
+      "recordedAt": "2026-07-10T13:19:05.595Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:19:05.595Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): English (ENG); Spanish (SPA); French (FRA); German (DEU); Japanese (JPN); Cantonese (CANT); Mandarin (MAN); Dutch (NLD); Hindi (HIN); Arabic (ARA); Danish (DAN); Turkish (TUR); Portuguese (POR); Hebrew (HEB); Swedish (SWE); Norwegian (NOR); Italian (ITA); Vietnamese (VIE); Tagalog (TGL); Khmer (KHM); Hmong (HMN); Telugu (TEL); Bengali (BNE); Marathi (MAR); Urdu (URD); Gujarati (GUJ); Lithuanian (LIT); Korean (KOR); American Sign Language (ASL); British Sign Language (BSL); Choose not to disclose; Polish; Other; Yes; No; New York, NY; Washington, DC; Palo Alto, CA; Seattle, WA; Denver, CO; cards[dbe30cab-7c88-4981-b9c9-a1ed816d52e0][field1]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field0]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field1]; cards[3da58b41-acf5-40a1-945e-c7f047ef8050][field0]; cards[026d7ce7-7ca4-44ed-9db6-1c7857707f0e][field0]; cards[a6197d84-549e-4a91-8bb0-6af972510013][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field1]; Yes, I consent; No, I do not consent"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.ashbyhq.com/uncountable/b9495eab-c04c-4333-b338-7dabdbddcaae",
+      "identity": "uncountable|fullstackintern|nyc",
+      "url": "https://jobs.ashbyhq.com/uncountable/b9495eab-c04c-4333-b338-7dabdbddcaae",
+      "title": "Full-Stack Intern",
+      "company": "Uncountable",
+      "location": "New York, San Francisco, Munich or London",
+      "city": "nyc",
+      "source": "ats:ashby",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 72,
+      "quality": 49,
+      "interviewOdds": 13,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "javascript",
+          "typescript",
+          "python",
+          "react",
+          "sql"
+        ],
+        "requiredSkills": [
+          "javascript",
+          "typescript",
+          "python",
+          "react",
+          "django",
+          "sql"
+        ],
+        "family": "fullstack",
+        "tier": "unknown",
+        "pay": "$6K / month",
+        "flags": []
+      },
+      "resume": {
+        "variant": "base",
+        "reason": "base (title reads as fullstack); body leaned frontend (3)"
+      },
+      "excerpt": "Thank you for your interest in Uncountable Engineering! Description ‍Uncountable is hiring interns who are passionate about a career in full-stack software engineering. Our goal is to revolutionize industrial research and development. We're looking for motivated engineers who can help to build a state of the art development platform that will be used across Fortune 500 companies. Possible Projects Architecting database to allow for more complex analysis and building new interfaces and views for scientists to manage experiments. We will consider only applicants that are graduating within a…",
+      "status": "submitted_unconfirmed",
+      "details": "submitted, no confirmation text detected",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:19:18.369Z",
+      "recordedAt": "2026-07-10T13:19:18.369Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:19:18.369Z",
+          "status": "submitted_unconfirmed",
+          "details": "submitted, no confirmation text detected"
+        }
+      ]
+    },
+    {
+      "key": "https://job-boards.greenhouse.io/sevenresearch/jobs/4895082008",
+      "identity": "sevenresearch|algorithmicdeveloperintern|nyc",
+      "url": "https://job-boards.greenhouse.io/sevenresearch/jobs/4895082008",
+      "title": "Algorithmic Developer - Intern",
+      "company": "Seven Research",
+      "location": "New York",
+      "city": "nyc",
+      "source": "ats:greenhouse",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 70,
+      "quality": 49,
+      "interviewOdds": 12,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [
+          "c++",
+          "algorithms"
+        ],
+        "requiredSkills": [
+          "c++",
+          "algorithms"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Why Work with Us Solve impactful problems. At Seven Research, our close-knit team unites brilliant minds passionate about pushing technological and scientific boundaries in the global markets. We provide state-of-the-art resources and cultivate intellectual freedom, enabling our people to develop groundbreaking solutions to the most complex challenges of our field. Our collaborative approach celebrates excellence from everyone, regardless of tenure. Your Role Our Algorithmic Developers are researchers and engineers who transform complex quantitative concepts into high-performance trading…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): unlabeled field; Start date month; Start date year; End date month; End date year; How did you hear about Seven Research?; Are you legally authorized to work in the United States?; Will you now, or in the future, require sponsorship for employment visa status (e.g. H1B status)?; Do you have any outstanding offers or deadlines?",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:19:21.989Z",
+      "recordedAt": "2026-07-10T13:19:21.989Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:19:21.989Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): unlabeled field; Start date month; Start date year; End date month; End date year; How did you hear about Seven Research?; Are you legally authorized to work in the United States?; Will you now, or in the future, require sponsorship for employment visa status (e.g. H1B status)?; Do you have any outstanding offers or deadlines?"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.ashbyhq.com/pointone/1e312db8-6d18-4d07-af99-ed3ba165e7d9",
+      "identity": "pointone|newgradsoftwareengineer|nyc",
+      "url": "https://jobs.ashbyhq.com/PointOne/1e312db8-6d18-4d07-af99-ed3ba165e7d9",
+      "title": "New Grad Software Engineer",
+      "company": "PointOne",
+      "location": "New York City",
+      "city": "nyc",
+      "source": "ats:ashby",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 70,
+      "quality": 60,
+      "interviewOdds": 12,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "typescript",
+          "react",
+          "aws"
+        ],
+        "requiredSkills": [
+          "typescript",
+          "react",
+          "aws",
+          "distributed"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "ABOUT POINTONE PointOne is reinventing how law firms operate. Our AI‑powered timekeeper helps attorneys capture billable time automatically and provides rich insights that transform how legal work is managed. We’re a venture‑backed startup (Y Combinator, Bessemer, 8VC, General Catalyst) made up of software engineers (Jane Street, Google, Stanford, Princeton) and ex-attorneys. Alongside a recent Series A round and rapid customer adoption, we're expanding our engineering team to keep up with overwhelming demand. WHO YOU ARE You have: - Significant internship experience at hyper-growth startups…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): Why do you want to work at PointOne?",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:19:28.687Z",
+      "recordedAt": "2026-07-10T13:19:28.687Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:19:28.687Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): Why do you want to work at PointOne?"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.smartrecruiters.com/agtechnologies1/743999655720227-hiring-entry-level-software-engineer?oga=true",
+      "identity": "agtechnologies|hiringentrylevelsoftwareengineer|nyc",
+      "url": "https://jobs.smartrecruiters.com/AGTechnologies1/743999655720227-hiring-entry-level-software-engineer?oga=true",
+      "title": "Hiring Entry Level Software Engineer",
+      "company": "AG Technologies",
+      "location": "Jersey City, NJ, us",
+      "city": "nyc",
+      "source": "smartrecruiters:AGTechnologies1",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 70,
+      "quality": 49,
+      "interviewOdds": 10,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [
+          "c++",
+          "sql"
+        ],
+        "requiredSkills": [
+          "c++",
+          "sql"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Skills :C++,SQL,Oracle Master of Computer Science /MIS/ECE/EE",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:19:28.687Z",
+      "recordedAt": "2026-07-10T13:19:28.687Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:19:28.687Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://job-boards.greenhouse.io/headlandstechnologiesllc/jobs/4227566009",
+      "identity": "headlandstechholdings|researchdevelopernewgrad|nyc",
+      "url": "https://job-boards.greenhouse.io/headlandstechnologiesllc/jobs/4227566009",
+      "title": "Research Developer – New Grad ",
+      "company": "Headlands Tech Holdings",
+      "location": "Amsterdam; Chicago; London; New York",
+      "city": "nyc",
+      "source": "ats:greenhouse",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 69,
+      "quality": 56,
+      "interviewOdds": 12,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "python",
+          "java",
+          "c++"
+        ],
+        "requiredSkills": [
+          "python",
+          "java",
+          "c++",
+          "ml"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Research Developer New Grad Job Description for Headlands Tech Locations: Amsterdam; Chicago; London; New York &nbsp; Scope : As a Research Developer at Headlands Tech, you'll join a team of quantitative researchers responsible for the firm's portfolio of automated electronic trading strategies. You'll research and develop predictive signals and trading models, iterating to drive measurable improvements in strategy PnL. Working closely with colleagues, you'll own ideas from hypothesis through production and be responsible for the results they generate. &nbsp; Qualifications : Low ego;…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): Country; unlabeled field; Start date year; End date year; Are you willing to relocate?; Chicago; Amsterdam; NYC; London; Any/all; Sponsorship; Not interested; Open to the idea; Interested but considering all opportunities; Interested and only considering Finance opportunities; Other Processes/Offers/Timelines; Employment Obligations; Top 3 programming languages",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:19:32.411Z",
+      "recordedAt": "2026-07-10T13:19:32.411Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:19:32.411Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): Country; unlabeled field; Start date year; End date year; Are you willing to relocate?; Chicago; Amsterdam; NYC; London; Any/all; Sponsorship; Not interested; Open to the idea; Interested but considering all opportunities; Interested and only considering Finance opportunities; Other Processes/Offers/Timelines; Employment Obligations; Top 3 programming languages"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.ashbyhq.com/melotech/15af19d9-a318-45a6-8a06-23053ea487a5",
+      "identity": "melotech|fullstackdeveloperinternmusicaudio|nyc",
+      "url": "https://jobs.ashbyhq.com/melotech/15af19d9-a318-45a6-8a06-23053ea487a5",
+      "title": "Full-Stack Developer Intern, Music & Audio",
+      "company": "Melotech",
+      "location": "Berlin ; San Francisco ; New York ; London ; Los Angeles",
+      "city": "nyc",
+      "source": "ats:ashby",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 69,
+      "quality": 56,
+      "interviewOdds": 12,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [
+          "react",
+          "node"
+        ],
+        "requiredSkills": [
+          "react",
+          "node"
+        ],
+        "family": "fullstack",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "WHO WE ARE Melotech is revolutionizing media and entertainment. We create art through technology for humans to enjoy. In just 24 months, our work has been heard, watched and loved for over 3 billion minutes worldwide. Founded by entrepreneur and investor Soheil Mirpour, we are backed by top VCs Cherry Ventures, Speedinvest and GFC, alongside world-class angels from firms such as Spotify, Blackstone and KKR. WHAT YOU WILL DO As one of our first developers, you will bridge the gap between beautifully designed frontends and scalable backends. You'll tackle the big questions: How do we build…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): Pick date...",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:19:38.898Z",
+      "recordedAt": "2026-07-10T13:19:38.898Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:19:38.898Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): Pick date..."
+        }
+      ]
+    },
+    {
+      "key": "https://job-boards.greenhouse.io/haizelabs/jobs/4685944008",
+      "identity": "haizelabs|softwareengineerintern|nyc",
+      "url": "https://job-boards.greenhouse.io/haizelabs/jobs/4685944008",
+      "title": "Software Engineer Intern",
+      "company": "Haize Labs",
+      "location": "NYC",
+      "city": "nyc",
+      "source": "ats:greenhouse",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 67,
+      "quality": 56,
+      "interviewOdds": 12,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [
+          "algorithms"
+        ],
+        "requiredSkills": [
+          "nlp",
+          "algorithms"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "resume": {
+        "variant": "base",
+        "reason": "base (no role-specific signal in the posting); body leaned ai (2)"
+      },
+      "excerpt": "Haize Labs gets LLM apps out of POCs and into production. We eliminate the risk and improve the reliability of LLM apps by&nbsp; haizing&nbsp; them -- i.e. rigorously, proactively, and continuously fuzz-testing them. We are looking for Software Engineering Interns to help develop our reliability platform, with a focus on: Data-efficient alignment of evaluation models Dynamic testing of AI applications Observability and anomaly detection&nbsp; Discrete optimization (with applications in architecture search and automated prompting) Our work is both intellectually stimulating and practically…",
+      "status": "submitted_unconfirmed",
+      "details": "submitted, no confirmation text detected",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:19:49.885Z",
+      "recordedAt": "2026-07-10T13:19:49.885Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:19:49.885Z",
+          "status": "submitted_unconfirmed",
+          "details": "submitted, no confirmation text detected"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.lever.co/palantir/b229baac-494b-4a0d-9a13-2e38806e06f3",
+      "identity": "palantir|softwareengineerinternshipinfrastructure|nyc",
+      "url": "https://jobs.lever.co/palantir/b229baac-494b-4a0d-9a13-2e38806e06f3",
+      "title": "Software Engineer, Internship - Infrastructure",
+      "company": "Palantir",
+      "location": "New York, NY",
+      "city": "nyc",
+      "source": "ats:lever",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 65,
+      "quality": 72,
+      "interviewOdds": 3,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "typescript",
+          "java",
+          "react",
+          "nosql",
+          "git",
+          "rest"
+        ],
+        "requiredSkills": [
+          "typescript",
+          "java",
+          "react",
+          "nosql",
+          "git",
+          "rest",
+          "spark"
+        ],
+        "family": "infra",
+        "tier": "top",
+        "pay": "$10,500/month",
+        "flags": []
+      },
+      "excerpt": "A World-Changing Company Palantir builds the world’s leading software for data-driven decisions and operations. By bringing the right data to the people who need it, our platforms empower our partners to develop lifesaving drugs, forecast supply chain disruptions, locate missing children, and more. The Role Are you passionate about engineering quality, performance, and increasing the impact of engineers around you? Software Engineers at Palantir build software at scale to transform how organizations around the world use data. As an intern within Palantir’s Foundations organization, you’ll…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): English (ENG); Spanish (SPA); French (FRA); German (DEU); Japanese (JPN); Cantonese (CANT); Mandarin (MAN); Dutch (NLD); Hindi (HIN); Arabic (ARA); Danish (DAN); Turkish (TUR); Portuguese (POR); Hebrew (HEB); Swedish (SWE); Norwegian (NOR); Italian (ITA); Vietnamese (VIE); Tagalog (TGL); Khmer (KHM); Hmong (HMN); Telugu (TEL); Bengali (BNE); Marathi (MAR); Urdu (URD); Gujarati (GUJ); Lithuanian (LIT); Korean (KOR); American Sign Language (ASL); British Sign Language (BSL); Choose not to disclose; Polish; Other; Yes; No; New York, NY; Washington, DC; Palo Alto, CA; Seattle, WA; Denver, CO; cards[dbe30cab-7c88-4981-b9c9-a1ed816d52e0][field1]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field0]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field1]; cards[3da58b41-acf5-40a1-945e-c7f047ef8050][field0]; cards[026d7ce7-7ca4-44ed-9db6-1c7857707f0e][field0]; cards[037683ac-0e2a-4adf-82d9-49bd682697cc][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field1]; Yes, I consent; No, I do not consent",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:19:54.024Z",
+      "recordedAt": "2026-07-10T13:19:54.024Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:19:54.024Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): English (ENG); Spanish (SPA); French (FRA); German (DEU); Japanese (JPN); Cantonese (CANT); Mandarin (MAN); Dutch (NLD); Hindi (HIN); Arabic (ARA); Danish (DAN); Turkish (TUR); Portuguese (POR); Hebrew (HEB); Swedish (SWE); Norwegian (NOR); Italian (ITA); Vietnamese (VIE); Tagalog (TGL); Khmer (KHM); Hmong (HMN); Telugu (TEL); Bengali (BNE); Marathi (MAR); Urdu (URD); Gujarati (GUJ); Lithuanian (LIT); Korean (KOR); American Sign Language (ASL); British Sign Language (BSL); Choose not to disclose; Polish; Other; Yes; No; New York, NY; Washington, DC; Palo Alto, CA; Seattle, WA; Denver, CO; cards[dbe30cab-7c88-4981-b9c9-a1ed816d52e0][field1]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field0]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field1]; cards[3da58b41-acf5-40a1-945e-c7f047ef8050][field0]; cards[026d7ce7-7ca4-44ed-9db6-1c7857707f0e][field0]; cards[037683ac-0e2a-4adf-82d9-49bd682697cc][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field1]; Yes, I consent; No, I do not consent"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.lever.co/palantir/4abf26b4-795c-420a-bf22-1ab98db268b4",
+      "identity": "palantir|softwareengineernewgradinfrastructure|nyc",
+      "url": "https://jobs.lever.co/palantir/4abf26b4-795c-420a-bf22-1ab98db268b4",
+      "title": "Software Engineer, New Grad - Infrastructure",
+      "company": "Palantir",
+      "location": "New York, NY",
+      "city": "nyc",
+      "source": "ats:lever",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 65,
+      "quality": 76,
+      "interviewOdds": 3,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "typescript",
+          "java",
+          "react",
+          "nosql",
+          "git",
+          "rest"
+        ],
+        "requiredSkills": [
+          "typescript",
+          "java",
+          "react",
+          "nosql",
+          "git",
+          "rest",
+          "spark"
+        ],
+        "family": "infra",
+        "tier": "top",
+        "pay": "$145,000 - $155,000/year",
+        "flags": []
+      },
+      "excerpt": "A World-Changing Company Palantir builds the world’s leading software for data-driven decisions and operations. By bringing the right data to the people who need it, our platforms empower our partners to develop lifesaving drugs, forecast supply chain disruptions, locate missing children, and more. The Role Are you passionate about engineering quality, performance, and increasing the impact of engineers around you? Software Engineers at Palantir build software at scale to transform how organizations around the world use data. As an engineer within Palantir’s Foundations organization, you’ll…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): English (ENG); Spanish (SPA); French (FRA); German (DEU); Japanese (JPN); Cantonese (CANT); Mandarin (MAN); Dutch (NLD); Hindi (HIN); Arabic (ARA); Danish (DAN); Turkish (TUR); Portuguese (POR); Hebrew (HEB); Swedish (SWE); Norwegian (NOR); Italian (ITA); Vietnamese (VIE); Tagalog (TGL); Khmer (KHM); Hmong (HMN); Telugu (TEL); Bengali (BNE); Marathi (MAR); Urdu (URD); Gujarati (GUJ); Lithuanian (LIT); Korean (KOR); American Sign Language (ASL); British Sign Language (BSL); Choose not to disclose; Polish; Other; Yes; No; New York, NY; Washington, DC; Palo Alto, CA; Seattle, WA; Denver, CO; cards[dbe30cab-7c88-4981-b9c9-a1ed816d52e0][field1]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field0]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field1]; cards[3da58b41-acf5-40a1-945e-c7f047ef8050][field0]; cards[026d7ce7-7ca4-44ed-9db6-1c7857707f0e][field0]; cards[a6197d84-549e-4a91-8bb0-6af972510013][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field1]; Yes, I consent; No, I do not consent",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:19:58.095Z",
+      "recordedAt": "2026-07-10T13:19:58.095Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:19:58.095Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): English (ENG); Spanish (SPA); French (FRA); German (DEU); Japanese (JPN); Cantonese (CANT); Mandarin (MAN); Dutch (NLD); Hindi (HIN); Arabic (ARA); Danish (DAN); Turkish (TUR); Portuguese (POR); Hebrew (HEB); Swedish (SWE); Norwegian (NOR); Italian (ITA); Vietnamese (VIE); Tagalog (TGL); Khmer (KHM); Hmong (HMN); Telugu (TEL); Bengali (BNE); Marathi (MAR); Urdu (URD); Gujarati (GUJ); Lithuanian (LIT); Korean (KOR); American Sign Language (ASL); British Sign Language (BSL); Choose not to disclose; Polish; Other; Yes; No; New York, NY; Washington, DC; Palo Alto, CA; Seattle, WA; Denver, CO; cards[dbe30cab-7c88-4981-b9c9-a1ed816d52e0][field1]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field0]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field1]; cards[3da58b41-acf5-40a1-945e-c7f047ef8050][field0]; cards[026d7ce7-7ca4-44ed-9db6-1c7857707f0e][field0]; cards[a6197d84-549e-4a91-8bb0-6af972510013][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field0]; cards[504ca500-ddc8-45de-a4c4-95d4195434f9][field1]; Yes, I consent; No, I do not consent"
+        }
+      ]
+    },
+    {
+      "key": "https://job-boards.greenhouse.io/sevenresearch/jobs/4895047008",
+      "identity": "sevenresearch|coredeveloperintern|nyc",
+      "url": "https://job-boards.greenhouse.io/sevenresearch/jobs/4895047008",
+      "title": "Core Developer - Intern",
+      "company": "Seven Research",
+      "location": "New York",
+      "city": "nyc",
+      "source": "ats:greenhouse",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 64,
+      "quality": 49,
+      "interviewOdds": 11,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "c++",
+          "algorithms"
+        ],
+        "requiredSkills": [
+          "c++",
+          "distributed",
+          "algorithms"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Why Work with Us &nbsp; Solve impactful problems. At Seven Research, our close-knit team unites brilliant minds passionate about pushing technological and scientific boundaries in the global markets. We provide state-of-the-art resources and cultivate intellectual freedom, enabling our people to develop groundbreaking solutions to the most complex challenges of our field. Our collaborative approach celebrates excellence from everyone, regardless of tenure. Your Role Core Developers are at the heart of our technological ecosystem, working to continuously optimize our research and technological…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): unlabeled field; Start date month; Start date year; End date month; End date year; How did you hear about Seven Research?; Are you legally authorized to work in the United States?; Will you now, or in the future, require sponsorship for employment visa status (e.g. H1B status)?; Do you have any outstanding offers or deadlines?",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:20:01.713Z",
+      "recordedAt": "2026-07-10T13:20:01.713Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:20:01.713Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): unlabeled field; Start date month; Start date year; End date month; End date year; How did you hear about Seven Research?; Are you legally authorized to work in the United States?; Will you now, or in the future, require sponsorship for employment visa status (e.g. H1B status)?; Do you have any outstanding offers or deadlines?"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.smartrecruiters.com/dellfortechnologies/102104140-entry-level-net-developer?oga=true",
+      "identity": "dellfortechnologies|entrylevelnetdeveloper|nyc",
+      "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102104140-entry-level-net-developer?oga=true",
+      "title": "Entry Level .Net Developer",
+      "company": "DellFor Technologies",
+      "location": "Jersey City, NJ, us",
+      "city": "nyc",
+      "source": "smartrecruiters:DellforTechnologies",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 64,
+      "quality": 49,
+      "interviewOdds": 9,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "c++",
+          "sql"
+        ],
+        "requiredSkills": [
+          "c++",
+          "c#",
+          "sql"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Any Bachelor Degree in Computer Science Stream. Ability to multi-task projects*Basic knowledge*of programming, C++, VB, C#*Basic foundation of programming concepts and methods*Working proficiency in Excel, Word, PowerPoint, and HTML/IDE tools*Effective communication, both written and verbal*ASP.Net experience a plus*SQL Server experience a plus*Fast learner, quality consciousness and committed to deadlines College degreeDomain experience in Finance, Banking, Insurance, Retail or Healthcare and/or benefit administration is a plusExcellent writing/documentation, communication, analysis and…",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:20:01.713Z",
+      "recordedAt": "2026-07-10T13:20:01.713Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:20:01.713Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.smartrecruiters.com/consultadd4/84199346-software-developer-entry-level?oga=true",
+      "identity": "consultaddpublicservices|softwaredeveloperentrylevel|nyc",
+      "url": "https://jobs.smartrecruiters.com/Consultadd4/84199346-software-developer-entry-level?oga=true",
+      "title": "Software developer - Entry level",
+      "company": "Consultadd Public Services",
+      "location": "Jersey City, NJ, us",
+      "city": "nyc",
+      "source": "smartrecruiters:Consultadd4",
+      "term": "unstated",
+      "country": "US",
+      "compatibility": 63,
+      "quality": 49,
+      "interviewOdds": 9,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [
+          "javascript"
+        ],
+        "requiredSkills": [
+          "javascript"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "SOFTWARE DEVELOPER(ENTRY LEVEL)JOB DESCRIPTION :-An entry-level web designer has advanced computer skills and understands both computer programming and graphic design. As a web designer you create the look, layout and features of a website for a business or individual. Entering this field you should be knowledgeable about major programming and design software. Your work will have you coding the internal structure of a website, as well as maintaining and troubleshooting existing websites or adding design elements.EXPECTED SKILLS :-As a web designer you will be creating the structure and layout…",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:20:01.717Z",
+      "recordedAt": "2026-07-10T13:20:01.717Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:20:01.717Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://careers.point72.com/csjobdetail?jobname=summer-2027-quantitative-developer-internship&jobcode=css-0012293",
+      "identity": "point72|quantitativedeveloperintern|nyc",
+      "url": "https://careers.point72.com/CSJobDetail?jobName=summer-2027-quantitative-developer-internship&jobCode=CSS-0012293",
+      "title": "Quantitative Developer Intern",
+      "company": "Point72",
+      "location": "New York, NY",
+      "city": "nyc",
+      "source": "vanshb03/Summer2027-Internships",
+      "term": "2027",
+      "country": "US",
+      "sponsorship": "Other",
+      "compatibility": 62,
+      "quality": 49,
+      "interviewOdds": 9,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [],
+        "requiredSkills": [],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Point72, L.P. and its affiliates and our third-party partners use cookies and similar technologies to view and retain your site interactions to perform analytics, enable site functionality and assist our marketing efforts exclusively for recruiting purposes. By continuing to use our site, you consent to these data practices, as described in our Privacy Policy. Point72 ABOUT US CAREERS PERSPECTIVES BROWSE OPEN ROLES 404 Something's gone wrong! Not to worry, why don't you try the link below: GO TO HOMEPAGE Point72 ABOUT US What We Do Our Values Leadership Locations JOIN OUR TEAM Working Here…",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:20:05.400Z",
+      "recordedAt": "2026-07-10T13:20:05.400Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:20:05.400Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://salesforce.wd12.myworkdayjobs.com/external_career_site/job/california---san-francisco/summer-2027-intern---software-engineer_jr340771-1",
+      "identity": "salesforce|softwareengineerinternfutureforcesummer2027|nyc",
+      "url": "https://salesforce.wd12.myworkdayjobs.com/External_Career_Site/job/California---San-Francisco/Summer-2027-Intern---Software-Engineer_JR340771-1",
+      "title": "Software Engineer Intern(Futureforce Summer 2027)",
+      "company": "Salesforce",
+      "location": "San Francisco, CA, Palo Alto, CA, New York, NY, Seattle, WA, Burlington, MA",
+      "city": "nyc",
+      "source": "vanshb03/Summer2027-Internships",
+      "term": "2027",
+      "country": "US",
+      "sponsorship": "Other",
+      "compatibility": 62,
+      "quality": 52,
+      "interviewOdds": 5,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [],
+        "requiredSkills": [],
+        "family": "swe",
+        "tier": "strong",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Skip to main content Privacy Highlights Important information Salesforce.com Inc's Candidate Privacy Notice contains more details about the handling and use of the personal data of job applicants. For more information about our website privacy practices, please see our Privacy Statement. Read Full Privacy Message Decline Accept Cookies English Sign In Search for Jobs The page you are looking for doesn't exist. Search for Jobs Follow Us © 2026 Workday, Inc. All rights reserved.",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:20:08.215Z",
+      "recordedAt": "2026-07-10T13:20:08.215Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:20:08.215Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://liveramp.wd5.myworkdayjobs.com/liverampcareers/job/new-york/intern--software-engineer---pixel-serving_jr012201",
+      "identity": "liveramp|softwareengineerinternpixelserving|nyc",
+      "url": "https://liveramp.wd5.myworkdayjobs.com/LiveRampCareers/job/New-York/Intern--Software-Engineer---Pixel-Serving_JR012201",
+      "title": "Software Engineer Intern, Pixel Serving",
+      "company": "LiveRamp",
+      "location": "New York, NY",
+      "city": "nyc",
+      "source": "vanshb03/Summer2027-Internships",
+      "term": "2027",
+      "country": "US",
+      "sponsorship": "Other",
+      "compatibility": 62,
+      "quality": 49,
+      "interviewOdds": 9,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [],
+        "requiredSkills": [],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Skip to main content We use strictly necessary cookies for the functioning of the website properly and to enable successful communication between the end user and the service. Session management cookies - User, device, and session ID cookies along with timestamp cookies for timing out sessions after inactivity. These cookies expire at the end of the session. Routing cookies - To forward requests for a single session to the same server for consistency of service. Application Security Management (ASM) cookies - To help protect web applications and infrastructure from security attacks. These…",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:20:11.131Z",
+      "recordedAt": "2026-07-10T13:20:11.131Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:20:11.131Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://job-boards.greenhouse.io/embed/job_app?for=point72&jr_id=6a07069024dcb03739f1ec72&token=7297613002",
+      "identity": "cubistsystematicstrategies|quantitativedeveloperintern|nyc",
+      "url": "https://job-boards.greenhouse.io/embed/job_app?for=point72&jr_id=6a07069024dcb03739f1ec72&token=7297613002",
+      "title": "Quantitative Developer Intern",
+      "company": "Cubist Systematic Strategies",
+      "location": "New York, NY",
+      "city": "nyc",
+      "source": "vanshb03/Summer2027-Internships",
+      "term": "2027",
+      "country": "US",
+      "sponsorship": "Other",
+      "compatibility": 53,
+      "quality": 49,
+      "interviewOdds": 8,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [],
+        "requiredSkills": [
+          "ml"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "The job you are looking for is no longer open. Current Openings at Point72 Search Department Select... Office Select... 237 jobs Academy Job 2027 Point72 Academy Investment Analyst Summer Internship Program - Hong Kong Hong Kong 2027 Point72 Academy Investment Analyst Summer Internship Program - Japan Japan 2027 Point72 Academy Investment Analyst Summer Internship Program - Singapore Singapore Point72 Academy 2026-2027 Investment Analyst Program for Experienced Professionals - US Chicago, Florida, New York, San Francisco Point72 Academy 2026 Investment Analyst Program for Experienced…",
+      "status": "skipped_closed",
+      "details": "posting is closed",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:20:25.211Z",
+      "recordedAt": "2026-07-10T13:20:25.211Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:20:25.211Z",
+          "status": "skipped_closed",
+          "details": "posting is closed"
+        }
+      ]
+    },
+    {
+      "key": "https://tower-research.com/open-positions/?gh_jid=8044334",
+      "identity": "towerresearch|quantitativedeveloperintern|nyc",
+      "url": "https://tower-research.com/open-positions/?gh_jid=8044334",
+      "title": "Quantitative Developer Intern",
+      "company": "Tower Research",
+      "location": "Chicago, IL, New York, NY",
+      "city": "nyc",
+      "source": "vanshb03/Summer2027-Internships",
+      "term": "2027",
+      "country": "US",
+      "sponsorship": "Other",
+      "compatibility": 62,
+      "quality": 49,
+      "interviewOdds": 9,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [],
+        "requiredSkills": [],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Skip to content WHAT WE DO WHO WE ARE WHAT’S NEW CONTACT US JOIN OUR TEAM EN BUILD YOUR CAREER AT TOWER The next chapter of your career starts here. Explore open roles across our departments and global offices. WHAT WE DO Quantitative Trading Engineering Liquidity Provision Ventures WHO WE ARE About Us Offices Philanthropy WHAT’S NEW JOIN OUR TEAM Careers Culture Internships CONTACT US Linkedin-in Instagram © 2026 Tower Research Capital LLC. All Rights Reserved. Terms of Use Privacy Policy Disclaimers EN",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:20:28.202Z",
+      "recordedAt": "2026-07-10T13:20:28.202Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:20:28.202Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://www.citadel.com/careers/details/software-engineer-intern-us",
+      "identity": "citadel|softwareengineerintern|nyc",
+      "url": "https://www.citadel.com/careers/details/software-engineer-intern-us/",
+      "title": "Software Engineer Intern",
+      "company": "Citadel",
+      "location": "New York, NY, Greenwich, CT, Miami, FL, Houston, TX",
+      "city": "nyc",
+      "source": "vanshb03/Summer2027-Internships",
+      "term": "2027",
+      "country": "US",
+      "sponsorship": "Other",
+      "compatibility": 43,
+      "quality": 63,
+      "interviewOdds": 2,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [],
+        "requiredSkills": [
+          "ml",
+          "nlp"
+        ],
+        "family": "swe",
+        "tier": "top",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Skip to Content Who We Are What We Do News Careers Client Login Software Engineer – Intern (US) New York, Miami, Greenwich, Houston Job Description At Citadel, our engineers work in small teams to turn the best ideas into high-performing and resilient technology. With short development cycles, work rapidly goes into production. As an engineer, you can create system architectures, develop platforms and build web frameworks. You’ll have access to state-of-the-art tools and apply innovative techniques including distributed computing, natural language processing, machine learning and more. As an…",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:20:31.437Z",
+      "recordedAt": "2026-07-10T13:20:31.437Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:20:31.437Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://www.deshaw.com/careers/software-developer-intern-new-york-summer-2027-5894",
+      "identity": "deshaw|softwaredeveloperintern|nyc",
+      "url": "https://www.deshaw.com/careers/software-developer-intern-new-york-summer-2027-5894",
+      "title": "Software Developer Intern",
+      "company": "DE Shaw",
+      "location": "New York, NY",
+      "city": "nyc",
+      "source": "vanshb03/Summer2027-Internships",
+      "term": "2027",
+      "country": "US",
+      "sponsorship": "Other",
+      "compatibility": 85,
+      "quality": 62,
+      "interviewOdds": 3,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "python",
+          "java",
+          "c++"
+        ],
+        "requiredSkills": [
+          "python",
+          "java",
+          "c++"
+        ],
+        "family": "swe",
+        "tier": "top",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Investor Login Home Who We Are What We Do How To Join News Library Contact Add job to your application bundle Apply Now By visiting our website, you agree to our Online Privacy Statement and our Terms of Use, which include a class action waiver and an arbitration provision. Clicking “Accept All” means you consent to our use of cookies and similar tracking technologies, such as analytics cookies provided by third-party companies, which help us understand how our website is used. Clicking “Decline All” means you prevent us from using non-essential cookies or other similar tracking technologies…",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:20:34.764Z",
+      "recordedAt": "2026-07-10T13:20:34.764Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:20:34.764Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://www.janestreet.com/join-jane-street/position/8599644002",
+      "identity": "janestreet|softwareengineersummerinternship|nyc",
+      "url": "https://www.janestreet.com/join-jane-street/position/8599644002",
+      "title": "Software Engineer Summer Internship",
+      "company": "Jane Street",
+      "location": "New York City, NY",
+      "city": "nyc",
+      "source": "speedyapply/2027-SWE-College-Jobs",
+      "term": "2027",
+      "country": "US",
+      "compatibility": 79,
+      "quality": 68,
+      "interviewOdds": 3,
+      "scoreConfidence": "medium",
+      "scoreSignals": {
+        "matchedSkills": [
+          "python",
+          "linux"
+        ],
+        "requiredSkills": [
+          "python",
+          "linux"
+        ],
+        "family": "swe",
+        "tier": "top",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Jane Street Group, LLC uses cookies and similar technologies, including third-party cookies, on this Site to provide basic functionalities and perform analytics. You may accept or decline cookies by selecting “Accept” or “Reject”. For information regarding our cookie practices, see Jane Street’s Ad and Cookie Policy. ACCEPT ALL REJECT ALL WHO WE ARE WHAT WE DO THE LATEST CULTURE JOIN JANE STREET CLIENT OFFERING GLOBAL CAPITAL MARKETS BENEFITS OUR OFFICES STREET VIEW PUZZLES DEPARTMENTS OPEN ROLES PROGRAMS AND EVENTS INTERNSHIPS INTERVIEWING Join Jane Street Open roles Job description Software…",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:20:38.122Z",
+      "recordedAt": "2026-07-10T13:20:38.122Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:20:38.122Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://www.deshaw.com/careers/5894",
+      "identity": "deshawco|softwaredeveloperinternnewyorksummer2027|nyc",
+      "url": "https://www.deshaw.com/careers/5894",
+      "title": "Software Developer Intern - New York - Summer 2027",
+      "company": "D. E. Shaw & Co.",
+      "location": "New York City, NY",
+      "city": "nyc",
+      "source": "speedyapply/2027-SWE-College-Jobs",
+      "term": "2027",
+      "country": "US",
+      "compatibility": 85,
+      "quality": 62,
+      "interviewOdds": 3,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "python",
+          "java",
+          "c++"
+        ],
+        "requiredSkills": [
+          "python",
+          "java",
+          "c++"
+        ],
+        "family": "swe",
+        "tier": "top",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Investor Login Home Who We Are What We Do How To Join News Library Contact Add job to your application bundle Apply Now By visiting our website, you agree to our Online Privacy Statement and our Terms of Use, which include a class action waiver and an arbitration provision. Clicking “Accept All” means you consent to our use of cookies and similar tracking technologies, such as analytics cookies provided by third-party companies, which help us understand how our website is used. Clicking “Decline All” means you prevent us from using non-essential cookies or other similar tracking technologies…",
+      "status": "manual_review",
+      "details": "unsupported application platform",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:20:42.501Z",
+      "recordedAt": "2026-07-10T13:20:42.501Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:20:42.501Z",
+          "status": "manual_review",
+          "details": "unsupported application platform"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.lever.co/traackr/9d884d26-018c-45b2-8cfb-f17d29d4e688",
+      "identity": "traackr|softwareengineeringinternparttimeinternaltooling|nyc",
+      "url": "https://jobs.lever.co/traackr/9d884d26-018c-45b2-8cfb-f17d29d4e688",
+      "title": "Software Engineering Intern - Part-Time - Internal Tooling",
+      "company": "Traackr",
+      "location": "New York City, NY",
+      "city": "nyc",
+      "source": "speedyapply/2027-SWE-College-Jobs",
+      "term": "2027",
+      "country": "US",
+      "compatibility": 82,
+      "quality": 50,
+      "interviewOdds": 11,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "javascript",
+          "python",
+          "java",
+          "c++",
+          "sql"
+        ],
+        "requiredSkills": [
+          "javascript",
+          "python",
+          "java",
+          "c++",
+          "kotlin",
+          "sql"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "resume": {
+        "variant": "base",
+        "reason": "base (no role-specific signal in the posting)"
+      },
+      "excerpt": "🍪 denyaccept Privacy Notice This website uses cookies to improve your web experience. By clicking Accept, you agree to the use of cookies. Cookie Policy Software Engineering Intern (Part-Time, Internal Tooling) New York CityEngineering /Remote /Remote APPLY FOR THIS JOB Traackr is a global SaaS technology company providing a data-driven influencer marketing platform that marketers use to optimize investments, streamline campaigns, and scale programs. Our customers range from some of the world’s largest companies in the beauty and personal care space to digitally native indie brands, which…",
+      "status": "submitted_unconfirmed",
+      "details": "submitted, no confirmation text detected",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:21:28.149Z",
+      "recordedAt": "2026-07-10T13:21:28.149Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:21:28.149Z",
+          "status": "submitted_unconfirmed",
+          "details": "submitted, no confirmation text detected"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.ashbyhq.com/latent%20defense/54841e7d-d80a-4c2f-8c44-d492fe8eb487",
+      "identity": "latentdefense|softwareengineerintern|nyc",
+      "url": "https://jobs.ashbyhq.com/latent%20defense/54841e7d-d80a-4c2f-8c44-d492fe8eb487",
+      "title": "Software Engineer Intern",
+      "company": "Latent Defense",
+      "location": "New York City, NY",
+      "city": "nyc",
+      "source": "speedyapply/2027-SWE-College-Jobs",
+      "term": "2027",
+      "country": "US",
+      "compatibility": 77,
+      "quality": 49,
+      "interviewOdds": 11,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "typescript",
+          "python",
+          "sql",
+          "docker",
+          "git"
+        ],
+        "requiredSkills": [
+          "typescript",
+          "python",
+          "sql",
+          "docker",
+          "kubernetes",
+          "git",
+          "security"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": null,
+        "flags": []
+      },
+      "resume": {
+        "variant": "backend",
+        "reason": "backend (databases, containers/infra, API design)"
+      },
+      "excerpt": "Software Engineer Intern Location New York City Employment Type Full time Location Type Hybrid Department Engineering Overview Application We're Building the World Model for Cybersecurity. Come Join Us! We're a small team building something ambitious: a world model for cybersecurity, starting with threat modeling. We're building an autonomous threat modeling system that rigorously models attack paths against large-scale infrastructures, orchestrates agents to validate each path, and remediates confirmed vulnerabilities at every step of the attack chain. We're hiring a team of engineers to…",
+      "status": "submitted_unconfirmed",
+      "details": "submitted, no confirmation text detected",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:21:43.390Z",
+      "recordedAt": "2026-07-10T13:21:43.390Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:21:43.390Z",
+          "status": "submitted_unconfirmed",
+          "details": "submitted, no confirmation text detected"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.ashbyhq.com/auctor/9d67c881-3ca7-4616-a059-e94c03e19607",
+      "identity": "auctor|softwareengineeringintern|nyc",
+      "url": "https://jobs.ashbyhq.com/auctor/9d67c881-3ca7-4616-a059-e94c03e19607",
+      "title": "Software Engineering Intern",
+      "company": "Auctor",
+      "location": "New York City, NY",
+      "city": "nyc",
+      "source": "speedyapply/2027-SWE-College-Jobs",
+      "term": "2027",
+      "country": "US",
+      "compatibility": 82,
+      "quality": 80,
+      "interviewOdds": 10,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "typescript",
+          "python",
+          "react",
+          "algorithms"
+        ],
+        "requiredSkills": [
+          "typescript",
+          "python",
+          "react",
+          "nlp",
+          "algorithms"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": "$80 per hour",
+        "flags": []
+      },
+      "resume": {
+        "variant": "base",
+        "reason": "base (no role-specific signal in the posting); body leaned frontend (3)"
+      },
+      "excerpt": "Software Engineering Intern Location New York Employment Type Full time Location Type On-site Department Engineering Compensation $80 per hour Overview Application Why Auctor Auctor is building the AI layer for professional-services and software-implementation work—the “brain” behind the best solution engineers, forward-deployed engineers, and onboarding teams. We automate the discovery, documentation, and decision-making that drives $400B+ in services every year. The category is massive and still wide-open. Internship Overview Join us in New York City for 10–12 weeks and help build the next…",
+      "status": "submitted_unconfirmed",
+      "details": "submitted, no confirmation text detected",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:21:58.683Z",
+      "recordedAt": "2026-07-10T13:21:58.683Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:21:58.683Z",
+          "status": "submitted_unconfirmed",
+          "details": "submitted, no confirmation text detected"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.ashbyhq.com/ellipsislabs/02136b22-35b1-4b3d-8bef-567c3380a849",
+      "identity": "ellipsislabs|softwareengineer2027interns|nyc",
+      "url": "https://jobs.ashbyhq.com/ellipsislabs/02136b22-35b1-4b3d-8bef-567c3380a849",
+      "title": "Software Engineer - 2027 Interns",
+      "company": "Ellipsis Labs",
+      "location": "New York City, NY",
+      "city": "nyc",
+      "source": "speedyapply/2027-SWE-College-Jobs",
+      "term": "2027",
+      "country": "US",
+      "compatibility": 85,
+      "quality": 66,
+      "interviewOdds": 11,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "javascript",
+          "typescript",
+          "python",
+          "java",
+          "c++",
+          "react",
+          "docker",
+          "ci",
+          "git",
+          "algorithms"
+        ],
+        "requiredSkills": [
+          "javascript",
+          "typescript",
+          "python",
+          "java",
+          "c++",
+          "rust",
+          "react",
+          "docker",
+          "ci",
+          "git",
+          "algorithms"
+        ],
+        "family": "swe",
+        "tier": "unknown",
+        "pay": "$10K per month",
+        "flags": []
+      },
+      "excerpt": "Software Engineer - 2027 Interns Location New York, New York Employment Type Intern Location Type Hybrid Department Engineering Compensation $10K per month Overview Application Ellipsis Labs is a profitable, venture-backed New York-based startup building sustainable and efficient DeFi protocols on high-throughput decentralized infrastructure. Our long-term goal is to build a better financial system. Our flagship product, Phoenix Perpetuals, brings professional-grade perpetual futures to Solana. Building on our experience developing efficient markets, Ellipsis Labs also operates SolFi, a…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): How did you hear about us?; Why does this role interest you (please don't use AI)?",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:22:07.857Z",
+      "recordedAt": "2026-07-10T13:22:07.857Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:22:07.857Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): How did you hear about us?; Why does this role interest you (please don't use AI)?"
+        }
+      ]
+    },
+    {
+      "key": "https://jobs.lever.co/palantir/5c7bb70c-83ea-43e7-8055-0c8f319f4333",
+      "identity": "palantir|yearatpalantirforwarddeployedsoftwareengineerinternshipusg|nyc",
+      "url": "https://jobs.lever.co/palantir/5c7bb70c-83ea-43e7-8055-0c8f319f4333",
+      "title": "Year at Palantir - Forward Deployed Software Engineer - Internship - USG",
+      "company": "Palantir",
+      "location": "New York City, NY",
+      "city": "nyc",
+      "source": "speedyapply/2027-SWE-College-Jobs",
+      "term": "2027",
+      "country": "US",
+      "compatibility": 85,
+      "quality": 75,
+      "interviewOdds": 3,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "javascript",
+          "typescript",
+          "python",
+          "java",
+          "c++",
+          "algorithms"
+        ],
+        "requiredSkills": [
+          "javascript",
+          "typescript",
+          "python",
+          "java",
+          "c++",
+          "algorithms"
+        ],
+        "family": "swe",
+        "tier": "top",
+        "pay": "$5,900 - $10,500/month",
+        "flags": []
+      },
+      "excerpt": "🍪 denyaccept Privacy Notice This website uses cookies to improve your web experience. By clicking Accept, you agree to the use of cookies. Cookie Policy Year at Palantir - Forward Deployed Software Engineer, Internship - USG New York, NYDelta /Internship /On-Site APPLY A World-Changing Company Palantir builds the world’s leading software for data-driven decisions and operations. By bringing the right data to the people who need it, our platforms empower our partners to develop lifesaving drugs, forecast supply chain disruptions, locate missing children, and more. Palantir Year We've had…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): English (ENG); Spanish (SPA); French (FRA); German (DEU); Japanese (JPN); Cantonese (CANT); Mandarin (MAN); Dutch (NLD); Hindi (HIN); Arabic (ARA); Danish (DAN); Turkish (TUR); Portuguese (POR); Hebrew (HEB); Swedish (SWE); Norwegian (NOR); Italian (ITA); Vietnamese (VIE); Tagalog (TGL); Khmer (KHM); Hmong (HMN); Telugu (TEL); Bengali (BNE); Marathi (MAR); Urdu (URD); Gujarati (GUJ); Lithuanian (LIT); Korean (KOR); American Sign Language (ASL); British Sign Language (BSL); Choose not to disclose; Polish; Other; cards[877379a1-2abf-4eab-9c51-81e7b5828b3e][field0]; I am looking to join Palantir for 1 year; I am currently studying Engineering in fields such as Computer Science, Mathematics, Software Engine; I am proficient in one or more programming languages such as Python, Java, C++, TypeScript/JavaScrip; cards[841c3f3c-3e6e-4665-9391-e360210fb5ee][field0]; cards[7736d0ea-6916-4d17-8895-c31776dbef15][field0]; Yes; No; cards[3da58b41-acf5-40a1-945e-c7f047ef8050][field0]; cards[026d7ce7-7ca4-44ed-9db6-1c7857707f0e][field0]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field0]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field1]; cards[037683ac-0e2a-4adf-82d9-49bd682697cc][field0]; Yes, I consent; No, I do not consent",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:22:17.893Z",
+      "recordedAt": "2026-07-10T13:22:17.893Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:22:17.893Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): English (ENG); Spanish (SPA); French (FRA); German (DEU); Japanese (JPN); Cantonese (CANT); Mandarin (MAN); Dutch (NLD); Hindi (HIN); Arabic (ARA); Danish (DAN); Turkish (TUR); Portuguese (POR); Hebrew (HEB); Swedish (SWE); Norwegian (NOR); Italian (ITA); Vietnamese (VIE); Tagalog (TGL); Khmer (KHM); Hmong (HMN); Telugu (TEL); Bengali (BNE); Marathi (MAR); Urdu (URD); Gujarati (GUJ); Lithuanian (LIT); Korean (KOR); American Sign Language (ASL); British Sign Language (BSL); Choose not to disclose; Polish; Other; cards[877379a1-2abf-4eab-9c51-81e7b5828b3e][field0]; I am looking to join Palantir for 1 year; I am currently studying Engineering in fields such as Computer Science, Mathematics, Software Engine; I am proficient in one or more programming languages such as Python, Java, C++, TypeScript/JavaScrip; cards[841c3f3c-3e6e-4665-9391-e360210fb5ee][field0]; cards[7736d0ea-6916-4d17-8895-c31776dbef15][field0]; Yes; No; cards[3da58b41-acf5-40a1-945e-c7f047ef8050][field0]; cards[026d7ce7-7ca4-44ed-9db6-1c7857707f0e][field0]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field0]; cards[d54adf7b-3148-4095-93bb-72bef32a61f8][field1]; cards[037683ac-0e2a-4adf-82d9-49bd682697cc][field0]; Yes, I consent; No, I do not consent"
+        }
+      ]
+    },
+    {
+      "key": "https://job-boards.greenhouse.io/embed/job_app?for=towerresearchcapital&token=8044334",
+      "identity": "towerresearchcapital|quantitativedeveloperintern|nyc",
+      "url": "https://job-boards.greenhouse.io/embed/job_app?for=towerresearchcapital&token=8044334",
+      "title": "Quantitative Developer Intern",
+      "company": "Tower Research Capital",
+      "location": "New York, NY / Chicago, IL",
+      "city": "nyc",
+      "source": "sndsh404/summer-2027-internships",
+      "term": "2027",
+      "country": "US",
+      "compatibility": 90,
+      "quality": 62,
+      "interviewOdds": 4,
+      "scoreConfidence": "high",
+      "scoreSignals": {
+        "matchedSkills": [
+          "python",
+          "c++",
+          "linux"
+        ],
+        "requiredSkills": [
+          "python",
+          "c++",
+          "linux",
+          "ml"
+        ],
+        "family": "swe",
+        "tier": "top",
+        "pay": null,
+        "flags": []
+      },
+      "excerpt": "Back to jobs New Quantitative Developer Intern - Summer 2027 New York, Chicago Apply Tower Research Capital is a leading quantitative trading firm founded in 1998. Tower has built its business on a high-performance platform and independent trading teams. We have a 25+ year track record of innovation and a reputation for discovering unique market opportunities. Tower is home to some of the world’s best systematic trading and engineering talent. We empower portfolio managers to build their teams and strategies independently while providing the economies of scale that come from a large, global…",
+      "status": "skipped_unknown_required",
+      "details": "unknown required field(s): Country; unlabeled field; Start date month; Start date year; End date month; End date year; Preferred Programming Language(s); Do you currently have an offer? If so, what is your deadline to make a decision by?; Where are you currently located?; How did you hear about this job?; Are you or have you been entrusted with a position or function in any government, international orga; Are you an immediate family member of someone holding such a position? An Immediate family member is; Are you currently authorized to work for all employers in the United States on a full-time basis​?; Will you now or in the future require sponsorship for employment visa status (e.g., H-1B status)?; Have you been employed by Tower Research Capital before?; Were you referred to this role by a current Tower Research Capital employee? If so, please provide t; Are you currently located in the US, or do you have US Work Authorization?",
+      "attempts": 1,
+      "firstSeenAt": "2026-07-10T13:22:24.743Z",
+      "recordedAt": "2026-07-10T13:22:24.743Z",
+      "history": [
+        {
+          "at": "2026-07-10T13:22:24.743Z",
+          "status": "skipped_unknown_required",
+          "details": "unknown required field(s): Country; unlabeled field; Start date month; Start date year; End date month; End date year; Preferred Programming Language(s); Do you currently have an offer? If so, what is your deadline to make a decision by?; Where are you currently located?; How did you hear about this job?; Are you or have you been entrusted with a position or function in any government, international orga; Are you an immediate family member of someone holding such a position? An Immediate family member is; Are you currently authorized to work for all employers in the United States on a full-time basis​?; Will you now or in the future require sponsorship for employment visa status (e.g., H-1B status)?; Have you been employed by Tower Research Capital before?; Were you referred to this role by a current Tower Research Capital employee? If so, please provide t; Are you currently located in the US, or do you have US Work Authorization?"
+        }
+      ]
     }
   ]
 }
