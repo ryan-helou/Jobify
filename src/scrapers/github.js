@@ -1,6 +1,8 @@
 import * as cheerio from 'cheerio';
 import {
   CITIES,
+  CANADA_ANY,
+  CANADA_FALLBACK,
   GITHUB_SOURCES,
   ROLE_INCLUDE,
   ROLE_EXCLUDE,
@@ -39,7 +41,13 @@ export function isDevRole(title, kind = 'internship') {
 // Canadian office also avoids a needless visa filter on a role we can take.
 export function matchCity(locations) {
   const text = (Array.isArray(locations) ? locations.join(' ; ') : locations || '').toString();
-  return CITIES.find((c) => c.match.test(text)) || null;
+  const hub = CITIES.find((c) => c.match.test(text));
+  if (hub) return hub;
+  // Anywhere else in Canada still counts. A US posting must never reach here as
+  // Canadian: the US hubs were tried above, and CANADA_ANY only fires on Canada
+  // context, so "Austin, TX" stays unplaced (null) while "Halifax, NS" is kept.
+  if (CANADA_ANY.test(text)) return CANADA_FALLBACK;
+  return null;
 }
 
 function cellText(html) {
