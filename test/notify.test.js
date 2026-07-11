@@ -47,3 +47,14 @@ test('escapes HTML in titles so a stray < cannot break the message', () => {
   const msg = formatNewPostings([job({ title: 'C++ <Systems> Intern', compatibility: 80 })], { total: 1 });
   assert.match(msg.telegram, /C\+\+ &lt;Systems&gt; Intern/);
 });
+
+test('each role carries location, term and visa on a second line', () => {
+  const us = formatNewPostings([{ title: 'SWE Intern', company: 'Acme', city: 'nyc', location: 'New York, NY', country: 'US', term: '2027', sponsorship: 'silent', compatibility: 82, applyUrl: 'https://x/1' }], { total: 1 });
+  assert.match(us.telegram, /New York, NY · Summer 2027 · sponsorship not stated/);
+
+  const usSponsors = formatNewPostings([{ title: 'X', company: 'B', city: 'sf', location: 'SF, CA', country: 'US', term: 'unstated', sponsorship: 'offers', compatibility: 80, applyUrl: 'https://x/2' }], { total: 1 });
+  assert.match(usSponsors.telegram, /term not stated · sponsors visa/);
+
+  const ca = formatNewPostings([{ title: 'Co-op', company: 'C', city: 'canada', location: 'Halifax, NS ; Remote', country: 'CA', term: 'unstated', sponsorship: 'n/a', compatibility: 78, applyUrl: 'https://x/3' }], { total: 1 });
+  assert.match(ca.telegram, /Halifax, NS · term not stated · no visa needed/);
+});
