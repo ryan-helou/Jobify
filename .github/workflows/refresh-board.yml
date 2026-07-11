@@ -52,6 +52,8 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # Public dashboard URL — becomes the "Open board →" link in each ping.
+          DASHBOARD_URL: https://jobify-dashboard-production.up.railway.app
         run: node src/index.js
 
       # Runs even when the refresh exits non-zero, so a crash partway through a scrape
