@@ -66,6 +66,24 @@ const CITY_SHORT = {
 };
 const place = (r) => CITY_SHORT[r.city] || r.city || '';
 
+// The real posting location, not the city bucket — a "canada" row could be Halifax or
+// Vancouver, and that's exactly the thing worth knowing. First location only.
+const locOf = (r) => ((r.location || '').split(/\s*[;|]\s*/)[0].trim() || place(r));
+
+const TERM_SHORT = { '2027': 'Summer 2027', exempt: '2027 cycle', unstated: 'term not stated' };
+
+// Sponsorship matters where it's needed: a US role for a Canadian. Non-US roles are
+// flagged "no visa needed" so the distinction is obvious at a glance.
+function visaNote(r) {
+  if (r.country !== 'US') return 'no visa needed';
+  return r.sponsorship === 'offers' ? 'sponsors visa'
+    : r.sponsorship === 'denies' ? 'no sponsorship'
+    : 'sponsorship not stated';
+}
+
+// The per-role second line: location · term · visa.
+const metaOf = (r) => [locOf(r), TERM_SHORT[r.term] || r.term, visaNote(r)].filter(Boolean).join(' · ');
+
 /**
  * Decide what (if anything) to announce. Pure — no network — so it's testable and the
  * "did we spam?" rule lives in one place.
@@ -84,8 +102,13 @@ export function formatNewPostings(postings, { total, minFit = NOTIFY_MIN_FIT, li
   const more = notable.length - shown.length;
   const head = `${notable.length} new role${notable.length === 1 ? '' : 's'} worth a look`;
 
-  const tgLines = shown.map((r) => `<b>${escHtml(String(r.compatibility ?? '—'))}</b> · <a href="${escHtml(r.applyUrl)}">${escHtml(r.title)}</a> — ${escHtml(r.company)}${place(r) ? ` · ${escHtml(place(r))}` : ''}`);
-  const slLines = shown.map((r) => `*${escSlack(String(r.compatibility ?? '—'))}* · <${r.applyUrl}|${escSlack(r.title)}> — ${escSlack(r.company)}${place(r) ? ` · ${escSlack(place(r))}` : ''}`);
+  const fit = (r) => String(r.compatibility ?? '—');
+  const tgLines = shown.map((r) =>
+    `<b>${escHtml(fit(r))}</b> · <a href="${escHtml(r.applyUrl)}">${escHtml(r.title)}</a> — ${escHtml(r.company)}\n   <i>${escHtml(metaOf(r))}</i>`
+  );
+  const slLines = shown.map((r) =>
+    `*${escSlack(fit(r))}* · <${r.applyUrl}|${escSlack(r.title)}> — ${escSlack(r.company)}\n   _${escSlack(metaOf(r))}_`
+  );
 
   const tail = more ? `\n+${more} more` : '';
   const tgLink2 = dashboardUrl ? `\n<a href="${escHtml(dashboardUrl)}">Open board →</a>` : '';
