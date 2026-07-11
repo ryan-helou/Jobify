@@ -780,6 +780,16 @@ export const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || '';
 // (Slack or Telegram) works alone; with neither set, new-posting pings just log.
 export const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 export const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
+
+// A notification interrupts you, so it holds a higher bar than the board. Only
+// genuinely-new postings that clear this fit AND aren't for the wrong hiring cycle
+// get pinged; a run that turns up only weak or off-cycle matches stays silent. The
+// board still shows everything — this only governs the ping. Raise to be pinged less.
+export const NOTIFY_MIN_FIT = parseInt(process.env.NOTIFY_MIN_FIT || '65', 10);
+export const NOTIFY_MAX_ITEMS = parseInt(process.env.NOTIFY_MAX_ITEMS || '6', 10);
+
+// Optional "Open board →" link on the notification. Empty → no link.
+export const DASHBOARD_URL = process.env.DASHBOARD_URL || '';
 export const DRY_RUN = (process.env.DRY_RUN || 'true').toLowerCase() !== 'false';
 // The number of applications actually submitted in a run.
 export const MAX_APPLICATIONS_PER_RUN = parseInt(process.env.MAX_APPLICATIONS_PER_RUN || '10', 10);

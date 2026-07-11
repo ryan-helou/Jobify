@@ -1,4 +1,11 @@
-import { SLACK_WEBHOOK_URL, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID } from './config.js';
+import {
+  SLACK_WEBHOOK_URL,
+  TELEGRAM_BOT_TOKEN,
+  TELEGRAM_CHAT_ID,
+  NOTIFY_MIN_FIT,
+  NOTIFY_MAX_ITEMS,
+  DASHBOARD_URL,
+} from './config.js';
 
 // The board pings you when genuinely-new postings land. Two channels are supported;
 // use whichever you like, or both, or neither (then pings just log). A channel that
@@ -42,8 +49,6 @@ export async function telegram(html) {
       }),
     });
     if (!res.ok) {
-      // Telegram returns a JSON body explaining the refusal (bad token, wrong chat
-      // id), which is far more useful than the status alone when first wiring this up.
       const detail = await res.text().catch(() => '');
       console.error(`Telegram sendMessage failed: HTTP ${res.status} ${detail}`);
     }
@@ -55,25 +60,54 @@ export async function telegram(html) {
 const escHtml = (s) => String(s == null ? '' : s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const escSlack = (s) => String(s == null ? '' : s).replace(/[<>&]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
+const CITY_SHORT = {
+  montreal: 'Montreal', toronto: 'Toronto', vancouver: 'Vancouver', ottawa: 'Ottawa',
+  calgary: 'Calgary', canada: 'Canada', nyc: 'NYC', sf: 'SF',
+};
+const place = (r) => CITY_SHORT[r.city] || r.city || '';
+
 /**
- * Announce genuinely-new postings on every configured channel. `postings` is the
- * `added` list from mergeBoard, already sorted best-first; `total` is the board size.
- * At most `limit` are listed so a big catch-up run doesn't send a novella.
+ * Decide what (if anything) to announce. Pure — no network — so it's testable and the
+ * "did we spam?" rule lives in one place.
+ *
+ * Returns null when nothing clears the bar, which is the whole anti-spam mechanism: a
+ * run that finds only weak or wrong-cycle postings sends no message at all. `postings`
+ * is mergeBoard's `added` list (genuinely new); it need not be pre-sorted.
  */
-export async function notifyNewPostings(postings, total, limit = 8) {
-  const n = postings.length;
-  const shown = postings.slice(0, limit);
-  const more = n > limit ? `\n…and ${n - limit} more on the board.` : '';
-  const headline = `${n} new posting${n === 1 ? '' : 's'} on the board — ${total} total`;
-  const loc = (r) => r.location || r.city || '';
+export function formatNewPostings(postings, { total, minFit = NOTIFY_MIN_FIT, limit = NOTIFY_MAX_ITEMS, dashboardUrl = DASHBOARD_URL } = {}) {
+  const notable = postings
+    .filter((r) => (r.compatibility ?? 0) >= minFit && r.term !== 'other-cycle')
+    .sort((a, b) => (b.compatibility ?? -1) - (a.compatibility ?? -1));
+  if (!notable.length) return null;
 
-  const slackBody = shown
-    .map((r) => `• <${r.applyUrl}|${escSlack(r.title)}> — *${escSlack(r.company)}* (${escSlack(loc(r))}) _fit ${r.compatibility ?? '—'}_`)
-    .join('\n');
-  await slack(`:sparkles: ${headline}\n${slackBody}${more}`);
+  const shown = notable.slice(0, limit);
+  const more = notable.length - shown.length;
+  const head = `${notable.length} new role${notable.length === 1 ? '' : 's'} worth a look`;
 
-  const tgBody = shown
-    .map((r) => `• <a href="${escHtml(r.applyUrl)}">${escHtml(r.title)}</a> — <b>${escHtml(r.company)}</b> · ${escHtml(loc(r))} · fit ${r.compatibility ?? '—'}`)
-    .join('\n');
-  await telegram(`✨ <b>${escHtml(headline)}</b>\n${tgBody}${escHtml(more)}`);
+  const tgLines = shown.map((r) => `<b>${escHtml(String(r.compatibility ?? '—'))}</b> · <a href="${escHtml(r.applyUrl)}">${escHtml(r.title)}</a> — ${escHtml(r.company)}${place(r) ? ` · ${escHtml(place(r))}` : ''}`);
+  const slLines = shown.map((r) => `*${escSlack(String(r.compatibility ?? '—'))}* · <${r.applyUrl}|${escSlack(r.title)}> — ${escSlack(r.company)}${place(r) ? ` · ${escSlack(place(r))}` : ''}`);
+
+  const tail = more ? `\n+${more} more` : '';
+  const tgLink2 = dashboardUrl ? `\n<a href="${escHtml(dashboardUrl)}">Open board →</a>` : '';
+  const slLink2 = dashboardUrl ? `\n<${dashboardUrl}|Open board →>` : '';
+
+  return {
+    count: notable.length,
+    telegram: `🆕 <b>${escHtml(head)}</b>\n${tgLines.join('\n')}${tail}${tgLink2}`,
+    slack: `🆕 *${escSlack(head)}*\n${slLines.join('\n')}${tail}${slLink2}`,
+  };
+}
+
+/**
+ * Announce genuinely-new postings on every configured channel. `postings` is
+ * mergeBoard's `added` list. Sends nothing when nothing clears the fit/term bar.
+ */
+export async function notifyNewPostings(postings, total) {
+  const msg = formatNewPostings(postings, { total });
+  if (!msg) {
+    console.log(`[notify] ${postings.length} new, none above the notify bar — no ping sent`);
+    return;
+  }
+  await slack(msg.slack);
+  await telegram(msg.telegram);
 }
