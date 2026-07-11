@@ -526,17 +526,22 @@
       $('readout').querySelectorAll('.n').forEach((el) => countUp(el, +el.dataset.to));
     }
 
-    function fillFilter(id, values, labelFn) {
+    // `extras` are aggregate options pinned above the individual values (e.g. the
+    // country roll-ups on the city filter), so they survive the rebuild each render.
+    function fillFilter(id, values, labelFn, extras = []) {
       const sel = $(id);
       const current = sel.value;
       const opts = [`<option value="">${sel.options[0].text}</option>`];
+      for (const e of extras) opts.push(`<option value="${esc(e.value)}">${esc(e.label)}</option>`);
       for (const v of [...values].filter(Boolean).sort()) opts.push(`<option value="${esc(v)}">${esc(labelFn ? labelFn(v) : v)}</option>`);
       sel.innerHTML = opts.join('');
       sel.value = current;
     }
 
     function buildFilters() {
-      fillFilter('city', new Set(jobs.map((j) => j.city)), (c) => CITY_LABEL[c] || c);
+      // 'all-ca'/'all-us' select every posting in that country, not one city.
+      fillFilter('city', new Set(jobs.map((j) => j.city)), (c) => CITY_LABEL[c] || c,
+        [{ value: 'all-ca', label: 'All Canada' }, { value: 'all-us', label: 'All USA' }]);
       fillFilter('term', new Set(jobs.map((j) => j.term)), (t) => TERM_LABEL[t] || t);
       fillFilter('sponsorship', new Set(jobs.map((j) => j.sponsorship)), (s) => SPON_LABEL[s] || s);
       fillFilter('platform', new Set(jobs.map((j) => j.platform)));
@@ -552,7 +557,9 @@
       const hideDone = $('hideDone').getAttribute('aria-pressed') === 'true';
 
       const rows = jobs.filter((j) => {
-        if (city && j.city !== city) return false;
+        if (city === 'all-ca') { if (j.country !== 'CA') return false; }
+        else if (city === 'all-us') { if (j.country !== 'US') return false; }
+        else if (city && j.city !== city) return false;
         if (term && j.term !== term) return false;
         if (spon && j.sponsorship !== spon) return false;
         if (platform && j.platform !== platform) return false;
