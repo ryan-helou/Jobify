@@ -71,6 +71,24 @@ test('the same posting under a different URL is matched on identity', () => {
   assert.equal(board.length, 1);
 });
 
+// The honest-count guarantee: `added` counts only genuinely-new rows, so the "N new"
+// ping can't overcount a posting that merely reappeared under a fresh URL.
+test('mergeBoard reports only genuinely-new rows in `added`', () => {
+  const board = [];
+  const first = mergeBoard(board, [job()], '2026-07-01T00:00:00Z');
+  assert.equal(first.added.length, 1, 'a brand-new posting is added');
+
+  // Same job, new URL (identity match) + one truly new job.
+  const second = mergeBoard(
+    board,
+    [job({ url: 'https://jobs.ashbyhq.com/acme/2' }), job({ url: 'https://x.com/9', title: 'ML Intern', company: 'Zed' })],
+    '2026-07-02T00:00:00Z'
+  );
+  assert.equal(second.added.length, 1, 'the reappeared posting must not count as new');
+  assert.equal(second.added[0].title, 'ML Intern');
+  assert.equal(board.length, 2);
+});
+
 test('nothing is ever excluded — wrong term, refusal and dead platforms all land', () => {
   const board = [];
   mergeBoard(board, [

@@ -774,6 +774,12 @@ export const TERM_VALUES = ['2027', 'exempt', 'unstated', 'other-cycle'];
 export const SPONSORSHIP_VALUES = ['offers', 'denies', 'silent', 'n/a'];
 
 export const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || '';
+
+// Telegram notifications. Both must be set to send: the bot token from @BotFather and
+// the chat id to deliver to (your own user id, from @userinfobot). Either channel
+// (Slack or Telegram) works alone; with neither set, new-posting pings just log.
+export const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+export const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
 export const DRY_RUN = (process.env.DRY_RUN || 'true').toLowerCase() !== 'false';
 // The number of applications actually submitted in a run.
 export const MAX_APPLICATIONS_PER_RUN = parseInt(process.env.MAX_APPLICATIONS_PER_RUN || '10', 10);
