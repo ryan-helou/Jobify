@@ -83,7 +83,7 @@
     }
 
     .readout {
-      display: grid; grid-template-columns: repeat(5, 1fr);
+      display: grid; grid-template-columns: repeat(6, 1fr);
       gap: 1px; background: var(--line-soft);
     }
     .tile { background: var(--panel); padding: 16px 18px 15px; }
@@ -100,7 +100,6 @@
     .tile.accent .n { color: var(--amber); }
     @media (max-width: 720px) {
       .readout { grid-template-columns: repeat(2, 1fr); }
-      .tile:last-child { grid-column: span 2; }
     }
 
     /* ── Console: filters ───────────────────────────────────────────────────── */
@@ -157,6 +156,15 @@
     td.title { white-space: normal; font-weight: 600; max-width: 250px; min-width: 158px; letter-spacing: -.005em; line-height: 1.35; }
     td.title .caret { color: var(--faint); font-weight: 400; margin-right: 5px; display: inline-block; transition: transform .12s; }
     tr.open td.title .caret { transform: rotate(90deg); color: var(--amber); }
+    /* NEW: a posting first seen in the last 24h. The dot on the readout tile and the
+       pill on the row share the go-mint so "fresh" reads the same in both places. */
+    .newpill {
+      display: inline-block; margin-right: 6px; padding: 1px 6px; border-radius: 4px; vertical-align: 1px;
+      font: 700 9.5px var(--mono); letter-spacing: .08em; color: var(--go);
+      background: rgba(63,224,161,.12); border: 1px solid rgba(63,224,161,.3);
+    }
+    .tile.fresh .n { color: var(--go); }
+    .tile.fresh .g > i { background: var(--go); }
     td.company { white-space: normal; max-width: 130px; color: var(--muted); }
     td.city { color: var(--muted); }
     .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
@@ -400,6 +408,14 @@
       return isNaN(d) ? '—' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     }
 
+    // Fresh = first seen in the last 24 hours. The board refreshes every 2h, so a
+    // genuinely new posting shows up here within two hours of appearing at the source.
+    const NEW_WINDOW_MS = 24 * 60 * 60 * 1000;
+    function isNew(j) {
+      const t = Date.parse(j.firstSeenAt);
+      return !isNaN(t) && Date.now() - t < NEW_WINDOW_MS;
+    }
+
     function scoreCell(v, scale) {
       if (typeof v !== 'number' || !isFinite(v)) return '<td class="score none">—·—</td>';
       const s = SCALES[scale];
@@ -492,7 +508,9 @@
       // Each tile carries a small gauge showing its share, except avg-fit which is
       // already a 0–100 reading. Applied is measured against what's actionable — the
       // only postings worth applying to — not the whole board.
+      const fresh = jobs.filter(isNew).length;
       const tiles = [
+        { n: fresh, l: 'New · 24h', g: total ? fresh / total : 0, fresh: true },
         { n: jobs.length, l: 'Postings', g: 1 },
         { n: canadian, l: 'Canadian', g: canadian / total },
         { n: actionable, l: 'Actionable', g: actionable / total },
@@ -500,7 +518,7 @@
         { n: avgFit ?? 0, l: 'Avg fit', g: (avgFit ?? 0) / 100, suffix: '' },
       ];
       $('readout').innerHTML = tiles.map((t) =>
-        `<div class="tile${t.accent ? ' accent' : ''}">
+        `<div class="tile${t.accent ? ' accent' : ''}${t.fresh ? ' fresh' : ''}">
            <div class="n" data-to="${t.n}">0</div>
            <div class="g"><i style="width:${Math.round(Math.max(0, Math.min(1, t.g)) * 100)}%"></i></div>
            <div class="l">${t.l}</div>
@@ -569,7 +587,7 @@
           const state = track[j.url];
           const tag = (v, label, kind) => `<span class="tag ${kind[v] || 'flat'}">${esc(label[v] || v || '—')}</span>`;
           return `<tr class="row ${state ? 'done' : ''}" data-url="${esc(j.url)}" tabindex="0" aria-expanded="false">
-            <td class="title"><span class="caret">▸</span>${esc(j.title)}</td>
+            <td class="title"><span class="caret">▸</span>${isNew(j) ? '<span class="newpill">NEW</span>' : ''}${esc(j.title)}</td>
             <td class="company">${esc(j.company)}</td>
             <td class="city">${esc(CITY_LABEL[j.city] || j.city || '—')}</td>
             ${scoreCell(j.compatibility, 'score')}

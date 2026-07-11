@@ -42,7 +42,7 @@ import { scrapeHnHiring } from './scrapers/hnhiring.js';
 import { guessBoardPostings } from './scrapers/discover.js';
 import { scrapeIndeed } from './scrapers/indeed.js';
 import { scoreJob } from './score.js';
-import { slack } from './notify.js';
+import { slack, notifyNewPostings } from './notify.js';
 
 // A disabled feed source contributes neither jobs nor postings.
 const NO_FEED = { jobs: [], postings: [] };
@@ -176,24 +176,20 @@ async function main() {
 
     // 4. Merge and write. Nothing is filtered out — that is the dashboard's job now.
     const before = loadBoard();
-    const known = new Set(before.map((r) => canonicalKey(r.url)));
-    const merged = mergeBoard(before, scraped);
-    const added = merged.filter((r) => !known.has(canonicalKey(r.url))).length;
+    const { board: merged, added } = mergeBoard(before, scraped);
     const total = saveBoard(merged);
 
     const terms = tally(merged, (r) => r.term);
     const platforms = tally(merged, (r) => r.platform);
-    console.log(`board: ${total} postings (${added} new this run)`);
+    console.log(`board: ${total} postings (${added.length} genuinely new this run)`);
     console.log(`  terms: ${describe(terms)}`);
     console.log(`  platforms: ${describe(platforms)}`);
 
-    if (added) {
-      const best = merged
-        .filter((r) => !known.has(canonicalKey(r.url)))
-        .sort((a, b) => (b.compatibility ?? -1) - (a.compatibility ?? -1))
-        .slice(0, 5)
-        .map((r) => `• <${r.applyUrl}|${r.title}> — *${r.company}* (${r.location}) _fit ${r.compatibility}_`);
-      await slack(`:clipboard: ${added} new posting(s) on the board — ${total} total\n${best.join('\n')}`);
+    if (added.length) {
+      // Newest and best-fitting first, so the notification leads with what's worth
+      // opening. Everything appears on the board regardless; this is just the ping.
+      const best = [...added].sort((a, b) => (b.compatibility ?? -1) - (a.compatibility ?? -1));
+      await notifyNewPostings(best, total);
     }
   } finally {
     if (browser) await browser.close();

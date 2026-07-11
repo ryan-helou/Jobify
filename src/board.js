@@ -92,16 +92,23 @@ export function rowFor(job, now) {
 }
 
 /**
- * Merge this run's postings into the stored board.
+ * Merge this run's postings into the stored board. Returns { board, added } where
+ * `added` is the rows that were genuinely new — matched by neither URL nor identity.
  *
  * Scores are recomputed every run and overwrite the stored ones — the scoring model
  * changes, and a board showing last week's opinion of a posting is worse than useless.
  * `firstSeenAt` is preserved, because "this has been open for three weeks" is a real
  * signal and the only one on this board that a re-scrape cannot reconstruct.
+ *
+ * Returning `added` from here — the one place that decides insert-vs-update — is what
+ * keeps the "N new" count honest. index.js used to derive it from a URL-only set while
+ * this function also de-dupes on identity, so a posting reappearing under a new URL was
+ * reported as new even though it only refreshed an existing row.
  */
 export function mergeBoard(existing, jobs, now = new Date().toISOString()) {
   const byUrl = new Map(existing.map((r) => [canonicalKey(r.url), r]));
   const byIdentity = new Map(existing.map((r) => [identityKey(r), r]));
+  const added = [];
 
   for (const job of jobs) {
     const row = rowFor(job, now);
@@ -113,8 +120,9 @@ export function mergeBoard(existing, jobs, now = new Date().toISOString()) {
     byUrl.set(canonicalKey(row.url), row);
     byIdentity.set(identityKey(row), row);
     existing.push(row);
+    added.push(row);
   }
-  return existing;
+  return { board: existing, added };
 }
 
 export function loadBoard() {
