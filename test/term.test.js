@@ -60,6 +60,25 @@ test('start-date inference does not fire on non-start dates', () => {
   assert.equal(termFromStartDate('Start date May 2027; alternate start date September 2027'), null);
 });
 
+test('French season+year is read like the English one (Montreal is bilingual)', () => {
+  assert.equal(classifyTerm('Stage été 2027 en génie logiciel'), '2027');
+  assert.equal(classifyTerm("Stagiaire, développement — été 2027"), '2027');
+  assert.equal(classifyTerm('Stage automne 2026'), 'other-cycle');
+  assert.equal(classifyTerm('Poste hiver 2027'), 'other-cycle'); // winter 2027 is off-cycle
+  assert.equal(classifyTerm('été 2026'), 'other-cycle'); // past summer
+  // "été" must not fire inside another word: "complété 2026" would wrongly read as
+  // été 2026 (other-cycle) without the lookbehind guard; it should stay unstated.
+  assert.equal(classifyTerm('Projet complété 2026'), 'unstated');
+});
+
+test('French start dates infer the cycle', () => {
+  assert.equal(classifyTerm('Début du stage : septembre 2026'), 'other-cycle'); // fall
+  assert.equal(classifyTerm('Poste à partir de mai 2027'), '2027'); // summer 2027
+  assert.equal(classifyTerm('Disponible dès janvier 2027'), 'other-cycle'); // winter
+  assert.equal(classifyTerm('Stage de mai à août 2027'), '2027'); // range, first month = summer
+  assert.equal(termFromStartDate("Fondée en septembre 2010"), null); // history, not a start
+});
+
 test('an explicit Summer 2027 phrase still beats a stray start date', () => {
   assert.equal(classifyTerm('Summer 2027 internship. Onboarding may begin September 2026.'), '2027');
 });

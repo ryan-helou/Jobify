@@ -6,25 +6,51 @@ import { TERM_TARGET, TERM_OTHER_SEASON, YEAR_TARGET, YEAR_PAST, OFF_SEASON_TITL
 // 2026?", "Start date: May 2027", "September 2026 – December 2026" — and no season
 // phrase at all, so without reading the date they sit in 'unstated' forever.
 //
-// Only months that unambiguously open a co-op season are mapped. August (summer's end
-// or fall's start) and November/December (rare starts) are omitted so we never guess
-// from an ambiguous month.
-const SEASON_OF_MONTH = {
-  jan: 'winter', feb: 'winter',
-  mar: 'spring', apr: 'spring',
-  may: 'summer', jun: 'summer', jul: 'summer',
-  sep: 'fall', oct: 'fall',
-};
-const MONTH = '(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\\.?';
-const MONTH_YEAR = new RegExp(`\\b${MONTH}\\s*,?\\s*(20\\d{2})\\b`, 'gi');
+// Everything here is bilingual: Montreal is the first-priority city and Quebec postings
+// are frequently in French ("Stage été 2027", "à partir de septembre 2026"), so the
+// French season words, month names, and start phrases are matched alongside the English.
+
+// Month token → the co-op season its *start* opens, or null. English and French stems
+// both resolve here. Ambiguous months (August/août, November, December/décembre) return
+// null so we never guess from them.
+function monthSeason(raw) {
+  const s = String(raw).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // strip accents: aout, fevrier
+  if (/^jan/.test(s)) return 'winter'; // january, janvier
+  if (/^fe[bv]/.test(s)) return 'winter'; // february, février
+  if (/^mar/.test(s)) return 'spring'; // march, mars
+  if (/^a(?:pr|vr)/.test(s)) return 'spring'; // april, avril
+  if (/^ma[iy]$/.test(s)) return 'summer'; // may, mai
+  if (/^ju(?:n|in)/.test(s)) return 'summer'; // june, juin
+  if (/^ju(?:l|il)/.test(s)) return 'summer'; // july, juillet
+  if (/^sep/.test(s)) return 'fall'; // september, septembre
+  if (/^oct/.test(s)) return 'fall'; // october, octobre
+  return null; // aug/août, nov, dec/décembre, unknown → no inference
+}
+
+const MONTHS =
+  'jan(?:uary|vier)?|f[eé]v(?:rier|ruary)?|feb(?:ruary)?|mar(?:ch|s)?|a(?:pr|vr)(?:il)?|may|mai|jun(?:e)?|juin|jul(?:y)?|juil(?:let)?|aug(?:ust)?|ao[uû]t|sep(?:t(?:ember|embre)?)?|oct(?:ober|obre)?|nov(?:ember|embre)?|d[eé]c(?:ember|embre)?';
+const MONTH_YEAR = new RegExp(`\\b(${MONTHS})\\.?\\s*,?\\s*(20\\d{2})\\b`, 'gi');
 // A "Month – Month Year" range whose year sits on the *second* month ("September –
-// December 2026"). The first month names the season, the trailing year dates it.
-const SEASON_RANGE = new RegExp(`\\b${MONTH}\\s*(?:-|–|—|to|through|until)\\s*${MONTH}\\s*,?\\s*(20\\d{2})\\b`, 'gi');
+// December 2026", "mai à août 2027"). The first month names the season, the trailing
+// year dates it. French uses "à"/"au" as the range separator.
+const SEASON_RANGE = new RegExp(`\\b(${MONTHS})\\.?\\s*(?:-|–|—|to|through|until|à|au)\\s*(?:${MONTHS})\\.?\\s*,?\\s*(20\\d{2})\\b`, 'gi');
 // The month/year only names a term when it's actually a *start*: anchored by a start
 // word beside it, or by being the front of a date range. "Apply by September 2026" and
-// "founded September 2010" must not qualify — they aren't start dates.
-const START_WORD = /\bstart(?:s|ing|ed|\s+date)?\b|\bbegin(?:s|ning)?\b|\bcommenc(?:e|es|ed|ing)\b|\b(?:able|available)\s+to\b/i;
-const RANGE_TAIL = /^\s*(?:-|–|—|to|through|until)\s*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i;
+// "founded September 2010" must not qualify — they aren't start dates. French start
+// cues: débuter, commencer, à partir de, à compter de, dès, disponible.
+const START_WORD =
+  /\bstart(?:s|ing|ed|\s+date)?\b|\bbegin(?:s|ning)?\b|\bcommenc\w*|\b(?:able|available)\s+to\b|\bd[eé]but\w*|\bà\s+(?:partir|compter)\b|\bd[eè]s\b|\bdisponible\b/i;
+const RANGE_TAIL = new RegExp(`^\\s*(?:-|–|—|to|through|until|à|au)\\s*(?:${MONTHS})`, 'i');
+
+// French season+year, the counterpart to config's English TERM_TARGET / TERM_OTHER_SEASON.
+// "été" needs a lookbehind rather than \b: it isn't preceded by an ASCII word char, and
+// without the guard it would fire inside "complété 2027" (completed, not summer).
+const FR_SUMMER = "(?<![a-zà-ÿ])[eé]t[eé]";
+const FR_TARGET = new RegExp(`${FR_SUMMER}\\s*(?:de\\s*)?2027\\b`, 'i'); // été 2027
+const FR_OTHER_SEASON = new RegExp(
+  `\\b(?:automne|hiver|printemps)\\s*(?:de\\s*)?20\\d{2}\\b|${FR_SUMMER}\\s*(?:de\\s*)?20(?:1\\d|2[0-6])\\b`,
+  'i'
+); // automne/hiver/printemps of any year, or été of a past year
 
 // Returns '2027' | 'other-cycle' inferred from a start date, or null when there is no
 // start date — or when several disagree, in which case a human should decide.
@@ -32,7 +58,7 @@ export function termFromStartDate(text) {
   const t = String(text || '');
   const terms = new Set();
   const add = (monthWord, year) => {
-    const season = SEASON_OF_MONTH[monthWord.slice(0, 3).toLowerCase()];
+    const season = monthSeason(monthWord);
     if (season) terms.add(season === 'summer' && year === '2027' ? '2027' : 'other-cycle');
   };
 
@@ -43,8 +69,10 @@ export function termFromStartDate(text) {
     const after = t.slice(m.index + m[0].length, m.index + m[0].length + 24);
     if (START_WORD.test(before) || /^\s*start\b/i.test(after) || RANGE_TAIL.test(after)) add(m[1], m[2]);
   }
-  // "Month – Month Year" range whose year is on the second month.
-  for (const m of t.matchAll(SEASON_RANGE)) add(m[1], m[3]);
+  // "Month – Month Year" range whose year is on the second month. Only the first
+  // month and the trailing year are captured (the second month is non-capturing),
+  // so the year is m[2].
+  for (const m of t.matchAll(SEASON_RANGE)) add(m[1], m[2]);
 
   return terms.size === 1 ? [...terms][0] : null;
 }
@@ -68,8 +96,8 @@ export function classifyTerm(text) {
   const t = String(text || '');
   if (!t.trim()) return 'unstated';
 
-  const wantsTerm = TERM_TARGET.test(t);
-  const otherTerm = TERM_OTHER_SEASON.test(t);
+  const wantsTerm = TERM_TARGET.test(t) || FR_TARGET.test(t);
+  const otherTerm = TERM_OTHER_SEASON.test(t) || FR_OTHER_SEASON.test(t);
 
   if (wantsTerm && !otherTerm) return '2027';
   if (otherTerm && !wantsTerm) return 'other-cycle';
