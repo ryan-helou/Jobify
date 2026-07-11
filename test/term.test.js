@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { classifyTerm, classifyPosting, termForSource } from '../src/term.js';
+import { classifyTerm, classifyPosting, termForSource, termFromStartDate } from '../src/term.js';
 
 test('classifyTerm accepts an explicit Summer 2027 phrase', () => {
   for (const t of [
@@ -36,6 +36,32 @@ test('a bare year can accept but never reject', () => {
   assert.equal(classifyTerm('Intern; must graduate by 2027. Program starts 2026.'), 'unstated');
   // A bare past year alone is not evidence of an off cycle.
   assert.equal(classifyTerm('Intern, graduating 2026'), 'unstated');
+});
+
+test('classifyTerm infers the cycle from a start date when no season is named', () => {
+  // The motivating case: a start of September 2026 is the Fall 2026 cohort.
+  assert.equal(classifyTerm('Are you able to start September 2026?'), 'other-cycle');
+  assert.equal(classifyTerm('Start date: May 2027'), '2027'); // summer 2027 = target
+  assert.equal(classifyTerm('This internship starts in January 2027.'), 'other-cycle'); // winter
+  assert.equal(classifyTerm('Software Engineer Intern, beginning June 2026'), 'other-cycle'); // summer 2026, past
+  // A duration range names the cycle by its first month, whichever month carries the year.
+  assert.equal(classifyTerm('Internship period: September 2026 – December 2026'), 'other-cycle');
+  assert.equal(classifyTerm('Duration: September – December 2026'), 'other-cycle');
+  assert.equal(classifyTerm('Work term May – August 2027'), '2027');
+});
+
+test('start-date inference does not fire on non-start dates', () => {
+  assert.equal(termFromStartDate('Applications close by September 2026.'), null); // a deadline, not a start
+  assert.equal(termFromStartDate('Our company was founded in September 2010.'), null); // history, not a start
+  assert.equal(termFromStartDate('Software Engineer Intern'), null); // no date at all
+  // An ambiguous month (August) is deliberately not mapped.
+  assert.equal(termFromStartDate('Start date August 2026'), null);
+  // Two genuinely-anchored, disagreeing start dates → a human decides, not a guess.
+  assert.equal(termFromStartDate('Start date May 2027; alternate start date September 2027'), null);
+});
+
+test('an explicit Summer 2027 phrase still beats a stray start date', () => {
+  assert.equal(classifyTerm('Summer 2027 internship. Onboarding may begin September 2026.'), '2027');
 });
 
 test('classifyTerm treats empty/blank input as unstated', () => {
