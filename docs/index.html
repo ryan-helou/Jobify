@@ -292,6 +292,12 @@
         <select id="sponsorship" aria-label="Sponsorship"><option value="">any sponsorship</option></select>
         <select id="platform" aria-label="Platform"><option value="">any platform</option></select>
         <select id="source" aria-label="Source"><option value="">any source</option></select>
+        <select id="status" aria-label="Applied status" title="Filter by what you've marked. 'applied' shows the jobs you've applied to — even with 'hide worked' on.">
+          <option value="">any status</option>
+          <option value="applied">✓ applied</option>
+          <option value="todo">to apply</option>
+          <option value="dismissed">dismissed</option>
+        </select>
       </div>
       <div class="rack">
         <label class="rng">fit ≥ <input type="range" id="minFit" min="0" max="100" step="5" value="0" /><output id="minFitOut">0</output></label>
@@ -514,11 +520,11 @@
         { n: jobs.length, l: 'Postings', g: 1 },
         { n: canadian, l: 'Canadian', g: canadian / total },
         { n: actionable, l: 'Actionable', g: actionable / total },
-        { n: applied, l: 'Applied', g: actionable ? applied / actionable : 0, accent: true },
+        { n: applied, l: 'Applied', g: actionable ? applied / actionable : 0, accent: true, filter: 'applied' },
         { n: avgFit ?? 0, l: 'Avg fit', g: (avgFit ?? 0) / 100, suffix: '' },
       ];
       $('readout').innerHTML = tiles.map((t) =>
-        `<div class="tile${t.accent ? ' accent' : ''}${t.fresh ? ' fresh' : ''}">
+        `<div class="tile${t.accent ? ' accent' : ''}${t.fresh ? ' fresh' : ''}"${t.filter ? ` data-status="${t.filter}" role="button" tabindex="0" title="Show your applied jobs" style="cursor:pointer"` : ''}>
            <div class="n" data-to="${t.n}">0</div>
            <div class="g"><i style="width:${Math.round(Math.max(0, Math.min(1, t.g)) * 100)}%"></i></div>
            <div class="l">${t.l}</div>
@@ -555,6 +561,7 @@
       const minFit = +$('minFit').value, minQual = +$('minQual').value;
       const paidOnly = $('paidOnly').getAttribute('aria-pressed') === 'true';
       const hideDone = $('hideDone').getAttribute('aria-pressed') === 'true';
+      const status = $('status').value;
 
       const rows = jobs.filter((j) => {
         if (city === 'all-ca') { if (j.country !== 'CA') return false; }
@@ -565,7 +572,12 @@
         if (platform && j.platform !== platform) return false;
         if (source && j.source !== source) return false;
         if (paidOnly && !j.pay) return false;
-        if (hideDone && track[j.url]) return false;
+        // A chosen status wins over the default "hide worked" toggle, so picking
+        // "applied" always surfaces your applied list even with hide-worked on.
+        if (status === 'applied') { if (track[j.url] !== 'applied') return false; }
+        else if (status === 'dismissed') { if (track[j.url] !== 'dismissed') return false; }
+        else if (status === 'todo') { if (track[j.url]) return false; }
+        else if (hideDone && track[j.url]) return false;
         // A floor of 0 must not filter out an unscored posting.
         if (minFit && !(j.compatibility >= minFit)) return false;
         if (minQual && !(j.quality >= minQual)) return false;
@@ -658,7 +670,20 @@
     }
 
     function wire() {
-      ['q', 'city', 'term', 'sponsorship', 'platform', 'source'].forEach((id) => $(id).addEventListener('input', render));
+      ['q', 'city', 'term', 'sponsorship', 'platform', 'source', 'status'].forEach((id) => $(id).addEventListener('input', render));
+      // Clicking (or Enter/Space on) the Applied stat jumps straight to your applied list.
+      const tileActivate = (e) => {
+        const tile = e.target.closest('[data-status]');
+        if (!tile) return;
+        if (e.type === 'keydown') {
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          e.preventDefault();
+        }
+        $('status').value = $('status').value === tile.dataset.status ? '' : tile.dataset.status;
+        render();
+      };
+      $('readout').addEventListener('click', tileActivate);
+      $('readout').addEventListener('keydown', tileActivate);
       for (const [id, out] of [['minFit', 'minFitOut'], ['minQual', 'minQualOut']]) {
         $(id).addEventListener('input', () => { $(out).textContent = $(id).value; render(); });
       }
@@ -669,7 +694,7 @@
         });
       }
       $('reset').addEventListener('click', () => {
-        ['q', 'city', 'term', 'sponsorship', 'platform', 'source'].forEach((id) => ($(id).value = ''));
+        ['q', 'city', 'term', 'sponsorship', 'platform', 'source', 'status'].forEach((id) => ($(id).value = ''));
         $('minFit').value = 0; $('minQual').value = 0; $('minFitOut').textContent = '0'; $('minQualOut').textContent = '0';
         $('paidOnly').setAttribute('aria-pressed', 'false');
         render();
