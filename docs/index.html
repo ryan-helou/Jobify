@@ -375,7 +375,14 @@
   </script>
 
   <script>
-    const STORE_KEY = 'jobify.track.v1';
+    const V1_KEY = 'jobify.track.v1'; // legacy localStorage: url -> status (migrated once)
+    const V2_KEY = 'jobify.track.v2'; // current localStorage cache: { version, marks }
+    const APPLIED_URL = '/applied.json'; // committed store, written by serve-dashboard.js
+    // Applied marks are private and this exact page is also served from a public,
+    // unauthenticated URL. So the page only ever touches the applied.json store when it
+    // is running on the local dashboard server — on any public host it stays 100% in
+    // localStorage and never transmits, not even in a rejected request body.
+    const CAN_PERSIST = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || location.protocol === 'file:';
     const REFRESH_MS = 2 * 60 * 60 * 1000; // the cron cadence — see refresh-board.yml
     const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -396,7 +403,8 @@
     };
 
     let jobs = [];
-    let track = {};           // url -> 'applied' | 'dismissed'
+    let marks = {};           // identity -> { status: 'applied'|'dismissed', at, company, title, url }
+    let byId = new Map();     // identity -> job, to resolve a mark back to its posting
     let sortKey = 'compatibility';
     let sortDir = -1;
     let updatedAt = null;
@@ -405,8 +413,45 @@
     const esc = (s) => (s == null ? '' : String(s)).replace(/[&<>"']/g, (c) =>
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-    const loadTrack = () => { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; } };
-    const saveTrack = () => localStorage.setItem(STORE_KEY, JSON.stringify(track));
+    // Marks are keyed by a stable identity (company|title|city, matching src/tracker.js)
+    // rather than the raw URL, so a re-scrape that changes a posting's URL keeps your
+    // "applied" mark. Normalisation strips accents and punctuation.
+    const idKey = (j) => {
+      const norm = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+      return `${norm(j.company)}|${norm(j.title)}|${norm(j.city)}`;
+    };
+    const st = (j) => marks[idKey(j)]?.status;
+
+    // Durability: read the committed applied.json first (it survives a browser clear and
+    // syncs across devices through git), then fill gaps from the localStorage cache, and
+    // migrate the old url-keyed marks into identity keys once. Server value wins.
+    async function loadMarks() {
+      const out = {};
+      try {
+        const v1 = JSON.parse(localStorage.getItem(V1_KEY)) || {};
+        for (const j of jobs) if (v1[j.url]) out[idKey(j)] = { status: v1[j.url], at: null, company: j.company, title: j.title, url: j.applyUrl || j.url };
+      } catch { /* no legacy marks */ }
+      try {
+        const v2 = JSON.parse(localStorage.getItem(V2_KEY));
+        if (v2 && v2.marks) Object.assign(out, v2.marks);
+      } catch { /* no local cache */ }
+      if (CAN_PERSIST) {
+        try {
+          const r = await fetch(APPLIED_URL + '?t=' + Date.now());
+          if (r.ok) { const d = await r.json(); if (d && d.marks) Object.assign(out, d.marks); }
+        } catch { /* server unreachable — localStorage only */ }
+      }
+      return out;
+    }
+
+    // Cache to localStorage and best-effort POST to the committed file. The public hosted
+    // server has no write endpoint, so the POST fails harmlessly there and marks stay in
+    // that browser only — which is the intended, privacy-preserving behaviour on a public URL.
+    function saveMarks() {
+      const payload = { version: 1, marks };
+      try { localStorage.setItem(V2_KEY, JSON.stringify(payload)); } catch { /* quota */ }
+      if (CAN_PERSIST) fetch(APPLIED_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => {});
+    }
 
     function fmtDate(iso) {
       if (!iso) return '—';
@@ -454,7 +499,7 @@
       if (s.pay) why.push(`<div class="wrow"><span class="wk">Pay</span><span class="wv">${esc(s.pay)}</span></div>`);
       if (s.flags?.length) why.push(`<div class="wrow"><span class="wk">Flags</span><span class="wv">${esc(s.flags.join(', '))}</span></div>`);
 
-      const applied = track[j.url] === 'applied';
+      const applied = st(j) === 'applied';
       const left = `<div>
         <h4>${esc(j.title)}</h4>
         <div class="sub">${esc(j.company)} · ${esc(CITY_LABEL[j.city] || j.city || '')}</div>
@@ -466,7 +511,7 @@
         <div class="facts">${facts.join('')}</div>
         <div class="detail-actions">
           <a class="apply-lg" href="${esc(j.applyUrl)}" target="_blank" rel="noopener">Open posting ↗</a>
-          <button class="act mark${applied ? ' on' : ''}" data-url="${esc(j.url)}" data-state="applied" aria-pressed="${applied}">
+          <button class="act mark${applied ? ' on' : ''}" data-id="${esc(idKey(j))}" data-state="applied" aria-pressed="${applied}">
             ${applied ? '✓ Applied' : 'Mark as applied'}
           </button>
         </div>
@@ -506,7 +551,7 @@
     }
 
     function renderReadout() {
-      const applied = Object.values(track).filter((v) => v === 'applied').length;
+      const applied = Object.values(marks).filter((m) => m.status === 'applied').length;
       const canadian = jobs.filter((j) => j.country === 'CA').length;
       const actionable = jobs.filter((j) => j.term === '2027' || j.term === 'exempt' || j.term === 'unstated').length;
       const avgFit = mean(jobs.map((j) => j.compatibility).filter((v) => typeof v === 'number'));
@@ -574,10 +619,10 @@
         if (paidOnly && !j.pay) return false;
         // A chosen status wins over the default "hide worked" toggle, so picking
         // "applied" always surfaces your applied list even with hide-worked on.
-        if (status === 'applied') { if (track[j.url] !== 'applied') return false; }
-        else if (status === 'dismissed') { if (track[j.url] !== 'dismissed') return false; }
-        else if (status === 'todo') { if (track[j.url]) return false; }
-        else if (hideDone && track[j.url]) return false;
+        if (status === 'applied') { if (st(j) !== 'applied') return false; }
+        else if (status === 'dismissed') { if (st(j) !== 'dismissed') return false; }
+        else if (status === 'todo') { if (st(j)) return false; }
+        else if (hideDone && st(j)) return false;
         // A floor of 0 must not filter out an unscored posting.
         if (minFit && !(j.compatibility >= minFit)) return false;
         if (minQual && !(j.quality >= minQual)) return false;
@@ -603,7 +648,7 @@
         tbody.innerHTML = `<tr><td colspan="${COLSPAN}"><div class="empty">No postings match these filters. Loosen a filter or hit reset.</div></td></tr>`;
       } else {
         tbody.innerHTML = rows.map((j) => {
-          const state = track[j.url];
+          const state = st(j);
           const tag = (v, label, kind) => `<span class="tag ${kind[v] || 'flat'}">${esc(label[v] || v || '—')}</span>`;
           return `<tr class="row ${state ? 'done' : ''}" data-url="${esc(j.url)}" tabindex="0" aria-expanded="false">
             <td class="title"><span class="caret">▸</span>${isNew(j) ? '<span class="newpill">NEW</span>' : ''}${esc(j.title)}</td>
@@ -619,8 +664,8 @@
             <td class="seen">${esc(fmtDate(j.firstSeenAt))}</td>
             <td><a class="apply" href="${esc(j.applyUrl)}" target="_blank" rel="noopener">open ↗</a></td>
             <td>
-              <button class="act" data-url="${esc(j.url)}" data-state="applied" aria-pressed="${state === 'applied'}">applied</button>
-              <button class="act" data-url="${esc(j.url)}" data-state="dismissed" aria-pressed="${state === 'dismissed'}">hide</button>
+              <button class="act" data-id="${esc(idKey(j))}" data-state="applied" aria-pressed="${state === 'applied'}">applied</button>
+              <button class="act" data-id="${esc(idKey(j))}" data-state="dismissed" aria-pressed="${state === 'dismissed'}">hide</button>
             </td>
           </tr>`;
         }).join('');
@@ -633,10 +678,13 @@
       renderReadout();
     }
 
-    function toggleTrack(url, state) {
-      if (track[url] === state) delete track[url];
-      else track[url] = state;
-      saveTrack();
+    function toggleTrack(id, state) {
+      if (marks[id]?.status === state) delete marks[id];
+      else {
+        const j = byId.get(id) || {};
+        marks[id] = { status: state, at: new Date().toISOString(), company: j.company, title: j.title, url: j.applyUrl || j.url };
+      }
+      saveMarks();
       render();
     }
 
@@ -702,7 +750,7 @@
       $('exportCsv').addEventListener('click', exportCsv);
       $('tbody').addEventListener('click', (e) => {
         const btn = e.target.closest('button.act');
-        if (btn) { toggleTrack(btn.dataset.url, btn.dataset.state); return; }
+        if (btn) { toggleTrack(btn.dataset.id, btn.dataset.state); return; }
         if (e.target.closest('a')) return;           // let the open link work
         const row = e.target.closest('tr.row');
         if (row) toggleDetail(row);
@@ -737,11 +785,12 @@
     }
 
     async function load() {
-      track = loadTrack();
       try {
         const data = await fetchBoard();
         jobs = Array.isArray(data.jobs) ? data.jobs : [];
         updatedAt = data.updatedAt || null;
+        byId = new Map(jobs.map((j) => [idKey(j), j]));
+        marks = await loadMarks(); // needs jobs loaded to migrate legacy url-keyed marks
         buildFilters();
         render();
         tickCountdown();

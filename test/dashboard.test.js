@@ -75,8 +75,19 @@ test('the dashboard reads board.json, not the retired applier ledger', () => {
 });
 
 // Applied/dismissed state is the user's, and this page is served from a public URL
-// with no authentication. It must never leave the browser.
-test('tracking state stays in the browser', () => {
+// with no authentication. It must never leave the browser on a public host — it may
+// persist to the *local* dashboard server (a committed applied.json), but only when
+// running on localhost, so nothing transmits from the public deploy, not even in a
+// rejected request body.
+test('tracking state only persists to a local server, never from a public host', () => {
   assert.ok(HTML.includes('localStorage'), 'track state should live in localStorage');
-  assert.ok(!/method:\s*['"]POST/i.test(HTML), 'the page must not POST anything anywhere');
+  // Persistence is gated by a localhost-only flag derived from the hostname.
+  assert.ok(/const CAN_PERSIST\s*=/.test(HTML), 'a CAN_PERSIST gate must exist');
+  assert.ok(/CAN_PERSIST\s*=[^;]*location\.hostname/.test(HTML), 'CAN_PERSIST must be derived from location.hostname');
+  assert.ok(/CAN_PERSIST\s*=[^;]*localhost/.test(HTML), 'CAN_PERSIST must allow only localhost');
+  // Every network write is behind that gate — no ungated POST anywhere.
+  for (const m of HTML.matchAll(/\bfetch\([^)]*method:\s*['"]POST/gi)) {
+    const preceding = HTML.slice(Math.max(0, m.index - 40), m.index);
+    assert.ok(/CAN_PERSIST/.test(preceding), 'every POST must be guarded by CAN_PERSIST');
+  }
 });
