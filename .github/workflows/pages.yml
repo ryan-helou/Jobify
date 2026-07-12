@@ -2,12 +2,13 @@ name: Deploy Dashboard
 
 # MANUAL ONLY — and think before you run it.
 #
-# This copies applied_jobs.json into the published site, and a GitHub Pages site is
-# served publicly even when its repository is private. Deploying it puts a
-# timestamped, permanent log of every job you have applied to on the open internet,
-# which is the exact exposure this repo was made private to avoid.
+# A GitHub Pages site is served publicly even when its repository is private. This
+# publishes only the dashboard and board.json (the open-postings catalogue). It must
+# NEVER publish applied.json — the private record of what you applied to — which is
+# why that file is deliberately not copied below and lives only in this repo and your
+# browser. The board renders on the hosted site with no applied marks, by design.
 #
-# For everyday use run the dashboard locally instead:
+# For everyday use run the dashboard locally instead, where your marks persist:
 #
 #     npm run dashboard
 #
@@ -39,7 +40,7 @@ jobs:
         run: |
           mkdir -p _site
           cp docs/index.html _site/index.html
-          cp applied_jobs.json _site/applied_jobs.json
+          cp board.json _site/board.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
