@@ -22,7 +22,7 @@ import {
 } from './config.js';
 import { identityKey, canonicalKey } from './tracker.js';
 import { loadBoard, mergeBoard, saveBoard } from './board.js';
-import { scrapeGithubBoards } from './scrapers/github.js';
+import { scrapeGithubBoards, isGraduateTitle } from './scrapers/github.js';
 import { scrapeAtsBoards } from './scrapers/ats.js';
 import { scrapeWorkday } from './scrapers/workday.js';
 import { scrapeOracle } from './scrapers/oracle.js';
@@ -174,9 +174,16 @@ async function main() {
         `${indeedJobs.length} indeed)`
     );
 
-    // 4. Merge and write. Nothing is filtered out — that is the dashboard's job now.
+    // 4. Merge, prune, write. The board is cumulative, so tightening a rule only stops
+    //    new matches — existing rows persist until something removes them. Graduate and
+    //    new-grad roles are off the board for a current undergraduate, so drop any that
+    //    are already on it. Safe because isGraduateTitle keys on title alone and never
+    //    matches a legitimate intern/co-op or campus role.
     const before = loadBoard();
-    const { board: merged, added } = mergeBoard(before, scraped);
+    const { board: mergedAll, added } = mergeBoard(before, scraped);
+    const merged = mergedAll.filter((r) => !isGraduateTitle(r.title));
+    const pruned = mergedAll.length - merged.length;
+    if (pruned) console.log(`pruned ${pruned} graduate/new-grad role(s) already on the board`);
     const total = saveBoard(merged);
 
     const terms = tally(merged, (r) => r.term);

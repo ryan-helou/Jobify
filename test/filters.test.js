@@ -32,6 +32,41 @@ test('isDevRole rejects non-developer and off-year internships', () => {
   }
 });
 
+// The applicant is a current undergraduate: graduate-level roles are off the board.
+// Titles are real ones from the board (fit 13–17 before this exclusion).
+test('isDevRole rejects new-grad and graduate roles on internship boards', () => {
+  for (const t of [
+    'Software Engineer, New Grad',
+    'Software Engineer - 2027 New Grads',
+    'New Grad Software Engineer (Full Stack)',
+    'Software Developer - New Graduate',
+    'Jr./Entry level Java Developer',
+    'Hiring Entry Level Software Engineer',
+    'Senior Software Engineer',
+    'Staff Software Engineer',
+    'Software Engineer, 3+ years of experience',
+    'Analog/RF Design Engineer Intern - Master\'s Degree', // grad degree required, even as "intern"
+    'PhD Machine Learning Intern', // grad degree required
+    'Graduate Intern, Systems R&D', // the intern's own level is graduate
+    'Senior Software Engineer Intern', // ditto
+  ]) {
+    assert.equal(isDevRole(t), false, t);
+  }
+});
+
+// The carve-out: a posting that lists new grad as a *separate* option alongside an
+// intern role stays — it genuinely accepts an intern. Undergraduate roles stay too.
+test('isDevRole keeps intern roles that also list new grad, and undergraduate roles', () => {
+  for (const t of [
+    'Software Engineer Intern / New Grad',
+    'SWE Intern or New Grad',
+    'Undergraduate Software Engineering Intern',
+    'Software Engineering Co-op',
+  ]) {
+    assert.equal(isDevRole(t), true, t);
+  }
+});
+
 test('newgrad kind allows entry-level titles without an "intern" token', () => {
   assert.equal(isDevRole('Software Developer – New Graduate', 'newgrad'), true);
   assert.equal(isDevRole('Junior Software Engineer, AI', 'newgrad'), true);
