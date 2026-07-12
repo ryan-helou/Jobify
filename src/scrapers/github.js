@@ -9,6 +9,10 @@ import {
   DEV_INCLUDE,
   NON_DEV_EXCLUDE,
   SENIOR_EXCLUDE,
+  GRAD_DEGREE_TITLE,
+  GRAD_LEVEL_ALWAYS,
+  GRAD_LEVEL_DUAL,
+  INTERN_TOKEN,
   DEV_CATEGORIES,
   WANTED_SEASON,
   SPONSORSHIP_MARKERS,
@@ -29,10 +33,24 @@ export function isDevRole(title, kind = 'internship') {
 
   if (kind === 'newgrad' || kind === 'campus') {
     if (SENIOR_EXCLUDE.test(title)) return false;
-  } else if (!ROLE_INCLUDE.test(title)) {
-    return false; // internship boards: must be intern/new-grad/co-op
+  } else {
+    if (!ROLE_INCLUDE.test(title)) return false; // internship boards: must be intern/co-op
+    if (isGraduateTitle(title)) return false;
   }
   return DEV_INCLUDE.test(title); // must carry a software signal
+}
+
+// A role a current undergraduate can't hold: it needs a completed or graduate degree,
+// or it's a "Graduate/Senior Intern" pitched above their level. A new-grad option
+// listed *alongside* an intern role ("Intern / New Grad") is not graduate — it accepts
+// an intern. Exported so the board can prune these from its cumulative history too, not
+// just refuse new ones — see index.js.
+export function isGraduateTitle(title) {
+  const t = String(title || '');
+  if (GRAD_DEGREE_TITLE.test(t)) return true;
+  if (GRAD_LEVEL_ALWAYS.test(t)) return true;
+  if (GRAD_LEVEL_DUAL.test(t) && !INTERN_TOKEN.test(t)) return true;
+  return false;
 }
 
 // Picks the highest-priority target city named in a posting's location(s).

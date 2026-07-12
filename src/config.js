@@ -123,6 +123,23 @@ export const NON_DEV_EXCLUDE =
 // (a framework) and "waterfall" (no word boundary before "fall").
 export const OFF_SEASON_TITLE = /\b(fall|autumn|winter)\b|\bspring\b(?!\s*(?:boot|framework))/i;
 
+// The applicant is a current undergraduate who has not finished their bachelor's, so
+// roles that require a completed or graduate degree don't belong on the board.
+//
+//   GRAD_DEGREE_TITLE  — asks for a Master's/PhD. Out even when it says "intern"
+//     ("Analog Intern - Master's Degree"): the degree requirement is the blocker.
+//   GRAD_LEVEL_ALWAYS  — the *intern's own* level: a "Graduate Intern" or "Senior
+//     Intern" wants someone past a bachelor's, so an intern token doesn't rescue it.
+//     `(?<!new\s)` lets "New Graduate" through to the dual rule below; `\bgraduate\b`
+//     can't match inside "undergraduate" (no word boundary), so undergrads are safe.
+//   GRAD_LEVEL_DUAL    — a *separate* role type listed alongside ours: "SWE Intern /
+//     New Grad" genuinely accepts an intern, so it's kept when an intern token is present.
+export const GRAD_DEGREE_TITLE = /\bph\.?d\b|\bdoctoral\b|\bdoctorate\b|\bmaster'?s?\b|\bm\.?sc\.?\b|\bmba\b/i;
+export const GRAD_LEVEL_ALWAYS =
+  /(?<!new\s)\bgraduate\b|\bsenior\b|\bstaff\b|\bprincipal\b|\blead\s+engineer\b|\b\d+\+?\s*years?\s+of\s+experience\b/i;
+export const GRAD_LEVEL_DUAL = /\bnew\s*grad(?:uate)?s?\b|\bentry[\s-]*level\b|\bcampus\s*hire\b/i;
+export const INTERN_TOKEN = /\bintern(?:ship)?s?\b|\bco-?op\b/i;
+
 // US postings must explicitly mention sponsorship, otherwise skipped.
 export const VISA_KEYWORDS = [
   'visa sponsorship',
