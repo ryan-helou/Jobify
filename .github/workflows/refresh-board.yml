@@ -4,15 +4,28 @@ name: Refresh Board
 # nothing — the applier was retired after it reached 8 of 239 postings and reported
 # nine submissions no employer ever received. A human works the board by hand.
 #
-# Every two hours, not hourly: a private repo gets 2,000 free Actions minutes a month,
-# and hourly runs at ~3 minutes each would spend roughly 2,200 of them. Postings do not
-# appear and vanish within an hour.
+# Twelve runs a day, not hourly and not evenly spaced. A private repo gets 2,000 free
+# Actions minutes a month; hourly runs at ~3 minutes each would spend ~2,200 of them, so
+# twelve is the budget (~1,080 min/month). But *when* those twelve fire matters: reaching
+# a posting early is one of the few real levers a candidate has (src/score.js even scores
+# it), so the runs are concentrated when new reqs actually appear rather than smeared
+# across the dead of night.
+#
+# Internship reqs post on weekday mornings, and the target cities straddle two coasts —
+# NYC/Toronto/Montreal (Eastern) and SF/Vancouver (Pacific). 9–11am in both zones is
+# 13:00–18:00 UTC, so that transcontinental morning window gets an hourly sweep; the
+# afternoon gets every-two-hours; and two overnight sweeps catch late posts plus the
+# nightly bot commits on the SimplifyJobs/vanshb03/speedyapply feeds.
 
 on:
   schedule:
-    # 00:10, 02:10, … UTC. Ten past the hour because GitHub delays runs scheduled on
-    # the hour, when everyone else's crons fire.
-    - cron: '10 */2 * * *'
+    # :10 past the hour — GitHub delays runs scheduled on the hour, when everyone
+    # else's crons fire. Hours in UTC (ET = −4, PT = −7 in summer):
+    #   12–18  hourly  ·  morning post-surge, 8am–2pm ET / 5–11am PT (both coasts' 9–11am)
+    #   20, 22         ·  afternoon, 4pm & 6pm ET / 1pm & 3pm PT
+    #   00             ·  end of the Pacific business day, 8pm ET / 5pm PT
+    #   03, 07         ·  overnight sweeps for late posts and the feeds' nightly commits
+    - cron: '10 0,3,7,12,13,14,15,16,17,18,20,22 * * *'
   workflow_dispatch:
 
 permissions:
