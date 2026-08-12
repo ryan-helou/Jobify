@@ -11,9 +11,10 @@ import { buildJob } from './candidate.js';
 //
 // ~750 internships tagged Software Engineering. Its categories are loose (a Walmart
 // "Area Manager" shows up under Software Engineering), so isDevRole does the real
-// filtering; its locations are US-wide, so matchCity keeps the NYC/SF ones. The
-// landing_page is a themuse.com redirect, not an ATS URL, so there's nothing to
-// harvest — jobs only.
+// filtering. Its locations are overwhelmingly US, so matchCity now discards most of
+// what this feed returns and only its Canadian rows survive — kept because that
+// residue is real, not because the feed is efficient. The landing_page is a
+// themuse.com redirect, not an ATS URL, so there's nothing to harvest — jobs only.
 
 const API = 'https://www.themuse.com/api/public/jobs';
 

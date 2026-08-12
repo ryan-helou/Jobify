@@ -12,7 +12,7 @@ name: Refresh Board
 # across the dead of night.
 #
 # Internship reqs post on weekday mornings, and the target cities straddle two coasts —
-# NYC/Toronto/Montreal (Eastern) and SF/Vancouver (Pacific). 9–11am in both zones is
+# Toronto/Montreal/Ottawa (Eastern) and Vancouver (Pacific). 9–11am in both zones is
 # 13:00–18:00 UTC, so that transcontinental morning window gets an hourly sweep; the
 # afternoon gets every-two-hours; and two overnight sweeps catch late posts plus the
 # nightly bot commits on the SimplifyJobs/vanshb03/speedyapply feeds.

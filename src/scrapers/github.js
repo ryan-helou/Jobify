@@ -53,17 +53,18 @@ export function isGraduateTitle(title) {
   return false;
 }
 
-// Picks the highest-priority target city named in a posting's location(s).
-// A posting listing both "San Francisco, CA" and "Toronto, ON" resolves to
-// Toronto — CITIES is ordered by preference (Montreal first), and preferring the
-// Canadian office also avoids a needless visa filter on a role we can take.
+// Picks the highest-priority target city named in a posting's location(s), and is
+// the board's hard geographic filter: null means the posting is dropped entirely.
+// A posting listing both "San Francisco, CA" and "Toronto, ON" resolves to Toronto
+// — a role with a Canadian office is takeable, so it is kept and filed under the
+// Canadian city, while a US-only posting is discarded rather than ranked low.
 export function matchCity(locations) {
   const text = (Array.isArray(locations) ? locations.join(' ; ') : locations || '').toString();
   const hub = CITIES.find((c) => c.match.test(text));
   if (hub) return hub;
-  // Anywhere else in Canada still counts. A US posting must never reach here as
-  // Canadian: the US hubs were tried above, and CANADA_ANY only fires on Canada
-  // context, so "Austin, TX" stays unplaced (null) while "Halifax, NS" is kept.
+  // Anywhere else in Canada still counts. CANADA_ANY fires only on unambiguous
+  // Canada context, so "Austin, TX" and "San Francisco, CA" stay unplaced (null)
+  // while "Halifax, NS" is kept.
   if (CANADA_ANY.test(text)) return CANADA_FALLBACK;
   return null;
 }

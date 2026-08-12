@@ -15,15 +15,21 @@ try {
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-// Ordered by priority: Montreal, Toronto, New York, San Francisco. The order is
-// load-bearing twice over — it sorts the apply queue, and matchCity resolves a
-// multi-city posting to the first entry it names, so a "New York / SF" role is
-// treated as New York.
-// `match` covers the whole commutable metro, not just the city proper: postings
-// say "San Jose" or "Sunnyvale" for what is the same Bay Area office market, and
-// matching only "San Francisco" silently discarded a third of the Summer 2027
-// listings. Suburb names are qualified with a province/state where the bare name
-// is ambiguous ("Laval" is also in France, "Waterloo" also in Ontario vs Iowa).
+// The board is Canada-only. A US role costs a visa and a move, so it is not a
+// weaker option to rank below the Canadian ones — it is not an option, and it is
+// dropped at ingest rather than scored and filtered later. This list plus
+// CANADA_ANY is that filter: matchCity returns null for anything neither one
+// places, and a posting with no city never reaches the board.
+//
+// Ordered by priority: Montreal first, then Toronto. The order is load-bearing
+// twice over — it sorts the queue, and matchCity resolves a multi-city posting to
+// the first entry it names, so a "Toronto / Vancouver" role is filed under Toronto.
+//
+// `match` covers the whole commutable metro, not just the city proper: a posting
+// saying "Mississauga" or "Burnaby" is the same office market as Toronto or
+// Vancouver, and matching only the core city silently discarded real listings.
+// Suburb names are qualified with a province where the bare name is ambiguous
+// ("Laval" is also in France, "Waterloo" also in Ontario vs Iowa).
 export const CITIES = [
   {
     key: 'montreal',
@@ -60,20 +66,6 @@ export const CITIES = [
     indeedDomain: 'ca.indeed.com',
     match: /calgary|edmonton/i,
   },
-  {
-    key: 'nyc',
-    name: 'New York, NY',
-    country: 'US',
-    indeedDomain: 'www.indeed.com',
-    match: /new york|\bnyc\b|manhattan|brooklyn|jersey city|hoboken/i,
-  },
-  {
-    key: 'sf',
-    name: 'San Francisco, CA',
-    country: 'US',
-    indeedDomain: 'www.indeed.com',
-    match: /san francisco|\bsf\b|bay area|san jose|sunnyvale|palo alto|mountain view|menlo park|santa clara|cupertino|redwood city|south san francisco|foster city/i,
-  },
 ];
 
 // Any Canadian location that CITIES doesn't place to a specific hub still belongs on
@@ -82,14 +74,18 @@ export const CITIES = [
 // dropped outright. Cohere, for one, tags its interns just "Canada". This matches a
 // province name/abbreviation, the word Canada, or a remote-in-Canada phrasing.
 //
-// Deliberately narrow so it never claims a US posting: bare "ON"/"QC" must be a
-// standalone token, and US-only signals are excluded first by matchCity trying the
-// US CITIES entries. "Ontario, CA" (California) is guarded by requiring Canada
-// context, not a bare province, when the string also names a US state.
-// "Ontario" is also a city in California, so that one province name is guarded
-// against a following US-state context; the rest don't collide with US place names.
+// Deliberately narrow so it never claims a US posting. Since the US hubs were
+// removed from CITIES this regex is the *only* thing standing between a US posting
+// and the board, so every alternation has to be Canada-unambiguous on its own:
+//   - bare "ON"/"QC" must be a standalone token, and the province-abbreviation list
+//     deliberately omits "CA" — "San Francisco, CA" is California, not Canada.
+//   - "Ontario" is also a city in California, so it is guarded against a following
+//     US-state context.
+//   - city names that exist in both countries (Waterloo NY/IA, Halifax VA/NC,
+//     Hamilton OH, London UK) are qualified with a province; only names unique to
+//     Canada (Kitchener, Winnipeg, Mississauga) are allowed bare.
 export const CANADA_ANY =
-  /\bcanad(?:a|ian)\b|\bontario\b(?!\s*,?\s*(?:ca\b|calif))|\b(?:quebec|qu[eé]bec|british columbia|alberta|manitoba|saskatchewan|nova scotia|new brunswick|newfoundland|prince edward)\b|,\s*(?:QC|ON|BC|AB|MB|SK|NS|NB|NL|PE)\b|\b(?:QC|ON|BC|AB|MB|SK|NS|NB|NL|PE),?\s*canada\b|\b(?:kitchener|waterloo|halifax|winnipeg|quebec city|qu[eé]bec city|mississauga|hamilton, ?on|london, ?on)\b/i;
+  /\bcanad(?:a|ian)\b|\bontario\b(?!\s*,?\s*(?:ca\b|calif))|\b(?:quebec|qu[eé]bec|british columbia|alberta|manitoba|saskatchewan|nova scotia|new brunswick|newfoundland|prince edward)\b|,\s*(?:QC|ON|BC|AB|MB|SK|NS|NB|NL|PE)\b|\b(?:QC|ON|BC|AB|MB|SK|NS|NB|NL|PE),?\s*canada\b|\b(?:kitchener|winnipeg|quebec city|qu[eé]bec city|mississauga|waterloo, ?on|halifax, ?ns|hamilton, ?on|london, ?on)\b/i;
 
 // The bucket a Canadian posting lands in when no specific hub matched. Not a member
 // of CITIES (nothing searches it; Indeed iterates CITIES), just a resolved label.
