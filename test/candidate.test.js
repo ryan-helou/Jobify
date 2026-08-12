@@ -9,21 +9,21 @@ test('builds a board job for a dev internship in a target city', () => {
   const job = buildJob({
     company: 'Acme',
     title: 'Software Engineer Intern',
-    location: 'New York, NY, US',
+    location: 'Toronto, ON, Canada',
     url: 'https://acme.example/jobs/1',
     source: 'workable:acme',
     description: 'Summer 2027 internship building distributed systems.',
   });
   assert.equal(job.title, 'Software Engineer Intern');
-  assert.equal(job.city, 'nyc');
-  assert.equal(job.country, 'US');
+  assert.equal(job.city, 'toronto');
+  assert.equal(job.country, 'CA');
   assert.equal(job.source, 'workable:acme');
   assert.equal(job.term, '2027');
   assert.equal(job.sponsorship, null);
 });
 
 test('rejects a non-developer internship', () => {
-  assert.equal(buildJob({ company: 'X', title: 'Marketing Intern', location: 'New York, NY', url: 'u', source: 's' }), null);
+  assert.equal(buildJob({ company: 'X', title: 'Marketing Intern', location: 'Toronto, ON', url: 'u', source: 's' }), null);
 });
 
 test('rejects a role outside the target cities', () => {

@@ -24,15 +24,28 @@ test('anywhere-in-Canada is kept, not dropped', () => {
   assert.equal(key('Winnipeg, Manitoba'), 'canada');
 });
 
-// A US posting must never be mistaken for Canadian, or the board fills with roles
-// that need a visa. This is the guard the CANADA_ANY regex has to hold.
-test('US postings are unaffected — hubs kept, the rest still dropped', () => {
-  assert.equal(key('New York, NY'), 'nyc');
-  assert.equal(key('San Francisco, CA'), 'sf');
+// The board is Canada-only: every US posting is dropped at ingest, including the
+// two hubs (New York, San Francisco) that used to be targets. CANADA_ANY is now the
+// sole guard, so the ", CA" case matters most — that is California, not Canada.
+test('US postings are dropped, including the former NYC/SF hubs', () => {
+  assert.equal(key('New York, NY'), null);
+  assert.equal(key('San Francisco, CA'), null);
+  assert.equal(key('Palo Alto, CA'), null);
   assert.equal(key('Austin, TX'), null);
   assert.equal(key('United States'), null);
   assert.equal(key('Remote - US'), null);
   assert.equal(key('Seattle, WA'), null);
+});
+
+// City names that exist in both countries must not drag a US posting in now that no
+// US hub is tried first. These are real US cities.
+test('cross-border city names need Canadian context', () => {
+  assert.equal(key('Waterloo, IA'), null);
+  assert.equal(key('Waterloo, NY'), null);
+  assert.equal(key('Halifax, VA'), null);
+  assert.equal(key('Hamilton, OH'), null);
+  assert.equal(key('Waterloo, ON'), 'toronto'); // in the Toronto metro match
+  assert.equal(key('Halifax, NS'), 'canada');
 });
 
 // "Ontario, California" and "London, Ontario" both exist. The bare-province token

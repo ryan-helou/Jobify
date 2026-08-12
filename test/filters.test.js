@@ -89,9 +89,11 @@ test('newgrad kind rejects senior and levelled roles', () => {
 });
 
 test('matchCity prefers the highest-priority target city', () => {
+  // A posting with a Canadian office is takeable, so the US half is ignored rather
+  // than disqualifying the role.
   assert.equal(matchCity(['San Francisco, CA', 'Toronto, ON']).key, 'toronto');
   assert.equal(matchCity(['Montreal, QC, Canada']).key, 'montreal');
-  assert.equal(matchCity(['New York, NY']).key, 'nyc');
+  assert.equal(matchCity(['New York, NY']), null);
   assert.equal(matchCity(['Austin, TX']), null);
   assert.equal(matchCity([]), null);
 });
@@ -136,7 +138,7 @@ test('parseListings carries the sponsorship field through', () => {
         url: 'https://example.com/j',
         title: 'Software Engineer Intern',
         company_name: 'Acme',
-        locations: ['New York, NY'],
+        locations: ['Toronto, ON'],
         active: true,
         is_visible: true,
         season: 'Summer',
@@ -146,7 +148,7 @@ test('parseListings carries the sponsorship field through', () => {
     { name: 'test', kind: 'internship' }
   );
   assert.equal(jobs[0].sponsorship, 'Offers Sponsorship');
-  assert.equal(jobs[0].country, 'US');
+  assert.equal(jobs[0].country, 'CA');
 });
 
 test('parseBoard reads markdown tables and carries ↳ company continuation', () => {
