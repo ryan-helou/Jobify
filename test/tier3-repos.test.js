@@ -12,12 +12,12 @@ test('parseBoard reads a clean company from a markdown-link cell', () => {
   const md = [
     '| Company | Role | Location | Apply |',
     '| --- | --- | --- | --- |',
-    '| **[Gumloop](https://resumax.ai/companies/gumloop?utm=x)** | Software Engineer Intern | San Francisco | [Apply](https://jobs.ashbyhq.com/gumloop/abc) |',
+    '| **[Gumloop](https://resumax.ai/companies/gumloop?utm=x)** | Software Engineer Intern | Toronto, ON | [Apply](https://jobs.ashbyhq.com/gumloop/abc) |',
   ].join('\n');
   const jobs = parseBoard(md, { name: 'resumax/tech-internships', kind: 'internship', term: 'detect' });
   assert.equal(jobs.length, 1);
   assert.equal(jobs[0].company, 'Gumloop'); // not "**[Gumloop](…)**"
-  assert.equal(jobs[0].city, 'sf');
+  assert.equal(jobs[0].city, 'toronto');
   // The apply URL comes from the link column (Ashby), not the company's resumax.ai link.
   assert.equal(jobs[0].url, 'https://jobs.ashbyhq.com/gumloop/abc');
 });
