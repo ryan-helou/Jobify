@@ -125,10 +125,25 @@ export function mergeBoard(existing, jobs, now = new Date().toISOString()) {
   return { board: existing, added };
 }
 
+/**
+ * The stored board, with anything outside Canada dropped.
+ *
+ * mergeBoard only ever merges *this run's* postings into the stored rows — it never
+ * re-examines a row already on the board. So when the target cities changed, the US
+ * postings scraped under the old config did not disappear: they sat on the board
+ * indefinitely, and every refresh re-announced the ones that looked new. Filtering on
+ * the way in is what makes the Canada-only rule retroactive instead of a one-time
+ * manual purge that the next stale board.json undoes.
+ *
+ * Deliberately on the read path, not the write path: it means a board.json arriving
+ * from anywhere — an older commit, a branch, the scheduled Action running behind this
+ * code — is cleaned before anything reads it.
+ */
 export function loadBoard() {
   try {
     const data = JSON.parse(fs.readFileSync(BOARD_PATH, 'utf8'));
-    return Array.isArray(data.jobs) ? data.jobs : [];
+    if (!Array.isArray(data.jobs)) return [];
+    return data.jobs.filter((r) => r.country === 'CA');
   } catch {
     return [];
   }
