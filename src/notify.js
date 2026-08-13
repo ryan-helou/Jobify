@@ -62,7 +62,7 @@ const escSlack = (s) => String(s == null ? '' : s).replace(/[<>&]/g, (c) => ({ '
 
 const CITY_SHORT = {
   montreal: 'Montreal', toronto: 'Toronto', vancouver: 'Vancouver', ottawa: 'Ottawa',
-  calgary: 'Calgary', canada: 'Canada', nyc: 'NYC', sf: 'SF',
+  calgary: 'Calgary', canada: 'Canada',
 };
 const place = (r) => CITY_SHORT[r.city] || r.city || '';
 
