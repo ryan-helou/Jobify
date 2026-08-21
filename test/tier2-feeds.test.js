@@ -21,11 +21,11 @@ const atom = (entries) =>
 
 test('Job Bank: keeps a dev internship, filling company and city from the summary', () => {
   const jobs = parseJobBankFeed(
-    atom([{ title: 'software developer co-op', url: 'https://www.jobbank.gc.ca/jobsearch/jobposting/1', loc: 'Toronto (ON)', employer: 'Acme Corp' }])
+    atom([{ title: 'software developer co-op', url: 'https://www.jobbank.gc.ca/jobsearch/jobposting/1', loc: 'Montreal (QC)', employer: 'Acme Corp' }])
   );
   assert.equal(jobs.length, 1);
   assert.equal(jobs[0].company, 'Acme Corp');
-  assert.equal(jobs[0].city, 'toronto');
+  assert.equal(jobs[0].city, 'montreal');
   assert.equal(jobs[0].source, 'jobbank');
 });
 
@@ -36,13 +36,20 @@ test('Job Bank: a full-time role (no intern/co-op token) is dropped', () => {
   assert.equal(jobs.length, 0);
 });
 
-test('Job Bank: "City (ON)" is normalized so non-hub Canadian cities pass the city gate', () => {
+test('Job Bank: "City (QC)" is normalized so metro suburbs pass the city gate', () => {
   const jobs = parseJobBankFeed(
-    atom([{ title: 'software developer intern', url: 'https://www.jobbank.gc.ca/jobsearch/jobposting/3', loc: 'London (ON)', employer: 'X' }])
+    atom([{ title: 'software developer intern', url: 'https://www.jobbank.gc.ca/jobsearch/jobposting/3', loc: 'Dorval (QC)', employer: 'X' }])
   );
-  // London isn't a named hub, but "London, ON" resolves to the Canada fallback bucket.
+  // Job Bank writes "Dorval (QC)"; matchCity's metro pattern expects "Dorval, QC".
   assert.equal(jobs.length, 1);
-  assert.equal(jobs[0].country, 'CA');
+  assert.equal(jobs[0].city, 'montreal');
+});
+
+test('Job Bank: a Canadian city outside Montreal is still dropped', () => {
+  const jobs = parseJobBankFeed(
+    atom([{ title: 'software developer intern', url: 'https://www.jobbank.gc.ca/jobsearch/jobposting/4', loc: 'London (ON)', employer: 'X' }])
+  );
+  assert.equal(jobs.length, 0);
 });
 
 // ---- levels.fyi (token mine) ----------------------------------------------

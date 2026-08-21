@@ -88,11 +88,12 @@ test('newgrad kind rejects senior and levelled roles', () => {
   }
 });
 
-test('matchCity prefers the highest-priority target city', () => {
-  // A posting with a Canadian office is takeable, so the US half is ignored rather
-  // than disqualifying the role.
-  assert.equal(matchCity(['San Francisco, CA', 'Toronto, ON']).key, 'toronto');
+test('matchCity prefers Montreal, and drops everywhere else', () => {
+  // A posting with a Montreal office is takeable, so the other half is ignored
+  // rather than disqualifying the role.
+  assert.equal(matchCity(['San Francisco, CA', 'Montreal, QC']).key, 'montreal');
   assert.equal(matchCity(['Montreal, QC, Canada']).key, 'montreal');
+  assert.equal(matchCity(['Toronto, ON']), null);
   assert.equal(matchCity(['New York, NY']), null);
   assert.equal(matchCity(['Austin, TX']), null);
   assert.equal(matchCity([]), null);
@@ -104,7 +105,7 @@ test('parseListings honours active, visibility, season and category', () => {
     url: 'https://example.com/j',
     title: 'Software Engineer Intern',
     company_name: 'Acme',
-    locations: ['Toronto, ON'],
+    locations: ['Montreal, QC'],
     active: true,
     is_visible: true,
     season: 'Summer',
@@ -138,7 +139,7 @@ test('parseListings carries the sponsorship field through', () => {
         url: 'https://example.com/j',
         title: 'Software Engineer Intern',
         company_name: 'Acme',
-        locations: ['Toronto, ON'],
+        locations: ['Montreal, QC'],
         active: true,
         is_visible: true,
         season: 'Summer',
@@ -155,9 +156,9 @@ test('parseBoard reads markdown tables and carries ↳ company continuation', ()
   const md = [
     '| Company | Role | Location | Application/Link | Date Posted |',
     '| ------- | ---- | -------- | ---------------- | ----------- |',
-    '| Optiver | Software Engineer Intern | Toronto, ON | <a href="https://ex.com/a">Apply</a> | Jul 07 |',
-    '| ↳ | Backend Engineer Intern | Montreal, QC | <a href="https://ex.com/b">Apply</a> | Jul 07 |',
-    '| Acme | Marketing Intern | Toronto, ON | <a href="https://ex.com/c">Apply</a> | Jul 07 |',
+    '| Optiver | Software Engineer Intern | Montreal, QC | <a href="https://ex.com/a">Apply</a> | Jul 07 |',
+    '| ↳ | Backend Engineer Intern | Laval, QC | <a href="https://ex.com/b">Apply</a> | Jul 07 |',
+    '| Acme | Marketing Intern | Montreal, QC | <a href="https://ex.com/c">Apply</a> | Jul 07 |',
   ].join('\n');
   const jobs = parseBoard(md, { name: 'md', kind: 'internship' });
   assert.equal(jobs.length, 2, 'marketing role filtered out');

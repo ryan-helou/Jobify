@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { BOARD_PATH, LEDGER_EXCERPT_CHARS } from './config.js';
+import { BOARD_PATH, LEDGER_EXCERPT_CHARS, ALLOWED_CITY_KEYS } from './config.js';
 import { canonicalKey, identityKey, excerptOf } from './tracker.js';
 import { feedSponsorshipVerdict, sponsorshipStance } from './visa.js';
 
@@ -126,14 +126,16 @@ export function mergeBoard(existing, jobs, now = new Date().toISOString()) {
 }
 
 /**
- * The stored board, with anything outside Canada dropped.
+ * The stored board, with anything outside the target cities dropped.
  *
  * mergeBoard only ever merges *this run's* postings into the stored rows — it never
- * re-examines a row already on the board. So when the target cities changed, the US
- * postings scraped under the old config did not disappear: they sat on the board
- * indefinitely, and every refresh re-announced the ones that looked new. Filtering on
- * the way in is what makes the Canada-only rule retroactive instead of a one-time
- * manual purge that the next stale board.json undoes.
+ * re-examines a row already on the board. So when the target cities changed, the rows
+ * scraped under the old config did not disappear: they sat on the board indefinitely,
+ * and every refresh re-announced the ones that looked new. Filtering on the way in is
+ * what makes a narrowing of the target list retroactive instead of a one-time manual
+ * purge that the next stale board.json undoes. It has now been needed twice — once
+ * dropping the US, once narrowing Canada to Montreal — so it keys off
+ * ALLOWED_CITY_KEYS rather than naming a country.
  *
  * Deliberately on the read path, not the write path: it means a board.json arriving
  * from anywhere — an older commit, a branch, the scheduled Action running behind this
@@ -143,7 +145,7 @@ export function loadBoard() {
   try {
     const data = JSON.parse(fs.readFileSync(BOARD_PATH, 'utf8'));
     if (!Array.isArray(data.jobs)) return [];
-    return data.jobs.filter((r) => r.country === 'CA');
+    return data.jobs.filter((r) => ALLOWED_CITY_KEYS.has(r.city));
   } catch {
     return [];
   }

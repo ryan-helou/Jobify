@@ -11,9 +11,10 @@ name: Refresh Board
 # it), so the runs are concentrated when new reqs actually appear rather than smeared
 # across the dead of night.
 #
-# Internship reqs post on weekday mornings, and the target cities straddle two coasts —
-# Toronto/Montreal/Ottawa (Eastern) and Vancouver (Pacific). 9–11am in both zones is
-# 13:00–18:00 UTC, so that transcontinental morning window gets an hourly sweep; the
+# Internship reqs post on weekday mornings. Montreal is Eastern, but the board also keeps
+# remote-in-Canada roles, which are posted by employers on both coasts — so the window
+# still spans both zones. 9–11am in either is 13:00–18:00 UTC, and that transcontinental
+# morning window gets an hourly sweep; the
 # afternoon gets every-two-hours; and two overnight sweeps catch late posts plus the
 # nightly bot commits on the SimplifyJobs/vanshb03/speedyapply feeds.
 

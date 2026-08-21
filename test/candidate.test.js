@@ -9,13 +9,13 @@ test('builds a board job for a dev internship in a target city', () => {
   const job = buildJob({
     company: 'Acme',
     title: 'Software Engineer Intern',
-    location: 'Toronto, ON, Canada',
+    location: 'Montréal, QC, Canada',
     url: 'https://acme.example/jobs/1',
     source: 'workable:acme',
     description: 'Summer 2027 internship building distributed systems.',
   });
   assert.equal(job.title, 'Software Engineer Intern');
-  assert.equal(job.city, 'toronto');
+  assert.equal(job.city, 'montreal');
   assert.equal(job.country, 'CA');
   assert.equal(job.source, 'workable:acme');
   assert.equal(job.term, '2027');
@@ -45,7 +45,7 @@ test('requires both a title and a url', () => {
 
 test('campus kind waives the intern-token requirement', () => {
   // On a student-only site a bare "Developer" title is still an internship.
-  assert.equal(buildJob({ company: 'X', title: 'Application Developer', location: 'Toronto, ON', url: 'u', source: 's' }), null);
-  const job = buildJob({ company: 'X', title: 'Application Developer', location: 'Toronto, ON', url: 'u', source: 's', kind: 'campus' });
-  assert.equal(job.city, 'toronto');
+  assert.equal(buildJob({ company: 'X', title: 'Application Developer', location: 'Montreal, QC', url: 'u', source: 's' }), null);
+  const job = buildJob({ company: 'X', title: 'Application Developer', location: 'Montreal, QC', url: 'u', source: 's', kind: 'campus' });
+  assert.equal(job.city, 'montreal');
 });

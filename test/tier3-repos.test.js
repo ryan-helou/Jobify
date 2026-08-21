@@ -12,12 +12,12 @@ test('parseBoard reads a clean company from a markdown-link cell', () => {
   const md = [
     '| Company | Role | Location | Apply |',
     '| --- | --- | --- | --- |',
-    '| **[Gumloop](https://resumax.ai/companies/gumloop?utm=x)** | Software Engineer Intern | Toronto, ON | [Apply](https://jobs.ashbyhq.com/gumloop/abc) |',
+    '| **[Gumloop](https://resumax.ai/companies/gumloop?utm=x)** | Software Engineer Intern | Montreal, QC | [Apply](https://jobs.ashbyhq.com/gumloop/abc) |',
   ].join('\n');
   const jobs = parseBoard(md, { name: 'resumax/tech-internships', kind: 'internship', term: 'detect' });
   assert.equal(jobs.length, 1);
   assert.equal(jobs[0].company, 'Gumloop'); // not "**[Gumloop](…)**"
-  assert.equal(jobs[0].city, 'toronto');
+  assert.equal(jobs[0].city, 'montreal');
   // The apply URL comes from the link column (Ashby), not the company's resumax.ai link.
   assert.equal(jobs[0].url, 'https://jobs.ashbyhq.com/gumloop/abc');
 });
@@ -50,8 +50,8 @@ test('the Canada listings source parses a Workday intern posting into a job', ()
         id: 'x',
         title: 'Software Engineer Intern',
         company_name: 'Ada',
-        locations: ['Toronto, Ontario'],
-        url: 'https://ada.wd3.myworkdayjobs.com/careers/job/Toronto/SWE-Intern_R1',
+        locations: ['Montreal, Quebec'],
+        url: 'https://ada.wd3.myworkdayjobs.com/careers/job/Montreal/SWE-Intern_R1',
       },
       // A "(Fall 2026)" title is off-cycle — isDevRole's year exclusion drops it.
       {
@@ -66,5 +66,5 @@ test('the Canada listings source parses a Workday intern posting into a job', ()
   );
   assert.equal(jobs.length, 1);
   assert.equal(jobs[0].company, 'Ada');
-  assert.equal(jobs[0].city, 'toronto');
+  assert.equal(jobs[0].city, 'montreal');
 });
