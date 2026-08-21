@@ -1,8 +1,10 @@
 import * as cheerio from 'cheerio';
 import {
   CITIES,
-  CANADA_ANY,
-  CANADA_FALLBACK,
+  CANADA_TOKEN,
+  NOT_MONTREAL,
+  QUEBEC_CITY,
+  REMOTE_FALLBACK,
   GITHUB_SOURCES,
   ROLE_INCLUDE,
   ROLE_EXCLUDE,
@@ -53,19 +55,24 @@ export function isGraduateTitle(title) {
   return false;
 }
 
-// Picks the highest-priority target city named in a posting's location(s), and is
-// the board's hard geographic filter: null means the posting is dropped entirely.
-// A posting listing both "San Francisco, CA" and "Toronto, ON" resolves to Toronto
-// — a role with a Canadian office is takeable, so it is kept and filed under the
-// Canadian city, while a US-only posting is discarded rather than ranked low.
+// Places a posting, and is the board's hard geographic filter: null means the posting
+// is dropped entirely. Two things survive — the Montreal metro, and remote-in-Canada.
+//
+// Order matters. Montreal is tried first, so a posting listing both Montreal and
+// somewhere else ("Markham ; Montreal") is kept and filed under Montreal: that role
+// is takeable from here. Only once Montreal is ruled out does naming somewhere else
+// specific become disqualifying.
 export function matchCity(locations) {
   const text = (Array.isArray(locations) ? locations.join(' ; ') : locations || '').toString();
   const hub = CITIES.find((c) => c.match.test(text));
   if (hub) return hub;
-  // Anywhere else in Canada still counts. CANADA_ANY fires only on unambiguous
-  // Canada context, so "Austin, TX" and "San Francisco, CA" stay unplaced (null)
-  // while "Halifax, NS" is kept.
-  if (CANADA_ANY.test(text)) return CANADA_FALLBACK;
+  // Remote within Canada is workable from Montreal, but only when the posting is not
+  // somewhere in particular: "Remote - Canada" qualifies, "Remote - Canada - ON" and
+  // "Quebec City" do not. Requiring an explicit Canada/Quebec token is also what keeps
+  // foreign postings ("Utrecht, nl") out.
+  if (CANADA_TOKEN.test(text) && !NOT_MONTREAL.test(text) && !QUEBEC_CITY.test(text)) {
+    return REMOTE_FALLBACK;
+  }
   return null;
 }
 

@@ -15,81 +15,60 @@ try {
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-// The board is Canada-only. A US role costs a visa and a move, so it is not a
-// weaker option to rank below the Canadian ones — it is not an option, and it is
-// dropped at ingest rather than scored and filtered later. This list plus
-// CANADA_ANY is that filter: matchCity returns null for anything neither one
-// places, and a posting with no city never reaches the board.
+// The board is Montreal-only. Everywhere else — including the rest of Canada — is
+// dropped at ingest rather than scored and filtered later, the same way US roles are:
+// a Toronto internship is not a weaker option than a Montreal one, it is a move.
+// matchCity is that gate. It returns null for anything it cannot place, and a posting
+// with no city never reaches the board.
 //
-// Ordered by priority: Montreal first, then Toronto. The order is load-bearing
-// twice over — it sorts the queue, and matchCity resolves a multi-city posting to
-// the first entry it names, so a "Toronto / Vancouver" role is filed under Toronto.
+// Two things are kept: a posting in the Montreal metro, and a posting that is remote
+// within Canada (or tagged only "Canada") and so workable from Montreal.
 //
-// `match` covers the whole commutable metro, not just the city proper: a posting
-// saying "Mississauga" or "Burnaby" is the same office market as Toronto or
-// Vancouver, and matching only the core city silently discarded real listings.
-// Suburb names are qualified with a province where the bare name is ambiguous
-// ("Laval" is also in France, "Waterloo" also in Ontario vs Iowa).
+// `match` covers the whole commutable metro, not just the city proper. A posting
+// saying "Dorval" or "Brossard" is the same office market, and matching only
+// "Montreal" silently dropped real listings — Dorval is on the island and was landing
+// in the catch-all bucket. Suburb names unique to Quebec are matched bare; names that
+// also exist elsewhere are qualified with a province, because nothing is tried before
+// this and a false positive puts a Kirkland, WA role on a Montreal board.
 export const CITIES = [
   {
     key: 'montreal',
     name: 'Montreal, QC',
     country: 'CA',
     indeedDomain: 'ca.indeed.com',
-    match: /montr[eé]al|laval, ?qc|longueuil/i,
-  },
-  {
-    key: 'toronto',
-    name: 'Toronto, ON',
-    country: 'CA',
-    indeedDomain: 'ca.indeed.com',
-    match: /toronto|mississauga|markham|north york|etobicoke|vaughan|waterloo, ?on/i,
-  },
-  {
-    key: 'vancouver',
-    name: 'Vancouver, BC',
-    country: 'CA',
-    indeedDomain: 'ca.indeed.com',
-    match: /vancouver|burnaby|richmond, ?bc|victoria, ?bc/i,
-  },
-  {
-    key: 'ottawa',
-    name: 'Ottawa, ON',
-    country: 'CA',
-    indeedDomain: 'ca.indeed.com',
-    match: /ottawa|gatineau|kanata/i,
-  },
-  {
-    key: 'calgary',
-    name: 'Calgary, AB',
-    country: 'CA',
-    indeedDomain: 'ca.indeed.com',
-    match: /calgary|edmonton/i,
+    match: /montr[eé]al|\b(?:longueuil|dorval|brossard|pointe[\s-]claire|lachine|outremont|pierrefonds|dollard[\s-]des[\s-]ormeaux|c[oô]te[\s-]saint[\s-]luc|saint[\s-]l[eé]onard|boucherville|terrebonne|repentigny|vaudreuil|saint[\s-]lambert|saint[\s-]bruno|candiac|kirkland, ?(?:qc|qu[eé]bec)|laval, ?(?:qc|qu[eé]bec)|verdun, ?(?:qc|qu[eé]bec)|anjou, ?(?:qc|qu[eé]bec)|lasalle, ?(?:qc|qu[eé]bec)|westmount, ?(?:qc|qu[eé]bec)|saint[\s-]laurent, ?(?:qc|qu[eé]bec)|mont[\s-]royal, ?(?:qc|qu[eé]bec))\b/i,
   },
 ];
 
-// Any Canadian location that CITIES doesn't place to a specific hub still belongs on
-// the board — the target is "anywhere in Canada", and a role tagged only "Canada",
-// "Remote - Canada" or a smaller city (Waterloo, Halifax, Quebec City) was being
-// dropped outright. Cohere, for one, tags its interns just "Canada". This matches a
-// province name/abbreviation, the word Canada, or a remote-in-Canada phrasing.
+// A posting is remote-in-Canada only if it names Canada (or Quebec) *and* names no
+// other specific place. "Remote - Canada" and Cohere's bare "Canada" qualify;
+// "Remote - Canada - ON" and "Cambridge, Ontario" do not, because they are somewhere
+// in particular and that somewhere is not here.
 //
-// Deliberately narrow so it never claims a US posting. Since the US hubs were
-// removed from CITIES this regex is the *only* thing standing between a US posting
-// and the board, so every alternation has to be Canada-unambiguous on its own:
-//   - bare "ON"/"QC" must be a standalone token, and the province-abbreviation list
-//     deliberately omits "CA" — "San Francisco, CA" is California, not Canada.
-//   - "Ontario" is also a city in California, so it is guarded against a following
-//     US-state context.
-//   - city names that exist in both countries (Waterloo NY/IA, Halifax VA/NC,
-//     Hamilton OH, London UK) are qualified with a province; only names unique to
-//     Canada (Kitchener, Winnipeg, Mississauga) are allowed bare.
-export const CANADA_ANY =
-  /\bcanad(?:a|ian)\b|\bontario\b(?!\s*,?\s*(?:ca\b|calif))|\b(?:quebec|qu[eé]bec|british columbia|alberta|manitoba|saskatchewan|nova scotia|new brunswick|newfoundland|prince edward)\b|,\s*(?:QC|ON|BC|AB|MB|SK|NS|NB|NL|PE)\b|\b(?:QC|ON|BC|AB|MB|SK|NS|NB|NL|PE),?\s*canada\b|\b(?:kitchener|winnipeg|quebec city|qu[eé]bec city|mississauga|waterloo, ?on|halifax, ?ns|hamilton, ?on|london, ?on)\b/i;
+// Requiring an explicit Canada/Quebec token is also what keeps foreign postings out.
+// The old province-abbreviation list matched a bare ", NL" for Newfoundland, which
+// silently read "Utrecht, nl" and "Amsterdam, UNAVAILABLE, NL" as Canadian and put
+// three Dutch cities on a Canada-only board.
+export const CANADA_TOKEN = /\bcanad(?:a|ian)\b|\bCAN\b|\bqu[eé]bec\b/i;
 
-// The bucket a Canadian posting lands in when no specific hub matched. Not a member
-// of CITIES (nothing searches it; Indeed iterates CITIES), just a resolved label.
-export const CANADA_FALLBACK = { key: 'canada', name: 'Canada (other)', country: 'CA' };
+// Somewhere specific that is not Montreal. Checked after the Montreal match, so a
+// posting naming both ("Markham ; Montreal") is already resolved and never reaches
+// here. Province names and abbreviations count as specific: "Remote - Canada - ON"
+// is an Ontario role.
+export const NOT_MONTREAL = /\b(?:toronto|vancouver|ottawa|calgary|edmonton|winnipeg|halifax|saskatoon|regina|victoria|burnaby|surrey|richmond|mississauga|markham|brampton|oakville|milton|hamilton|kitchener|waterloo|cambridge|guelph|london|windsor|kingston|brockville|hawkesbury|ancaster|delta|ashcroft|fredericton|moncton|st\.? ?john'?s|charlottetown|gatineau|kanata|sherbrooke|trois[\s-]rivi[eè]res|saguenay|st ?j[eé]r[oô]me|saint[\s-]j[eé]r[oô]me)\b|\bontario\b|\bbritish columbia\b|\balberta\b|\bmanitoba\b|\bsaskatchewan\b|\bnova scotia\b|\bnew brunswick\b|\bnewfoundland\b|\bprince edward\b|[-,]\s*(?:ON|BC|AB|MB|SK|NS|NB|NL|PE)\b|\b(?:ON|BC|AB|MB|SK|NS|NB|PE)\s*[-,]/i;
+
+// Quebec City is in Quebec but is not Montreal, and "Quebec, Quebec" means the city.
+// Guarded separately because CANADA_TOKEN deliberately accepts a bare "Quebec" as
+// province-level (and therefore Montreal-workable) context.
+export const QUEBEC_CITY = /\bqu[eé]bec[\s,]+(?:city|qu[eé]bec\b)/i;
+
+// The bucket a remote-in-Canada posting lands in. Not a member of CITIES (nothing
+// searches it; Indeed iterates CITIES), just a resolved label.
+export const REMOTE_FALLBACK = { key: 'remote', name: 'Remote (Canada)', country: 'CA' };
+
+// Every city key a board row is allowed to carry. loadBoard drops anything else, which
+// is what makes a narrowing of this list retroactive over the stored board.
+export const ALLOWED_CITY_KEYS = new Set([...CITIES.map((c) => c.key), REMOTE_FALLBACK.key]);
 
 export const SEARCH_QUERY = 'software engineering internship summer 2027';
 

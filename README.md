@@ -1,12 +1,17 @@
 # 🎯 Jobify
 
-*Builds a board of Summer 2027 software internships across the target cities, scores every posting, and hands you a dashboard to work from. It does not apply to anything — you do.*
+*Builds a board of Summer 2027 software internships in Montreal, scores every posting, and hands you a dashboard to work from. It does not apply to anything — you do.*
 
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white) ![Slack](https://img.shields.io/badge/Slack-4A154B?style=flat-square&logo=slack&logoColor=white)
 
-Jobify looks for internship and entry-level developer roles — intern, co-op, and new-grad — in Montreal, Toronto, Vancouver, Ottawa, and Calgary, in that priority order, plus anywhere else in Canada. The order is load-bearing: it resolves multi-city postings, so a "Toronto / Vancouver" role is filed under Toronto. It scrapes every source it knows, scores each posting against `assets/profile.json`, and writes the lot to `board.json`. A GitHub Action runs it every two hours and commits `board.json` back to the repo.
+Jobify looks for internship and entry-level developer roles — intern, co-op, and new-grad — in **Montreal**. It scrapes every source it knows, scores each posting against `assets/profile.json`, and writes the lot to `board.json`. A GitHub Action runs it every two hours and commits `board.json` back to the repo.
 
-**The board is Canada-only.** A US role costs a visa and a move, so it isn't a weaker option to rank below the Canadian ones — it isn't an option, and it's dropped at ingest rather than scored and filtered later. `matchCity` is that gate: a posting it can't place in Canada never reaches the board. A posting listing *both* a US and a Canadian office is kept and filed under the Canadian one, since that role is takeable.
+**The board is Montreal-only.** Everywhere else — including the rest of Canada — is dropped at ingest rather than scored and filtered later: a Toronto internship is not a weaker option than a Montreal one, it is a move. `matchCity` is that gate, and a posting it cannot place never reaches the board. Two things are kept:
+
+- **The Montreal metro**, not just the city proper. Dorval, Laval, Longueuil, Brossard, Pointe-Claire and the rest of the island resolve to `montreal`, because a posting saying "Dorval" is the same commute. Suburb names unique to Quebec match bare; names that also exist elsewhere ("Kirkland" is also in Washington, "Verdun" also in France) are qualified with a province, since nothing is tried before this and a false positive puts a foreign role on the board.
+- **Remote within Canada**, which is workable from here — but only when the posting is not somewhere in particular. `Remote - Canada` and Cohere's bare `Canada` qualify; `Remote - Canada - ON` and `Cambridge, Ontario` do not. These land in a `remote` bucket.
+
+A posting listing Montreal *alongside* other offices is kept and filed under Montreal, since that role is takeable from here.
 
 It **used to** auto-apply, and the applier reached 8 of 239 postings — the eight easiest forms, never the Workday roles worth having — while reporting nine submissions no employer ever received. That half is retired. The scrape, the dedup, the hiring-term classifier, and the scoring were always the valuable part; every gate the applier needed (term, sponsorship, platform) is now a column you filter on. Nothing here is irreversible: no résumé is uploaded anywhere, and a crashed run costs nothing but a stale board.
 
@@ -26,7 +31,7 @@ Every source is toggled by an `ENABLE_*` env var and can be turned off independe
 
 ## 🗂 The board
 
-`board.json` is a catalogue of every posting ever seen, scored, and deduped — not a log of what was applied to. Each row carries the attributes the pipeline used to reason about it as fields you can filter on: `city`, `country`, `platform`, `source`, `term`, `sponsorship`, `pay`, the three scores, a bounded excerpt of the description, and `firstSeenAt` / `lastSeenAt`. `firstSeenAt` is the one signal a re-scrape can't reconstruct — it's how you know a role has been open for three weeks — so it's preserved across runs while the scores are recomputed every time.
+`board.json` is a catalogue of every Montreal posting ever seen, scored, and deduped — not a log of what was applied to. Each row carries the attributes the pipeline used to reason about it as fields you can filter on: `city`, `country`, `platform`, `source`, `term`, `sponsorship`, `pay`, the three scores, a bounded excerpt of the description, and `firstSeenAt` / `lastSeenAt`. `firstSeenAt` is the one signal a re-scrape can't reconstruct — it's how you know a role has been open for three weeks — so it's preserved across runs while the scores are recomputed every time.
 
 ## 🗓 Hiring term
 
@@ -40,7 +45,7 @@ Read the board as three tiers: `2027` is your confident queue, `unstated` is wor
 
 ## 🖥 The dashboard
 
-`docs/index.html` is one self-contained file — no build step, no dependencies. Read it locally with `npm run dashboard`. It renders `board.json` with filters on city, platform, source, sponsorship, and hiring term, sorted by compatibility. Filters live in the URL, so any view can be linked or bookmarked.
+`docs/index.html` is one self-contained file — no build step, no dependencies. Read it locally with `npm run dashboard`. It renders `board.json` with filters on city (Montreal vs remote), platform, source, sponsorship, and hiring term, sorted by compatibility. Filters live in the URL, so any view can be linked or bookmarked.
 
 Two rules hold the interface together. The accent colour means *a human should look here* and is spent nowhere else. And facts the machine wrote — scores, timestamps, statuses, board names — are set in mono, while words a person wrote are set in sans; you can tell them apart without reading them.
 
@@ -52,7 +57,7 @@ The repo is **private** and should stay that way; the GitHub Pages deploy is man
 
 Every posting gets three numbers, computed in `src/score.js` from an editable lexicon of skills, company tiers, and pay curves in `src/config.js`.
 
-- **compatibility** (0–100) is how well *this* candidate fits *this* posting: 60% skill overlap against your declared skill list, 40% role-family match, all multiplied by an eligibility factor for hiring term and work authorization. A posting naming few technologies is shrunk toward a neutral prior of 55 rather than scored zero for being terse; a role naming the wrong season has its score collapsed, not merely docked. City is deliberately absent — that's a filter, not part of fit. The sponsorship arm of the eligibility multiplier is dormant now that the board is Canada-only, and is kept for the same reason the `sponsorship` column is: it costs nothing and it's what you'd need back if a US city were ever re-added.
+- **compatibility** (0–100) is how well *this* candidate fits *this* posting: 60% skill overlap against your declared skill list, 40% role-family match, all multiplied by an eligibility factor for hiring term and work authorization. A posting naming few technologies is shrunk toward a neutral prior of 55 rather than scored zero for being terse; a role naming the wrong season has its score collapsed, not merely docked. City is deliberately absent — that's a filter, not part of fit. The sponsorship arm of the eligibility multiplier is dormant now that the board is Montreal-only, and is kept for the same reason the `sponsorship` column is: it costs nothing and it's what you'd need back if a US city were ever re-added.
 - **quality** (0–100) is candidate-independent: 35% pay (an hourly curve anchored at ~$20/hr low, ~$50/hr strong, ~$80/hr big-tech), 30% program signals (return offers, mentorship, cohort), 20% real-work substance, 15% company prestige. An unpaid or credit-only internship is capped at 25 no matter how well the rest reads.
 - **interviewOdds** (1–60%) is a heuristic prior, not a calibrated probability — nothing here records whether an application led to an interview. It starts from a 6% base rate and swings on prestige (a top-tier name sinks the odds, because everyone applied there too), fit, and how early in a posting's life it was reached. Treat it as a tie-breaker between two roles, never a forecast.
 

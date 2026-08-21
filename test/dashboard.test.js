@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { TERM_VALUES, SPONSORSHIP_VALUES, CITIES, CANADA_FALLBACK } from '../src/config.js';
+import { TERM_VALUES, SPONSORSHIP_VALUES, CITIES, REMOTE_FALLBACK } from '../src/config.js';
 import { classifyTerm } from '../src/term.js';
 import { sponsorshipOf } from '../src/board.js';
 
@@ -58,9 +58,9 @@ test('SPONSORSHIP_VALUES covers what sponsorshipOf actually returns', () => {
 test('every city the scrapers target has a display label', () => {
   const labels = vocabulary().cities;
   for (const city of CITIES) assert.ok(labels[city.key], `no dashboard label for city "${city.key}"`);
-  // The Canada catch-all is a resolved bucket, not a CITIES member, but it still
-  // reaches the board and needs a label.
-  assert.ok(labels[CANADA_FALLBACK.key], `no dashboard label for the "${CANADA_FALLBACK.key}" bucket`);
+  // The remote bucket is a resolved label, not a CITIES member, but it still
+  // reaches the board and needs a display name.
+  assert.ok(labels[REMOTE_FALLBACK.key], `no dashboard label for the "${REMOTE_FALLBACK.key}" bucket`);
 });
 
 // A wrong colspan collapses the "no results" row and silently breaks the empty state.
