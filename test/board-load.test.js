@@ -16,27 +16,29 @@ const { loadBoard } = await import('../src/board.js');
 const write = (jobs) => fs.writeFileSync(process.env.BOARD_PATH, JSON.stringify({ updatedAt: 'x', jobs }));
 
 // The regression this guards: the board is a catalogue that mergeBoard only ever adds
-// to, so US postings scraped before the Canada-only change survived every refresh and
-// kept getting re-announced. Dropping them on read makes the rule retroactive.
-test('loadBoard drops postings outside Canada', () => {
+// to, so rows scraped before a narrowing of the target cities survived every refresh
+// and kept getting re-announced. Dropping them on read makes the change retroactive.
+// It has mattered twice — once dropping the US, once narrowing Canada to Montreal.
+test('loadBoard keeps only the allowed city keys', () => {
   write([
-    { url: 'https://a.com/1', title: 'SWE Intern', city: 'toronto', country: 'CA' },
-    { url: 'https://a.com/2', title: 'SWE Intern', city: 'nyc', country: 'US' },
-    { url: 'https://a.com/3', title: 'SWE Intern', city: 'sf', country: 'US' },
-    { url: 'https://a.com/4', title: 'SWE Intern', city: 'canada', country: 'CA' },
+    { url: 'https://a.com/1', title: 'SWE Intern', city: 'montreal', country: 'CA' },
+    { url: 'https://a.com/2', title: 'SWE Intern', city: 'toronto', country: 'CA' },
+    { url: 'https://a.com/3', title: 'SWE Intern', city: 'canada', country: 'CA' },
+    { url: 'https://a.com/4', title: 'SWE Intern', city: 'nyc', country: 'US' },
+    { url: 'https://a.com/5', title: 'SWE Intern', city: 'remote', country: 'CA' },
   ]);
   const board = loadBoard();
-  assert.equal(board.length, 2);
-  assert.deepEqual(board.map((r) => r.city), ['toronto', 'canada']);
+  assert.deepEqual(board.map((r) => r.city), ['montreal', 'remote']);
 });
 
-// A row with no country is not provably Canadian, and on a Canada-only board an
-// unverifiable row is exactly what should not be announced.
-test('loadBoard drops rows with a missing or empty country', () => {
+// The retired 'canada' catch-all is specifically worth pinning: it used to mean
+// "anywhere in Canada" and now means nothing, so a stored row carrying it is stale.
+test('loadBoard drops rows with a missing, empty or retired city', () => {
   write([
-    { url: 'https://a.com/1', city: 'toronto', country: 'CA' },
-    { url: 'https://a.com/2', city: 'toronto', country: '' },
-    { url: 'https://a.com/3', city: 'toronto' },
+    { url: 'https://a.com/1', city: 'montreal', country: 'CA' },
+    { url: 'https://a.com/2', city: 'canada', country: 'CA' },
+    { url: 'https://a.com/3', city: '', country: 'CA' },
+    { url: 'https://a.com/4', country: 'CA' },
   ]);
   assert.equal(loadBoard().length, 1);
 });

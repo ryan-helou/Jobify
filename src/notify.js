@@ -60,10 +60,7 @@ export async function telegram(html) {
 const escHtml = (s) => String(s == null ? '' : s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const escSlack = (s) => String(s == null ? '' : s).replace(/[<>&]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
-const CITY_SHORT = {
-  montreal: 'Montreal', toronto: 'Toronto', vancouver: 'Vancouver', ottawa: 'Ottawa',
-  calgary: 'Calgary', canada: 'Canada',
-};
+const CITY_SHORT = { montreal: 'Montreal', remote: 'Remote (Canada)' };
 const place = (r) => CITY_SHORT[r.city] || r.city || '';
 
 // The real posting location, not the city bucket — a "canada" row could be Halifax or
