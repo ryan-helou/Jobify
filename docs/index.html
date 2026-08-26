@@ -103,7 +103,51 @@
     }
 
     /* ── Console: filters ───────────────────────────────────────────────────── */
-    .console { margin: 14px 0; display: flex; flex-direction: column; gap: 10px; }
+    /* Sticky, because the board is 160+ rows and a filter you have to scroll back
+       up to reach is a filter you stop using. Solid ground, not translucent — a
+       blurred bar detaches mid-scroll on iOS. */
+    .console {
+      margin: 14px 0; display: flex; flex-direction: column; gap: 10px;
+      position: sticky; top: 0; z-index: 6;
+      background: var(--field); padding: 12px 0 11px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    @media (max-width: 720px) { .console { position: static; } }
+
+    /* Quick views. Each one is a shortcut to a SINGLE control, never a hidden
+       macro — so whatever a chip turns on also shows up as a removable pill and
+       in the URL. A preset that silently set three filters would be the fastest
+       way to make someone distrust the board. */
+    .presets { gap: 7px; }
+    button.preset {
+      background: var(--raised); border: 1px solid var(--line); color: var(--muted);
+      border-radius: 999px; padding: 6px 12px; cursor: pointer;
+      font: 500 12px var(--mono); letter-spacing: .03em;
+      display: inline-flex; align-items: center; gap: 7px; transition: all .12s;
+    }
+    button.preset:hover { border-color: var(--faint); color: var(--ink); }
+    button.preset[aria-pressed=true] { border-color: var(--amber); color: var(--ink); background: var(--amber-soft); }
+    button.preset .ct { font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
+    button.preset[aria-pressed=true] .ct { color: var(--amber); }
+    button.preset[disabled] { opacity: .38; cursor: default; }
+
+    /* What is currently on, and how to take one thing off without nuking the lot. */
+    .activebar { gap: 8px; min-height: 26px; }
+    .resultcount { font: 600 12px var(--mono); letter-spacing: .04em; color: var(--muted); white-space: nowrap; }
+    .resultcount b { color: var(--amber); font-variant-numeric: tabular-nums; }
+    .pills { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--amber-soft); border: 1px solid rgba(255,158,44,.35); color: var(--ink);
+      border-radius: 999px; padding: 4px 6px 4px 10px; font: 500 11px var(--mono); letter-spacing: .03em;
+    }
+    .pill .k { color: var(--faint); text-transform: uppercase; font-size: 10px; letter-spacing: .1em; }
+    .pill button {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font: 600 13px/1 var(--mono); padding: 0 3px; border-radius: 50%;
+    }
+    .pill button:hover { color: var(--off); }
+    .empty .fix { display: block; margin-top: 12px; }
     .rack { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
     .field-lbl { font-family: var(--mono); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--faint); margin-right: 2px; }
     input[type=search], select {
@@ -285,8 +329,9 @@
     </header>
 
     <section class="console" aria-label="Filters">
+      <div class="rack presets" id="presets" role="group" aria-label="Quick views"></div>
       <div class="rack">
-        <input type="search" id="q" placeholder="search title, company, location…" aria-label="Search" />
+        <input type="search" id="q" placeholder="search title, company, location…  (press /)" aria-label="Search" />
         <select id="city" aria-label="City"><option value="">all cities</option></select>
         <select id="term" aria-label="Hiring term" title="2027 = confirmed Summer 2027 · unstated = season not stated (most postings; worth a skim, not a reject) · other-cycle = different season, skip"><option value="">any term</option></select>
         <select id="sponsorship" aria-label="Sponsorship"><option value="">any sponsorship</option></select>
@@ -303,10 +348,15 @@
         <label class="rng">chance ≥ <input type="range" id="minFit" min="0" max="100" step="5" value="0" /><output id="minFitOut">0</output></label>
         <label class="rng">qual ≥ <input type="range" id="minQual" min="0" max="100" step="5" value="0" /><output id="minQualOut">0</output></label>
         <button class="chip" id="paidOnly" aria-pressed="false">pay stated</button>
+        <button class="chip" id="freshOnly" aria-pressed="false">new · 24h</button>
         <button class="chip" id="hideDone" aria-pressed="true">hide worked</button>
         <button class="ghost" id="reset">↺ reset</button>
         <span style="flex:1"></span>
         <button class="ghost" id="exportCsv">↓ export csv</button>
+      </div>
+      <div class="rack activebar">
+        <span class="resultcount" id="resultcount"></span>
+        <div class="pills" id="pills"></div>
       </div>
     </section>
 
@@ -581,12 +631,20 @@
 
     // `extras` are aggregate options pinned above the individual values (e.g. the
     // country roll-ups on the city filter), so they survive the rebuild each render.
+    //
+    // Every option carries the number of postings it would actually yield, counted
+    // against the OTHER active filters. That is the difference between a filter you
+    // explore and one you guess at: you can see that "Workday (26)" is worth opening
+    // and that a value showing (0) is a dead end before you spend a click on it.
+    const BASE_OPTION = { city: 'all cities', term: 'any term', sponsorship: 'any sponsorship', platform: 'any platform', source: 'any source' };
     function fillFilter(id, values, labelFn, extras = []) {
       const sel = $(id);
-      const current = sel.value;
-      const opts = [`<option value="">${sel.options[0].text}</option>`];
-      for (const e of extras) opts.push(`<option value="${esc(e.value)}">${esc(e.label)}</option>`);
-      for (const v of [...values].filter(Boolean).sort()) opts.push(`<option value="${esc(v)}">${esc(labelFn ? labelFn(v) : v)}</option>`);
+      const current = filters[id] ?? sel.value;
+      const opts = [`<option value="">${esc(BASE_OPTION[id])} (${poolFor(id).length})</option>`];
+      for (const e of extras) opts.push(`<option value="${esc(e.value)}">${esc(e.label)} (${countIf(id, e.value)})</option>`);
+      for (const v of [...values].filter(Boolean).sort()) {
+        opts.push(`<option value="${esc(v)}">${esc(labelFn ? labelFn(v) : v)} (${countIf(id, v)})</option>`);
+      }
       sel.innerHTML = opts.join('');
       sel.value = current;
     }
@@ -601,36 +659,163 @@
       fillFilter('source', new Set(jobs.map((j) => j.source)));
     }
 
-    function currentRows() {
-      const q = $('q').value.trim().toLowerCase();
-      const city = $('city').value, term = $('term').value, spon = $('sponsorship').value;
-      const platform = $('platform').value, source = $('source').value;
-      const minFit = +$('minFit').value, minQual = +$('minQual').value;
-      const paidOnly = $('paidOnly').getAttribute('aria-pressed') === 'true';
-      const hideDone = $('hideDone').getAttribute('aria-pressed') === 'true';
-      const status = $('status').value;
+    // ---- filtering ---------------------------------------------------------
+    //
+    // One named predicate per filter, rather than one long boolean. That shape is
+    // what makes honest facet counts possible: to work out what a control WOULD
+    // yield, evaluate every predicate EXCEPT that one and then test the candidate
+    // value. Counting against the fully-filtered set instead would show 0 next to
+    // every option you haven't already picked, which is worse than no counts.
+    const PREDICATES = {
+      q: (j, f) => !f.q || `${j.title} ${j.company} ${j.location}`.toLowerCase().includes(f.q),
+      city: (j, f) => !f.city
+        || (f.city === 'all-ca' ? j.country === 'CA' : f.city === 'all-us' ? j.country === 'US' : j.city === f.city),
+      term: (j, f) => !f.term || j.term === f.term,
+      sponsorship: (j, f) => !f.sponsorship || j.sponsorship === f.sponsorship,
+      platform: (j, f) => !f.platform || j.platform === f.platform,
+      source: (j, f) => !f.source || j.source === f.source,
+      paidOnly: (j, f) => !f.paidOnly || !!j.pay,
+      freshOnly: (j, f) => !f.freshOnly || isNew(j),
+      // A floor of 0 must not filter out an unscored posting.
+      minFit: (j, f) => !f.minFit || j.chance >= f.minFit,
+      minQual: (j, f) => !f.minQual || j.quality >= f.minQual,
+      status: (j, f) => !f.status || (f.status === 'todo' ? !st(j) : st(j) === f.status),
+      // A chosen status wins over the default "hide worked" toggle, so picking
+      // "applied" always surfaces your applied list even with hide-worked on.
+      hideDone: (j, f) => !f.hideDone || !!f.status || !st(j),
+    };
 
-      const rows = jobs.filter((j) => {
-        if (city === 'all-ca') { if (j.country !== 'CA') return false; }
-        else if (city === 'all-us') { if (j.country !== 'US') return false; }
-        else if (city && j.city !== city) return false;
-        if (term && j.term !== term) return false;
-        if (spon && j.sponsorship !== spon) return false;
-        if (platform && j.platform !== platform) return false;
-        if (source && j.source !== source) return false;
-        if (paidOnly && !j.pay) return false;
-        // A chosen status wins over the default "hide worked" toggle, so picking
-        // "applied" always surfaces your applied list even with hide-worked on.
-        if (status === 'applied') { if (st(j) !== 'applied') return false; }
-        else if (status === 'dismissed') { if (st(j) !== 'dismissed') return false; }
-        else if (status === 'todo') { if (st(j)) return false; }
-        else if (hideDone && st(j)) return false;
-        // A floor of 0 must not filter out an unscored posting.
-        if (minFit && !(j.chance >= minFit)) return false;
-        if (minQual && !(j.quality >= minQual)) return false;
-        if (q && !`${j.title} ${j.company} ${j.location}`.toLowerCase().includes(q)) return false;
-        return true;
+    const DEFAULTS = {
+      q: '', city: '', term: '', sponsorship: '', platform: '', source: '', status: '',
+      minFit: 0, minQual: 0, paidOnly: false, freshOnly: false, hideDone: true,
+    };
+    let filters = { ...DEFAULTS };
+
+    const matches = (j, f, except) => {
+      for (const k in PREDICATES) if (k !== except && !PREDICATES[k](j, f)) return false;
+      return true;
+    };
+
+    // Rows that survive everything except `key` — the pool a control's own counts
+    // are measured against.
+    const poolFor = (key) => jobs.filter((j) => matches(j, filters, key));
+
+    function countIf(key, value) {
+      const probe = { ...filters, [key]: value };
+      return poolFor(key).filter((j) => PREDICATES[key](j, probe)).length;
+    }
+
+    // ---- state <-> controls <-> URL ----------------------------------------
+    const TOGGLES = ['paidOnly', 'freshOnly', 'hideDone'];
+    const SELECTS = ['city', 'term', 'sponsorship', 'platform', 'source', 'status'];
+
+    function readControls() {
+      filters = {
+        q: $('q').value.trim().toLowerCase(),
+        minFit: +$('minFit').value,
+        minQual: +$('minQual').value,
+        ...Object.fromEntries(SELECTS.map((id) => [id, $(id).value])),
+        ...Object.fromEntries(TOGGLES.map((id) => [id, $(id).getAttribute('aria-pressed') === 'true'])),
+      };
+    }
+
+    function writeControls() {
+      $('q').value = filters.q;
+      $('minFit').value = filters.minFit; $('minFitOut').textContent = filters.minFit;
+      $('minQual').value = filters.minQual; $('minQualOut').textContent = filters.minQual;
+      for (const id of SELECTS) $(id).value = filters[id];
+      for (const id of TOGGLES) $(id).setAttribute('aria-pressed', String(filters[id]));
+    }
+
+    // The README has always promised that a filtered view can be linked or
+    // bookmarked; until now it wasn't true. Only non-default values are written, so
+    // a clean board has a clean URL. replaceState, not pushState — typing in the
+    // search box must not bury the back button under one entry per keystroke.
+    function syncUrl() {
+      const p = new URLSearchParams();
+      for (const [k, v] of Object.entries(filters)) {
+        if (v === DEFAULTS[k]) continue;
+        p.set(k, typeof v === 'boolean' ? (v ? '1' : '0') : v);
+      }
+      if (sortKey !== 'chance' || sortDir !== -1) { p.set('sort', sortKey); p.set('dir', sortDir < 0 ? 'desc' : 'asc'); }
+      const qs = p.toString();
+      history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
+    }
+
+    function restoreFromUrl() {
+      const p = new URLSearchParams(location.search);
+      if (![...p.keys()].length) return;
+      for (const k of Object.keys(DEFAULTS)) {
+        if (!p.has(k)) continue;
+        const raw = p.get(k);
+        filters[k] = typeof DEFAULTS[k] === 'boolean' ? raw === '1'
+          : typeof DEFAULTS[k] === 'number' ? (+raw || 0)
+          : raw;
+      }
+      if (p.has('sort')) { sortKey = p.get('sort'); sortDir = p.get('dir') === 'asc' ? 1 : -1; }
+      writeControls();
+    }
+
+    // ---- quick views --------------------------------------------------------
+    // Deliberately thin: one preset sets exactly one filter. See the CSS note.
+    const PRESETS = [
+      { label: 'Montreal',     key: 'city',      value: 'montreal' },
+      { label: 'New York',     key: 'city',      value: 'nyc' },
+      { label: 'Remote',       key: 'city',      value: 'remote' },
+      { label: 'Summer 2027',  key: 'term',      value: '2027' },
+      { label: 'Strong chance',key: 'minFit',    value: 65 },
+      { label: 'New · 24h',    key: 'freshOnly', value: true },
+      { label: 'Not applied',  key: 'status',    value: 'todo' },
+    ];
+
+    function renderPresets() {
+      $('presets').innerHTML = PRESETS.map((p, i) => {
+        const on = filters[p.key] === p.value;
+        const n = countIf(p.key, p.value);
+        return `<button class="preset" type="button" data-preset="${i}" aria-pressed="${on}"${!n && !on ? ' disabled' : ''}>`
+          + `${esc(p.label)}<span class="ct">${n}</span></button>`;
+      }).join('');
+    }
+
+    // ---- what's on right now ------------------------------------------------
+    const PILL_LABEL = {
+      q: (v) => ['search', `"${v}"`],
+      city: (v) => ['city', v === 'all-ca' ? 'All Canada' : v === 'all-us' ? 'All USA' : (CITY_LABEL[v] || v)],
+      term: (v) => ['term', TERM_LABEL[v] || v],
+      sponsorship: (v) => ['visa', SPON_LABEL[v] || v],
+      platform: (v) => ['via', v],
+      source: (v) => ['source', v],
+      status: (v) => ['status', v === 'todo' ? 'not applied' : v],
+      minFit: (v) => ['chance', `≥ ${v}`],
+      minQual: (v) => ['quality', `≥ ${v}`],
+      paidOnly: () => ['', 'pay stated'],
+      freshOnly: () => ['', 'new · 24h'],
+      hideDone: () => ['', 'hiding worked'],
+    };
+
+    function renderActive(shown) {
+      const total = jobs.length;
+      $('resultcount').innerHTML = shown === total
+        ? `<b>${total}</b> postings`
+        : `<b>${shown}</b> of ${total}`;
+
+      // hideDone is on by default and is not really a "filter you applied", so it
+      // only earns a pill once it is actually hiding something.
+      const active = Object.entries(filters).filter(([k, v]) => {
+        if (v === DEFAULTS[k]) return false;
+        return !(k === 'hideDone' && v === true);
       });
+      if (filters.hideDone && jobs.some((j) => st(j)) && !filters.status) active.push(['hideDone', true]);
+
+      $('pills').innerHTML = active.map(([k, v]) => {
+        const [key, label] = PILL_LABEL[k](v);
+        return `<span class="pill">${key ? `<span class="k">${esc(key)}</span>` : ''}${esc(label)}`
+          + `<button type="button" data-clear="${esc(k)}" aria-label="Remove ${esc(key || label)} filter">×</button></span>`;
+      }).join('') + (active.length > 1 ? `<button class="ghost" type="button" id="clearAll">clear all</button>` : '');
+    }
+
+    function currentRows() {
+      const rows = jobs.filter((j) => matches(j, filters));
 
       rows.sort((a, b) => {
         const av = a[sortKey], bv = b[sortKey];
@@ -644,10 +829,17 @@
     }
 
     function render() {
+      readControls();
       const rows = currentRows();
+      renderPresets();
+      renderActive(rows.length);
+      buildFilters();
+      syncUrl();
       const tbody = $('tbody');
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="${COLSPAN}"><div class="empty">No postings match these filters. Loosen a filter or hit reset.</div></td></tr>`;
+        // An empty board should hand back the way out, not just report the wall.
+        tbody.innerHTML = `<tr><td colspan="${COLSPAN}"><div class="empty">No postings match these filters.`
+          + `<button class="ghost fix" type="button" id="clearAllEmpty">↺ clear all filters</button></div></td></tr>`;
       } else {
         tbody.innerHTML = rows.map((j) => {
           const state = st(j);
@@ -736,17 +928,45 @@
       for (const [id, out] of [['minFit', 'minFitOut'], ['minQual', 'minQualOut']]) {
         $(id).addEventListener('input', () => { $(out).textContent = $(id).value; render(); });
       }
-      for (const id of ['paidOnly', 'hideDone']) {
+      for (const id of ['paidOnly', 'freshOnly', 'hideDone']) {
         $(id).addEventListener('click', () => {
           $(id).setAttribute('aria-pressed', $(id).getAttribute('aria-pressed') !== 'true');
           render();
         });
       }
-      $('reset').addEventListener('click', () => {
-        ['q', 'city', 'term', 'sponsorship', 'platform', 'source', 'status'].forEach((id) => ($(id).value = ''));
-        $('minFit').value = 0; $('minQual').value = 0; $('minFitOut').textContent = '0'; $('minQualOut').textContent = '0';
-        $('paidOnly').setAttribute('aria-pressed', 'false');
+      const resetAll = () => { filters = { ...DEFAULTS }; writeControls(); render(); };
+      $('reset').addEventListener('click', resetAll);
+
+      // A preset is a shortcut to one control, and clicking an active one turns it
+      // back off — so it is always obvious how to undo what you just did.
+      $('presets').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-preset]');
+        if (!btn) return;
+        const p = PRESETS[+btn.dataset.preset];
+        filters[p.key] = filters[p.key] === p.value ? DEFAULTS[p.key] : p.value;
+        writeControls();
         render();
+      });
+
+      // Take one filter off without losing the rest.
+      $('pills').addEventListener('click', (e) => {
+        if (e.target.id === 'clearAll') return resetAll();
+        const btn = e.target.closest('[data-clear]');
+        if (!btn) return;
+        filters[btn.dataset.clear] = DEFAULTS[btn.dataset.clear];
+        writeControls();
+        render();
+      });
+      $('tbody').addEventListener('click', (e) => {
+        if (e.target.id === 'clearAllEmpty') resetAll();
+      });
+
+      // `/` to search from anywhere, Escape to drop back out — the two keys that
+      // make a filter bar feel like an instrument instead of a form.
+      document.addEventListener('keydown', (e) => {
+        const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '');
+        if (e.key === '/' && !typing) { e.preventDefault(); $('q').focus(); $('q').select(); return; }
+        if (e.key === 'Escape' && document.activeElement === $('q')) { $('q').value = ''; $('q').blur(); render(); }
       });
       $('exportCsv').addEventListener('click', exportCsv);
       $('tbody').addEventListener('click', (e) => {
@@ -793,6 +1013,7 @@
         byId = new Map(jobs.map((j) => [idKey(j), j]));
         marks = await loadMarks(); // needs jobs loaded to migrate legacy url-keyed marks
         buildFilters();
+        restoreFromUrl(); // a linked or bookmarked view wins over the defaults
         render();
         tickCountdown();
         setInterval(tickCountdown, REDUCED ? 30000 : 1000);
