@@ -46,7 +46,16 @@ Read the board as three tiers: `2027` is your confident queue, `unstated` is wor
 
 ## 🖥 The dashboard
 
-`docs/index.html` is one self-contained file — no build step, no dependencies. Read it locally with `npm run dashboard`. It renders `board.json` with filters on city (Montreal, New York, remote), platform, source, sponsorship, and hiring term, sorted by chance. Filters live in the URL, so any view can be linked or bookmarked.
+`docs/index.html` is one self-contained file — no build step, no dependencies. Read it locally with `npm run dashboard`. It renders `board.json` sorted by chance, and filtering it is meant to take one click:
+
+- **Quick views** — `Montreal`, `New York`, `Remote`, `Summer 2027`, `Strong chance`, `New · 24h`, `Not applied`. Each is deliberately a shortcut to a *single* control, never a hidden macro, so anything a chip switches on also appears as a removable pill and in the URL. A preset that silently set three filters is the fastest way to stop trusting a board.
+- **Live counts on every option** — `New York (109)`, `Workday (26)` — counted against the *other* active filters, so you can see which values are worth a click and which are dead ends before spending one. Counting against the fully-filtered set instead would show `(0)` beside everything you hadn't already picked.
+- **Removable pills** for whatever is currently on, so you can drop one filter without resetting the lot.
+- **A live result count**, and an empty state that hands back the way out instead of just reporting the wall.
+- **Filters live in the URL**, so any view can be linked or bookmarked — and the sort does too. Only non-default values are written, so a clean board has a clean URL.
+- **`/` focuses the search box, `Escape` leaves it.** The filter bar is sticky on desktop, because a filter you have to scroll back up to reach is a filter you stop using; it goes static on narrow screens, where a pinned filter stack would eat the viewport.
+
+Full controls for city, term, sponsorship, platform, source, status, minimum chance and minimum quality sit below the quick views.
 
 Two rules hold the interface together. The accent colour means *a human should look here* and is spent nowhere else. And facts the machine wrote — scores, timestamps, statuses, board names — are set in mono, while words a person wrote are set in sans; you can tell them apart without reading them.
 
