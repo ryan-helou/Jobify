@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import { BOARD_PATH, LEDGER_EXCERPT_CHARS, ALLOWED_CITY_KEYS } from './config.js';
 import { canonicalKey, identityKey, excerptOf } from './tracker.js';
 import { feedSponsorshipVerdict, sponsorshipStance } from './visa.js';
+import { contestFor } from './score.js';
 
 // board.json is a catalogue of every posting we have ever seen, not a log of what we
 // applied to. That difference is the whole point of this file.
@@ -80,9 +81,8 @@ export function rowFor(job, now) {
     term: job.term || 'unstated',
     sponsorship: sponsorshipOf(job, description),
     pay: s.signals?.pay || null,
-    compatibility: s.compatibility ?? null,
+    chance: s.chance ?? null,
     quality: s.quality ?? null,
-    interviewOdds: s.interviewOdds ?? null,
     scoreConfidence: s.confidence || null,
     scoreSignals: s.signals || null,
     excerpt: excerptOf(description, LEDGER_EXCERPT_CHARS),
@@ -145,14 +145,41 @@ export function loadBoard() {
   try {
     const data = JSON.parse(fs.readFileSync(BOARD_PATH, 'utf8'));
     if (!Array.isArray(data.jobs)) return [];
-    return data.jobs.filter((r) => ALLOWED_CITY_KEYS.has(r.city));
+    return data.jobs.filter((r) => ALLOWED_CITY_KEYS.has(r.city)).map(migrateScores);
   } catch {
     return [];
   }
 }
 
+/**
+ * Brings a row scored by the retired three-number model (compatibility / quality /
+ * interviewOdds) onto the two-number one (chance / quality).
+ *
+ * Needed for the same reason the city filter above is: mergeBoard only refreshes rows
+ * this run actually re-scraped, so a posting that has come down — or that today's run
+ * simply missed — would keep its old fields forever and render as a blank cell.
+ *
+ * The conversion is exact, not a guess. A stored row carries everything contestFor
+ * needs (the old `compatibility` IS the new `fit`, plus quality, tier, source and
+ * confidence), so a migrated row lands on precisely the number a rescrape would give
+ * it. Rows that never scored at all are left alone rather than invented.
+ */
+export function migrateScores(row) {
+  if (!row || row.chance != null || row.compatibility == null) return row;
+  const signals = row.scoreSignals || {};
+  const { compatibility, interviewOdds, ...rest } = row;
+  const { difficulty, chance } = contestFor({
+    fit: compatibility,
+    quality: row.quality,
+    tier: signals.tier,
+    source: row.source,
+    confidence: row.scoreConfidence,
+  });
+  return { ...rest, chance, scoreSignals: { ...signals, fit: compatibility, difficulty } };
+}
+
 export function saveBoard(jobs, now = new Date().toISOString()) {
-  const sorted = [...jobs].sort((a, b) => (b.compatibility ?? -1) - (a.compatibility ?? -1));
+  const sorted = [...jobs].sort((a, b) => (b.chance ?? -1) - (a.chance ?? -1));
   fs.writeFileSync(BOARD_PATH, JSON.stringify({ updatedAt: now, jobs: sorted }, null, 2) + '\n');
   return sorted.length;
 }

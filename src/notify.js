@@ -2,7 +2,7 @@ import {
   SLACK_WEBHOOK_URL,
   TELEGRAM_BOT_TOKEN,
   TELEGRAM_CHAT_ID,
-  NOTIFY_MIN_FIT,
+  NOTIFY_MIN_CHANCE,
   NOTIFY_MAX_ITEMS,
   DASHBOARD_URL,
 } from './config.js';
@@ -60,7 +60,7 @@ export async function telegram(html) {
 const escHtml = (s) => String(s == null ? '' : s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const escSlack = (s) => String(s == null ? '' : s).replace(/[<>&]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
-const CITY_SHORT = { montreal: 'Montreal', remote: 'Remote (Canada)' };
+const CITY_SHORT = { montreal: 'Montreal', remote: 'Remote (Canada)', nyc: 'New York' };
 const place = (r) => CITY_SHORT[r.city] || r.city || '';
 
 // The real posting location, not the city bucket — a "canada" row could be Halifax or
@@ -69,17 +69,24 @@ const locOf = (r) => ((r.location || '').split(/\s*[;|]\s*/)[0].trim() || place(
 
 const TERM_SHORT = { '2027': 'Summer 2027', exempt: '2027 cycle', unstated: 'term not stated' };
 
-// Sponsorship matters where it's needed: a US role for a Canadian. Non-US roles are
-// flagged "no visa needed" so the distinction is obvious at a glance.
+// Sponsorship matters where it's needed: a US role for a Canadian. It no longer moves
+// any score (see src/score.js), but a New York posting that says outright it won't
+// sponsor is still worth knowing before you spend an evening on the form. Canadian
+// roles say nothing at all rather than repeating "no visa needed" on every line.
 function visaNote(r) {
-  if (r.country !== 'US') return 'no visa needed';
+  if (r.country !== 'US') return null;
   return r.sponsorship === 'offers' ? 'sponsors visa'
     : r.sponsorship === 'denies' ? 'no sponsorship'
     : 'sponsorship not stated';
 }
 
-// The per-role second line: location · term · visa.
-const metaOf = (r) => [locOf(r), TERM_SHORT[r.term] || r.term, visaNote(r)].filter(Boolean).join(' · ');
+// The per-role second line: location · quality · term · visa. Quality rides here
+// rather than next to the headline number because the headline answers "should I
+// bother", and quality only matters once the answer is yes.
+const metaOf = (r) =>
+  [locOf(r), r.quality != null ? `quality ${r.quality}` : null, TERM_SHORT[r.term] || r.term, visaNote(r)]
+    .filter(Boolean)
+    .join(' · ');
 
 /**
  * Decide what (if anything) to announce. Pure — no network — so it's testable and the
@@ -88,18 +95,22 @@ const metaOf = (r) => [locOf(r), TERM_SHORT[r.term] || r.term, visaNote(r)].filt
  * Returns null when nothing clears the bar, which is the whole anti-spam mechanism: a
  * run that finds only weak or wrong-cycle postings sends no message at all. `postings`
  * is mergeBoard's `added` list (genuinely new); it need not be pre-sorted.
+ *
+ * The bar is read against `chance`, which is strictly lower than the `compatibility` it
+ * replaced — chance subtracts difficulty from fit and never adds. NOTIFY_MIN_CHANCE was
+ * re-tuned when the scores changed; porting the old 65 across would have muted the board.
  */
-export function formatNewPostings(postings, { total, minFit = NOTIFY_MIN_FIT, limit = NOTIFY_MAX_ITEMS, dashboardUrl = DASHBOARD_URL } = {}) {
+export function formatNewPostings(postings, { total, minChance = NOTIFY_MIN_CHANCE, limit = NOTIFY_MAX_ITEMS, dashboardUrl = DASHBOARD_URL } = {}) {
   const notable = postings
-    .filter((r) => (r.compatibility ?? 0) >= minFit && r.term !== 'other-cycle')
-    .sort((a, b) => (b.compatibility ?? -1) - (a.compatibility ?? -1));
+    .filter((r) => (r.chance ?? 0) >= minChance && r.term !== 'other-cycle')
+    .sort((a, b) => (b.chance ?? -1) - (a.chance ?? -1));
   if (!notable.length) return null;
 
   const shown = notable.slice(0, limit);
   const more = notable.length - shown.length;
   const head = `${notable.length} new role${notable.length === 1 ? '' : 's'} worth a look`;
 
-  const fit = (r) => String(r.compatibility ?? '—');
+  const fit = (r) => String(r.chance ?? '—');
   const tgLines = shown.map((r) =>
     `<b>${escHtml(fit(r))}</b> · <a href="${escHtml(r.applyUrl)}">${escHtml(r.title)}</a> — ${escHtml(r.company)}\n   <i>${escHtml(metaOf(r))}</i>`
   );

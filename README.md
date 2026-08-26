@@ -4,14 +4,15 @@
 
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white) ![Slack](https://img.shields.io/badge/Slack-4A154B?style=flat-square&logo=slack&logoColor=white)
 
-Jobify looks for internship and entry-level developer roles — intern, co-op, and new-grad — in **Montreal**. It scrapes every source it knows, scores each posting against `assets/profile.json`, and writes the lot to `board.json`. A GitHub Action runs it every two hours and commits `board.json` back to the repo.
+Jobify looks for internship and entry-level developer roles — intern, co-op, and new-grad — in **Montreal and New York**. It scrapes every source it knows, scores each posting against `assets/profile.json`, and writes the lot to `board.json`. A GitHub Action runs it every two hours and commits `board.json` back to the repo.
 
-**The board is Montreal-only.** Everywhere else — including the rest of Canada — is dropped at ingest rather than scored and filtered later: a Toronto internship is not a weaker option than a Montreal one, it is a move. `matchCity` is that gate, and a posting it cannot place never reaches the board. Two things are kept:
+**Geography is a hard gate, not a score.** Everywhere outside the target cities — including the rest of Canada — is dropped at ingest rather than scored and filtered later: a Toronto internship is not a weaker option than a Montreal one, it is a move. `matchCity` is that gate, and a posting it cannot place never reaches the board. Three things are kept:
 
 - **The Montreal metro**, not just the city proper. Dorval, Laval, Longueuil, Brossard, Pointe-Claire and the rest of the island resolve to `montreal`, because a posting saying "Dorval" is the same commute. Suburb names unique to Quebec match bare; names that also exist elsewhere ("Kirkland" is also in Washington, "Verdun" also in France) are qualified with a province, since nothing is tried before this and a false positive puts a foreign role on the board.
 - **Remote within Canada**, which is workable from here — but only when the posting is not somewhere in particular. `Remote - Canada` and Cohere's bare `Canada` qualify; `Remote - Canada - ON` and `Cambridge, Ontario` do not. These land in a `remote` bucket.
+- **New York**, added August 2026 and the only US city on the board. Work authorization is deliberately not scored: every New York posting is shown regardless of what it says about sponsorship, and the `sponsorship` column is there to be read, not to demote anything. Two guards keep it honest, both drawn from real postings — "Manhattan Beach, CA" is Los Angeles, and in "United States - New York - Albany" the words *New York* are the state.
 
-A posting listing Montreal *alongside* other offices is kept and filed under Montreal, since that role is takeable from here.
+A posting listing several offices is kept and filed under the first city `CITIES` names, so a role open in both Montreal and New York files under Montreal — home beats away, and the role is takeable either way.
 
 It **used to** auto-apply, and the applier reached 8 of 239 postings — the eight easiest forms, never the Workday roles worth having — while reporting nine submissions no employer ever received. That half is retired. The scrape, the dedup, the hiring-term classifier, and the scoring were always the valuable part; every gate the applier needed (term, sponsorship, platform) is now a column you filter on. Nothing here is irreversible: no résumé is uploaded anywhere, and a crashed run costs nothing but a stale board.
 
@@ -45,7 +46,7 @@ Read the board as three tiers: `2027` is your confident queue, `unstated` is wor
 
 ## 🖥 The dashboard
 
-`docs/index.html` is one self-contained file — no build step, no dependencies. Read it locally with `npm run dashboard`. It renders `board.json` with filters on city (Montreal vs remote), platform, source, sponsorship, and hiring term, sorted by compatibility. Filters live in the URL, so any view can be linked or bookmarked.
+`docs/index.html` is one self-contained file — no build step, no dependencies. Read it locally with `npm run dashboard`. It renders `board.json` with filters on city (Montreal, New York, remote), platform, source, sponsorship, and hiring term, sorted by chance. Filters live in the URL, so any view can be linked or bookmarked.
 
 Two rules hold the interface together. The accent colour means *a human should look here* and is spent nowhere else. And facts the machine wrote — scores, timestamps, statuses, board names — are set in mono, while words a person wrote are set in sans; you can tell them apart without reading them.
 
@@ -55,13 +56,17 @@ The repo is **private** and should stay that way; the GitHub Pages deploy is man
 
 ## 📊 Scoring
 
-Every posting gets three numbers, computed in `src/score.js` from an editable lexicon of skills, company tiers, and pay curves in `src/config.js`.
+Every posting gets **two** numbers, computed in `src/score.js` from an editable lexicon of skills, company tiers, and pay curves in `src/config.js`. Two, because a board answers two questions — *can I get this?* and *do I want it?* — and any third number is one more thing to argue with.
 
-- **compatibility** (0–100) is how well *this* candidate fits *this* posting: 60% skill overlap against your declared skill list, 40% role-family match, all multiplied by an eligibility factor for hiring term and work authorization. A posting naming few technologies is shrunk toward a neutral prior of 55 rather than scored zero for being terse; a role naming the wrong season has its score collapsed, not merely docked. City is deliberately absent — that's a filter, not part of fit. The sponsorship arm of the eligibility multiplier is dormant now that the board is Montreal-only, and is kept for the same reason the `sponsorship` column is: it costs nothing and it's what you'd need back if a US city were ever re-added.
+- **chance** (0–100) is how likely the application is to land. It is `fit` less how contested the role is, and both halves ride along on every row so you can always see which one moved it.
+  - **fit** is 60% skill overlap against your declared skill list and 40% role-family match, multiplied by an eligibility factor for hiring term and level. A posting naming few technologies is shrunk toward a neutral prior of 55 rather than scored zero for being terse; a wrong-season or PhD-only role has its score collapsed, not merely docked. City is deliberately absent — that's a filter, not part of fit. Work authorization is absent too, on purpose: New York postings are shown whatever they say about sponsorship.
+  - **difficulty** reads company prestige, how desirable the posting reads, and how early we reached it — a role found on the employer's own ATS is less contested than the same role copied into a README days later. With no description to judge from, it is pulled back toward neutral rather than asserted.
+  - Difficulty only ever subtracts, so **chance can never exceed fit**. Being a perfect match for a role a thousand other people also match is not a good chance, and no amount of obscurity makes you a better candidate than you are.
 - **quality** (0–100) is candidate-independent: 35% pay (an hourly curve anchored at ~$20/hr low, ~$50/hr strong, ~$80/hr big-tech), 30% program signals (return offers, mentorship, cohort), 20% real-work substance, 15% company prestige. An unpaid or credit-only internship is capped at 25 no matter how well the rest reads.
-- **interviewOdds** (1–60%) is a heuristic prior, not a calibrated probability — nothing here records whether an application led to an interview. It starts from a 6% base rate and swings on prestige (a top-tier name sinks the odds, because everyone applied there too), fit, and how early in a posting's life it was reached. Treat it as a tie-breaker between two roles, never a forecast.
 
-The board sorts by compatibility, and all three scores ride along into the dashboard and into a one-line Slack explanation of the evidence behind them.
+Neither number is calibrated — nothing in this repo records whether an application led to an interview, so there is no ground truth to fit against. Treat `chance` as a way to rank two postings against each other, never as a forecast. It replaced an earlier trio that also published `interviewOdds` as a percentage; the signals behind that number were defensible, but printing it as "~12% interview" read as a measurement, and nothing here measured it. Those signals now live inside `difficulty`.
+
+The board sorts by chance, and both scores ride along into the dashboard and into a one-line Slack explanation of the evidence behind them.
 
 ## 🚀 Running it
 

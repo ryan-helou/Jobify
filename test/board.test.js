@@ -36,7 +36,7 @@ const job = (over = {}) => ({
   source: 'ats',
   term: 'unstated',
   description: 'Python and React.',
-  scores: { compatibility: 70, quality: 60, interviewOdds: 9, confidence: 'medium', signals: { pay: null } },
+  scores: { chance: 70, quality: 60, confidence: 'medium', signals: { fit: 84, difficulty: 28, pay: null } },
   ...over,
 });
 
@@ -45,7 +45,7 @@ test('a board row keeps the gates as fields instead of dropping the posting', ()
   assert.equal(r.platform, 'greenhouse');
   assert.equal(r.term, 'unstated');
   assert.equal(r.sponsorship, 'n/a');
-  assert.equal(r.compatibility, 70);
+  assert.equal(r.chance, 70);
   assert.equal(r.firstSeenAt, '2026-07-10T00:00:00Z');
 });
 
@@ -53,13 +53,13 @@ test('merging re-scores a known posting but preserves when it was first seen', (
   const board = [];
   mergeBoard(board, [job()], '2026-07-01T00:00:00Z');
   assert.equal(board.length, 1);
-  assert.equal(board[0].compatibility, 70);
+  assert.equal(board[0].chance, 70);
 
-  const rescored = job({ scores: { compatibility: 12, quality: 60, interviewOdds: 2, confidence: 'high', signals: {} } });
+  const rescored = job({ scores: { chance: 12, quality: 60, confidence: 'high', signals: {} } });
   mergeBoard(board, [rescored], '2026-07-10T00:00:00Z');
 
   assert.equal(board.length, 1, 'the same posting must not be duplicated');
-  assert.equal(board[0].compatibility, 12, 'scores are recomputed every run');
+  assert.equal(board[0].chance, 12, 'scores are recomputed every run');
   assert.equal(board[0].firstSeenAt, '2026-07-01T00:00:00Z', 'age survives a re-scrape');
   assert.equal(board[0].lastSeenAt, '2026-07-10T00:00:00Z');
 });

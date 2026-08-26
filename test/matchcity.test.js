@@ -5,7 +5,8 @@ import { matchCity } from '../src/scrapers/github.js';
 
 const key = (loc) => matchCity(loc)?.key ?? null;
 
-// The board is Montreal-only. matchCity is the hard gate: null means dropped.
+// The board is Montreal, New York, and remote-in-Canada. matchCity is the hard gate:
+// null means the posting is dropped permanently.
 test('the Montreal metro resolves to montreal, in every spelling employers use', () => {
   assert.equal(key('Montréal, Quebec, Canada'), 'montreal');
   assert.equal(key('Montreal, QC, Canada'), 'montreal');
@@ -63,12 +64,47 @@ test('the rest of Canada is dropped', () => {
   assert.equal(key('CA - Esterhazy, SK'), null);
 });
 
-test('US and other foreign postings are dropped', () => {
-  assert.equal(key('New York, NY'), null);
+test('the rest of the US, and the rest of the world, is dropped', () => {
   assert.equal(key('San Francisco, CA'), null);
   assert.equal(key('Austin, TX'), null);
   assert.equal(key('Remote - US'), null);
   assert.equal(key('London, UK'), null);
+});
+
+// New York was added 2026-08-26. Every string below is a real `location` value from
+// the 386 US rows this board carried before the Canada-only narrowing dropped them.
+test('New York resolves to nyc, in every spelling employers use', () => {
+  assert.equal(key('New York, NY'), 'nyc');
+  assert.equal(key('New York City'), 'nyc');
+  assert.equal(key('New York, New York'), 'nyc');
+  assert.equal(key('NY - New York'), 'nyc');
+  assert.equal(key('USA - NY - New York City'), 'nyc');
+  assert.equal(key('US | NY | New York - 32 Old Slip'), 'nyc');
+  assert.equal(key('New York office'), 'nyc');
+});
+
+// Both of these are real postings that a naive /new york|manhattan/ would have
+// claimed. They are the reason the nyc entry carries an `exclude` predicate.
+test('New York State is not New York City, and Manhattan Beach is in California', () => {
+  assert.equal(key('United States - New York - Albany'), null, 'Albany is a three-hour drive');
+  assert.equal(key('Manhattan Beach, CA'), null, 'Los Angeles, not Manhattan');
+  // An upstate mention only disqualifies when the city proper is absent — multi-site
+  // postings naming both are genuinely New York roles.
+  assert.equal(key('New York, NY ; Albany, NY'), 'nyc');
+});
+
+// Same rule as Montreal's: a posting listing several offices is takeable at any of
+// them, so it is kept and filed under the first city in CITIES order.
+test('a multi-city posting naming New York is filed under nyc', () => {
+  assert.equal(key('Berlin ; New York ; London'), 'nyc');
+  assert.equal(key('Chicago, IL, New York, NY'), 'nyc');
+  assert.equal(key('New York, NY, San Francisco, CA'), 'nyc');
+});
+
+// CITIES order is the priority order and Montreal is first: home beats away.
+test('a posting naming both Montreal and New York is filed under Montreal', () => {
+  assert.equal(key('New York, NY ; Montreal, QC'), 'montreal');
+  assert.equal(key(['New York, NY', 'Montréal, Quebec']), 'montreal');
 });
 
 // A bare ", NL" is Newfoundland *and* the Netherlands country code. The old

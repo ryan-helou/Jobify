@@ -11,37 +11,44 @@ import {
   HOURS_PER_YEAR,
   TOP_TIER_COMPANIES,
   STRONG_TIER_COMPANIES,
-  ODDS_BASE_RATE,
-  ODDS_FLOOR,
-  ODDS_CEILING,
   CANDIDATE,
 } from './config.js';
-import { feedSponsorshipVerdict, mentionsSponsorship } from './visa.js';
 
-// Three numbers per posting.
+// Two numbers per posting. Two, not three, because a board answers two questions:
+// "can I get this?" and "do I want it?" — and anything else is a number to argue with.
 //
-//   compatibility — how well this candidate fits this posting        [0..100]
-//   quality       — how good the internship is, candidate-independent [0..100]
-//   interviewOdds — P(application → first-round interview), percent   [1..60]
+//   chance  — how likely this application is to land, given fit AND difficulty [0..100]
+//   quality — how good the internship is, candidate-independent                [0..100]
 //
 // What these are worth, stated plainly, because a number on a dashboard invites
 // more trust than it has earned:
 //
-//   `compatibility` is the honest one. It compares a posting's stated
-//   requirements against a declared skill list. Both sides are text we can read.
+//   `chance` combines the two halves of the question. `fit` is the honest half: it
+//   compares a posting's stated requirements against a declared skill list, and both
+//   sides are text we can read. `difficulty` is the softer half — company prestige,
+//   how desirable the posting reads, and how early we reached it. They are kept as
+//   separate signals on every row so you can always see which half moved the number.
+//
+//   `chance` can never exceed `fit`. Being a perfect match for a role a thousand
+//   other people also match is not a good chance, and no amount of obscurity makes
+//   you a better candidate than you are. Difficulty only ever subtracts.
 //
 //   `quality` is a defensible aggregate of things a good internship tends to
 //   say about itself (pay, return offers, mentorship, real production work) plus
 //   an editable opinion about company prestige. Reasonable people would weight
 //   it differently.
 //
-//   `interviewOdds` is a heuristic prior, NOT a calibrated probability. Nothing
-//   in this repo records whether an application ever led to an interview —
-//   applied_jobs.json stores submissions, not outcomes — so there is no ground
-//   truth to fit against. It is a base rate multiplied by factors chosen by
-//   hand. Treat it as a *ranking* signal, useful for deciding which of two
-//   postings to spend an application on, and not as a forecast. If you ever
-//   start recording outcomes, this function is where to fit a real model.
+//   Neither number is calibrated. Nothing in this repo records whether an application
+//   ever led to an interview — applied_jobs.json stores submissions, not outcomes — so
+//   there is no ground truth to fit against. Treat `chance` as a *ranking* signal,
+//   useful for deciding which of two postings to spend an application on, and not as a
+//   forecast. If you ever start recording outcomes, this function is where to fit a
+//   real model.
+//
+// This replaced an earlier trio that also published `interviewOdds`, a base rate
+// multiplied by hand-chosen factors and printed as a percentage. The factors were the
+// defensible part; the percentage was not, because "~12% interview" reads as a
+// measurement and nothing here measured it. Those factors now live in `difficulty`.
 //
 // Every score degrades gracefully when the description is missing (the GitHub
 // listings feeds carry none), which is what `confidence` reports.
@@ -135,7 +142,7 @@ export function parsePay(text) {
   return { hourly, raw: m[0].trim(), period };
 }
 
-// ---- compatibility --------------------------------------------------------
+// ---- fit ------------------------------------------------------------------
 
 // How many technologies a posting must name before its skill overlap is taken
 // at face value. Below this, the observed ratio is shrunk toward a neutral prior
@@ -245,19 +252,16 @@ function levelMismatch(title, description) {
   return { factor: 1, reason: null };
 }
 
+// Work authorization is deliberately NOT scored here, as of 2026-08-26, when New York
+// was added to the board. Ryan's instruction was "no need for sponsorship": show every
+// New York posting regardless of what it says about visas, and let him judge each one.
+// A multiplier that quietly demoted the roles he had just asked to see would be the
+// opposite of that. `sponsorship` is still resolved and still shown as a column in
+// src/board.js — it is information, not a penalty.
 function eligibilityMultiplier(job, description) {
   const term = job.term === '2027' || job.term === 'exempt' ? 1 : job.term === 'unstated' ? 0.9 : 0.3;
-
-  let visa = 1; // Canadian postings need no sponsorship
-  if (job.country === 'US') {
-    const verdict = feedSponsorshipVerdict(job);
-    if (verdict === 'offers') visa = 1;
-    else if (verdict === 'denies') visa = 0.4;
-    else visa = mentionsSponsorship(description) ? 1 : 0.85; // silence ≠ refusal
-  }
-
   const level = levelMismatch(job.title, description);
-  return { multiplier: term * visa * level.factor, levelReason: level.reason };
+  return { multiplier: term * level.factor, levelReason: level.reason };
 }
 
 const COMPAT_WEIGHTS = { skill: 0.6, role: 0.4 };
@@ -266,7 +270,7 @@ const COMPAT_WEIGHTS = { skill: 0.6, role: 0.4 };
 
 // No location or eligibility term here: `quality` answers "is this a good
 // internship", which cannot depend on which city *this* candidate prefers or
-// whether *this* candidate needs a visa. Those belong to compatibility.
+// whether *this* candidate prefers a city. Those belong to `chance`.
 const QUALITY_WEIGHTS = { pay: 0.35, program: 0.3, substance: 0.2, company: 0.15 };
 const TIER_QUALITY = { top: 95, strong: 78, unknown: 55 };
 const RED_FLAG_CEILING = 25;
@@ -279,11 +283,28 @@ function payScore(text, job) {
   return { score: interpolate(PAY_CURVE, pay.hourly), pay };
 }
 
-// ---- interview odds -------------------------------------------------------
+// ---- difficulty -----------------------------------------------------------
+//
+// How contested a posting is, 0..100, where 100 means everyone else applied too.
+// This is the second half of `chance`: fit says whether you match the work,
+// difficulty says how many other people also do.
 
-// Prestige cuts both ways: a top-tier name raises `quality` and sinks the odds,
+// Prestige cuts both ways: a top-tier name raises `quality` and raises difficulty,
 // because everyone else applied there too.
-const TIER_COMPETITION = { top: 0.4, strong: 0.7, unknown: 1.3 };
+const DIFFICULTY_TIER = { top: 85, strong: 60, unknown: 25 };
+
+// A posting that reads well draws more applicants than a dull one, whoever posted it.
+// Worth less than the name on the door, which is why it is a smaller term.
+const DIFFICULTY_QUALITY_DRAW = 15;
+
+// What we assume about a posting we know nothing about: neither easy nor hard, and
+// slightly below the midpoint because most postings are not Google.
+const DIFFICULTY_NEUTRAL = 40;
+
+// How much of `fit` the hardest imaginable posting can take away. At 0.6 a perfect
+// match for a top-tier role still reads ~50, not ~5: the role is a long shot, not a
+// waste of an afternoon, and the board should not tell him to skip it.
+const CHANCE_CONTEST_WEIGHT = 0.6;
 
 // How early in a posting's life we reached it. A company's own ATS board lists a
 // job days before a volunteer copies it into a README, and applying early is one
@@ -295,11 +316,29 @@ const DIRECT_ATS_CHANNELS = new Set([
   'ats', 'workday', 'oracle', 'smartrecruiters',
   'workable', 'recruitee', 'bamboohr', 'icims', 'eightfold', 'personio', 'phenom',
 ]);
-function channelMultiplier(source) {
+function channelDifficulty(source) {
   const channel = String(source || '').split(':')[0];
-  if (DIRECT_ATS_CHANNELS.has(channel)) return 1.25;
-  if (source === 'indeed') return 0.8; // aggregator; the posting has been up a while
-  return 1.0;
+  if (DIRECT_ATS_CHANNELS.has(channel)) return -15; // we got here before the copies did
+  if (source === 'indeed') return 10; // aggregator; the posting has been up a while
+  return 0;
+}
+
+/**
+ * Difficulty and chance from already-computed parts. Exported because two callers need
+ * exactly this arithmetic: scoreJob below, and the migration in src/board.js that has
+ * to bring rows scored by the retired three-number model onto the new scale. A stored
+ * row carries fit, quality, tier, source and confidence, which is everything this
+ * needs — so the migration is exact rather than a guess, and there is one formula
+ * rather than two that drift.
+ */
+export function contestFor({ fit, quality, tier, source, confidence }) {
+  const contest =
+    (DIFFICULTY_TIER[tier] ?? DIFFICULTY_TIER.unknown) +
+    DIFFICULTY_QUALITY_DRAW * ((quality ?? 50) / 100) +
+    channelDifficulty(source);
+  const evidence = { high: 1, medium: 0.7, low: 0.4 }[confidence] ?? 0.4;
+  const difficulty = round(DIFFICULTY_NEUTRAL + (contest - DIFFICULTY_NEUTRAL) * evidence);
+  return { difficulty, chance: round((fit ?? 0) * (1 - CHANCE_CONTEST_WEIGHT * (difficulty / 100))) };
 }
 
 // ---- public API -----------------------------------------------------------
@@ -313,12 +352,12 @@ export function scoreJob(job, profile = CANDIDATE, description = null) {
   const desc = description ?? job.description ?? '';
   const text = `${job.title || ''}\n${desc}`;
 
-  // --- compatibility
+  // --- fit: can this candidate do, and hold, this job?
   const skill = skillFit(text, profile);
   const role = roleFit(job.title, profile);
   const { multiplier: eligibility, levelReason } = eligibilityMultiplier(job, desc);
 
-  const compatibility = round((skill.score * COMPAT_WEIGHTS.skill + role.score * COMPAT_WEIGHTS.role) * eligibility);
+  const fit = round((skill.score * COMPAT_WEIGHTS.skill + role.score * COMPAT_WEIGHTS.role) * eligibility);
 
   // --- quality
   const tier = companyTier(job.company);
@@ -349,34 +388,28 @@ export function scoreJob(job, profile = CANDIDATE, description = null) {
   if (flags.length) quality = Math.min(quality, RED_FLAG_CEILING);
 
   // How much text the scores actually rest on. `low` means the posting had no
-  // description, so `quality` is mostly company tier and `compatibility` is
-  // mostly title and location.
+  // description, so `quality` is mostly company tier and `fit` is mostly the title.
   const confidence = !desc.trim() ? 'low' : desc.length > 800 && !skill.thin ? 'high' : 'medium';
 
-  // --- interview odds (see the header comment: a prior, not a forecast)
+  // --- difficulty, then chance
   //
-  // Two changes make this less dishonest than it was, without pretending it is
-  // calibrated. It now inherits the level penalty through `compatibility`, so a
-  // PhD-only posting no longer advertises a double-digit chance at an interview.
-  // And it shrinks toward the base rate in proportion to the evidence behind it:
-  // a posting with no description moves the prior barely at all, because every
-  // factor below was computed from a title and a company name.
-  const compatMult = 0.4 + 1.4 * Math.pow(compatibility / 100, 1.3);
-  const qualityMult = 1.1 - 0.25 * (quality / 100); // desirable roles draw more applicants
-  const raw = ODDS_BASE_RATE * compatMult * TIER_COMPETITION[tier] * channelMultiplier(job.source) * qualityMult;
-
-  const evidence = { high: 1, medium: 0.7, low: 0.4 }[confidence];
-  const shrunk = ODDS_BASE_RATE + (raw - ODDS_BASE_RATE) * evidence;
-
-  const odds = clamp(shrunk, ODDS_FLOOR, ODDS_CEILING);
-  const interviewOdds = Math.max(1, Math.round(odds * 100));
+  // Every term here was computed from a company name, a source, and a quality score
+  // that may itself rest on nothing. With no description to stand on, say so by
+  // pulling the answer back toward neutral rather than asserting it — the same
+  // evidence shrink the retired odds number used, for the same reason.
+  //
+  // Difficulty only ever subtracts, so `chance <= fit` always holds. A PhD-only or
+  // new-grad posting still collapses to near zero, because it collapsed `fit` first.
+  const { difficulty, chance } = contestFor({ fit, quality, tier, source: job.source, confidence });
 
   return {
-    compatibility,
+    chance,
     quality,
-    interviewOdds,
     confidence,
     signals: {
+      // Both halves of `chance`, kept so a row can always explain its own number.
+      fit,
+      difficulty,
       matchedSkills: skill.matched,
       requiredSkills: skill.required,
       family: role.family,
@@ -393,7 +426,7 @@ export function scoreJob(job, profile = CANDIDATE, description = null) {
 // One-line explanation for Slack and the dashboard tooltip.
 export function explainScore(scores) {
   const s = scores.signals;
-  const bits = [`fit ${scores.compatibility}`, `quality ${scores.quality}`, `~${scores.interviewOdds}% interview`];
+  const bits = [`chance ${scores.chance}`, `quality ${scores.quality}`, `fit ${s.fit} vs difficulty ${s.difficulty}`];
   if (s.matchedSkills.length) bits.push(`matches ${s.matchedSkills.slice(0, 5).join(', ')}`);
   if (s.pay) bits.push(s.pay);
   if (s.tier !== 'unknown') bits.push(`${s.tier}-tier`);

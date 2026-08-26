@@ -88,13 +88,14 @@ test('newgrad kind rejects senior and levelled roles', () => {
   }
 });
 
-test('matchCity prefers Montreal, and drops everywhere else', () => {
+test('matchCity prefers Montreal, then New York, and drops everywhere else', () => {
   // A posting with a Montreal office is takeable, so the other half is ignored
-  // rather than disqualifying the role.
+  // rather than disqualifying the role. CITIES order is the priority order.
   assert.equal(matchCity(['San Francisco, CA', 'Montreal, QC']).key, 'montreal');
   assert.equal(matchCity(['Montreal, QC, Canada']).key, 'montreal');
+  assert.equal(matchCity(['New York, NY', 'Montreal, QC']).key, 'montreal');
+  assert.equal(matchCity(['New York, NY']).key, 'nyc');
   assert.equal(matchCity(['Toronto, ON']), null);
-  assert.equal(matchCity(['New York, NY']), null);
   assert.equal(matchCity(['Austin, TX']), null);
   assert.equal(matchCity([]), null);
 });
