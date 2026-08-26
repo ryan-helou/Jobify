@@ -37,7 +37,7 @@ test('a new record carries the evidence behind its verdict, not just the verdict
     job({
       applyUrl: 'https://boards.greenhouse.io/acme/jobs/1/apply',
       description: 'We use React and TypeScript. You will ship real code.',
-      scores: { compatibility: 82, quality: 71, interviewOdds: 9, confidence: 'high', signals: { family: 'frontend' } },
+      scores: { chance: 82, quality: 71, confidence: 'high', signals: { fit: 91, difficulty: 22, family: 'frontend' } },
     }),
     'applied',
     'submitted',
@@ -49,7 +49,7 @@ test('a new record carries the evidence behind its verdict, not just the verdict
   assert.equal(r.term, '2027');
   assert.equal(r.country, 'CA');
   assert.equal(r.applyUrl, 'https://boards.greenhouse.io/acme/jobs/1/apply');
-  assert.equal(r.compatibility, 82);
+  assert.equal(r.chance, 82);
   assert.equal(r.scoreConfidence, 'high');
   assert.deepEqual(r.resume, { variant: 'frontend', reason: 'title says frontend' });
   assert.match(r.excerpt, /^We use React/);
@@ -72,7 +72,7 @@ test('re-examining a posting appends to its history and keeps the first sighting
   const firstSeen = only(t).firstSeenAt;
 
   await new Promise((r) => setTimeout(r, 5)); // distinct ISO timestamps
-  t.add(job({ scores: { compatibility: 90, quality: 60, interviewOdds: 7, confidence: 'high', signals: {} } }), 'applied', 'submitted');
+  t.add(job({ scores: { chance: 90, quality: 60, confidence: 'high', signals: {} } }), 'applied', 'submitted');
 
   const r = only(t);
   assert.equal(r.status, 'applied', 'the fresh verdict wins');
@@ -80,7 +80,7 @@ test('re-examining a posting appends to its history and keeps the first sighting
   assert.equal(r.firstSeenAt, firstSeen, 'firstSeenAt survives re-examination');
   assert.notEqual(r.recordedAt, firstSeen, 'recordedAt moves to the new decision');
   assert.deepEqual(r.history.map((h) => h.status), ['manual_review', 'applied']);
-  assert.equal(r.compatibility, 90, 're-scoring on the second read replaces the weaker guess');
+  assert.equal(r.chance, 90, 're-scoring on the second read replaces the weaker guess');
 });
 
 test('history is bounded — a posting seen forever does not grow the ledger forever', () => {

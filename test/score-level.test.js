@@ -22,7 +22,7 @@ const posting = (title, extra = {}) => ({
   ...extra,
 });
 
-const fit = (title, desc) => scoreJob(posting(title), undergrad, desc).compatibility;
+const fit = (title, desc) => scoreJob(posting(title), undergrad, desc).signals.fit;
 
 test('a PhD-only internship is not a fit for an undergraduate', () => {
   const phd = fit('Analog Engineer Intern - PhD', 'Design analog circuits in C++ and Python.');
@@ -72,21 +72,24 @@ test('levelReason explains a near-zero score', () => {
   assert.equal(scoreJob(posting('Software Engineer Intern'), undergrad, 'python').signals.levelReason, null);
 });
 
-// interviewOdds must not advertise a double-digit chance at a job you can't hold.
-test('interview odds collapse for ineligible postings', () => {
-  const phd = scoreJob(posting('Analog Engineer Intern - PhD'), undergrad, 'circuits in C++').interviewOdds;
-  const real = scoreJob(posting('Software Engineer Intern'), undergrad, 'Python and React production work').interviewOdds;
-  assert.ok(phd < real, `PhD odds ${phd} should be below real odds ${real}`);
+// `chance` must not advertise a real shot at a job you cannot hold. It inherits the
+// level collapse through `fit`, which is the whole reason difficulty only subtracts.
+test('chance collapses for ineligible postings', () => {
+  const phd = scoreJob(posting('Analog Engineer Intern - PhD'), undergrad, 'circuits in C++').chance;
+  const real = scoreJob(posting('Software Engineer Intern'), undergrad, 'Python and React production work').chance;
+  assert.ok(phd < real, `PhD chance ${phd} should be below real chance ${real}`);
+  assert.ok(phd < 20, `an undergraduate cannot hold this job at all, yet it scored ${phd}`);
 });
 
-// Less evidence, less movement away from the base rate.
-test('odds shrink toward the base rate when there is no description', () => {
+// Less evidence, less movement away from neutral.
+test('difficulty shrinks toward neutral when there is no description', () => {
+  const NEUTRAL = 40; // DIFFICULTY_NEUTRAL in src/score.js
   const withText = scoreJob(posting('Software Engineer Intern'), undergrad, 'Python React '.repeat(90));
   const without = scoreJob(posting('Software Engineer Intern'), undergrad, '');
   assert.equal(without.confidence, 'low');
   assert.ok(
-    Math.abs(without.interviewOdds - 8) < Math.abs(withText.interviewOdds - 8),
-    `no-description odds ${without.interviewOdds} should sit closer to the base rate than ${withText.interviewOdds}`
+    Math.abs(without.signals.difficulty - NEUTRAL) < Math.abs(withText.signals.difficulty - NEUTRAL),
+    `no-description difficulty ${without.signals.difficulty} should sit closer to neutral than ${withText.signals.difficulty}`
   );
 });
 

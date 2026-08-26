@@ -19,6 +19,10 @@ const write = (jobs) => fs.writeFileSync(process.env.BOARD_PATH, JSON.stringify(
 // to, so rows scraped before a narrowing of the target cities survived every refresh
 // and kept getting re-announced. Dropping them on read makes the change retroactive.
 // It has mattered twice — once dropping the US, once narrowing Canada to Montreal.
+//
+// Because it keys off ALLOWED_CITY_KEYS rather than naming a country, it also did the
+// right thing without being touched when New York was ADDED on 2026-08-26: `nyc` is a
+// CITIES key, so those rows now pass. That is the point of deriving the set.
 test('loadBoard keeps only the allowed city keys', () => {
   write([
     { url: 'https://a.com/1', title: 'SWE Intern', city: 'montreal', country: 'CA' },
@@ -26,9 +30,10 @@ test('loadBoard keeps only the allowed city keys', () => {
     { url: 'https://a.com/3', title: 'SWE Intern', city: 'canada', country: 'CA' },
     { url: 'https://a.com/4', title: 'SWE Intern', city: 'nyc', country: 'US' },
     { url: 'https://a.com/5', title: 'SWE Intern', city: 'remote', country: 'CA' },
+    { url: 'https://a.com/6', title: 'SWE Intern', city: 'sf', country: 'US' },
   ]);
   const board = loadBoard();
-  assert.deepEqual(board.map((r) => r.city), ['montreal', 'remote']);
+  assert.deepEqual(board.map((r) => r.city), ['montreal', 'nyc', 'remote']);
 });
 
 // The retired 'canada' catch-all is specifically worth pinning: it used to mean

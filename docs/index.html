@@ -300,7 +300,7 @@
         </select>
       </div>
       <div class="rack">
-        <label class="rng">fit ≥ <input type="range" id="minFit" min="0" max="100" step="5" value="0" /><output id="minFitOut">0</output></label>
+        <label class="rng">chance ≥ <input type="range" id="minFit" min="0" max="100" step="5" value="0" /><output id="minFitOut">0</output></label>
         <label class="rng">qual ≥ <input type="range" id="minQual" min="0" max="100" step="5" value="0" /><output id="minQualOut">0</output></label>
         <button class="chip" id="paidOnly" aria-pressed="false">pay stated</button>
         <button class="chip" id="hideDone" aria-pressed="true">hide worked</button>
@@ -317,9 +317,8 @@
             <th data-sort="title">Role</th>
             <th data-sort="company">Company</th>
             <th data-sort="city">City</th>
-            <th data-sort="compatibility" title="Fit against your profile — skills, role family, city, term, eligibility. Roles you can't hold (PhD-only, new-grad, senior) score near zero regardless of skill overlap.">Fit</th>
+            <th data-sort="chance" title="How likely this application is to land: how well you fit the work, less how contested the role is. Fit reads skills, role family, term and eligibility — roles you can't hold (PhD-only, new-grad, senior) score near zero regardless of skill overlap. Difficulty reads company prestige, how desirable the posting is, and how early we reached it. Chance can never exceed fit. Open a row to see both halves.">Chance</th>
             <th data-sort="quality" title="How good the internship looks: pay, return offer, mentorship, real production work, company tier.">Qual</th>
-            <th data-sort="interviewOdds" title="A hand-built prior, NOT a calibrated probability — no interview outcomes are recorded, so nothing is fitted to data. Shrinks toward the base rate when a posting has no description. Rank two postings with it; don't predict one.">Odds</th>
             <th data-sort="term" title="Which hiring cycle the posting is for. 2027: it names Summer 2027 explicitly — your confident queue. unstated: no season+year phrase, which is most postings — NOT 'not 2027', just unproven, so worth a skim (Canadian co-ops rarely write the season). other-cycle: a different season/year — skip.">Term</th>
             <th data-sort="sponsorship">Visa</th>
             <th data-sort="platform">Apply via</th>
@@ -338,8 +337,9 @@
     </div>
 
     <p class="fineprint">
-      <b>Odds</b> is a heuristic prior, not a forecast — no interview outcomes are recorded, so nothing is fitted to
-      real data. Hover any row for the signals behind its scores. <b>Applied</b> and <b>hide</b> live in this browser
+      <b>Chance</b> is a ranking signal, not a forecast — no interview outcomes are recorded, so nothing here is
+      fitted to real data. Use it to choose between two postings, not to predict one. Open any row for the fit and
+      difficulty behind it. <b>Applied</b> and <b>hide</b> live in this browser
       only (<kbd>localStorage</kbd>) — they never leave your device and no employer is contacted. Jobify finds and
       ranks; you apply.
     </p>
@@ -353,7 +353,7 @@
   -->
   <script type="application/json" id="board-vocabulary">
   {
-    "columns": 13,
+    "columns": 12,
     "terms": {
       "2027":        { "label": "Summer 2027",       "kind": "good" },
       "exempt":      { "label": "Cycle-scoped feed", "kind": "good" },
@@ -367,7 +367,7 @@
       "n/a":    { "label": "Not needed",        "kind": "info" }
     },
     "cities": {
-      "montreal": "Montreal", "remote": "Remote (Canada)"
+      "montreal": "Montreal", "nyc": "New York", "remote": "Remote (Canada)"
     }
   }
   </script>
@@ -403,7 +403,7 @@
     let jobs = [];
     let marks = {};           // identity -> { status: 'applied'|'dismissed', at, company, title, url }
     let byId = new Map();     // identity -> job, to resolve a mark back to its posting
-    let sortKey = 'compatibility';
+    let sortKey = 'chance';
     let sortDir = -1;
     let updatedAt = null;
 
@@ -491,6 +491,11 @@
       if (j.scoreConfidence) facts.push(`<span class="fact">confidence <b>${esc(j.scoreConfidence)}</b></span>`);
 
       const why = [];
+      // The headline number is a subtraction, so show the subtraction. Without this a
+      // strong candidate for a Google role just looks mysteriously mediocre.
+      if (s.fit != null && s.difficulty != null) {
+        why.push(`<div class="wrow"><span class="wk">Chance</span><span class="wv">fit <b>${esc(s.fit)}</b> less difficulty <b>${esc(s.difficulty)}</b></span></div>`);
+      }
       if (s.levelReason) why.push(`<div class="wrow"><span class="wk">Heads up</span><span class="wv warn-line">⚠ ${esc(s.levelReason)}</span></div>`);
       if (s.matchedSkills?.length) why.push(`<div class="wrow"><span class="wk">Your skills matched</span><span class="wv">${esc(s.matchedSkills.join(', '))}</span></div>`);
       if (s.requiredSkills?.length) why.push(`<div class="wrow"><span class="wk">Posting asks for</span><span class="wv">${esc(s.requiredSkills.join(', '))}</span></div>`);
@@ -502,9 +507,8 @@
         <h4>${esc(j.title)}</h4>
         <div class="sub">${esc(j.company)} · ${esc(CITY_LABEL[j.city] || j.city || '')}</div>
         <div class="scorepips">
-          ${pip('Fit', j.compatibility, 70, 45)}
+          ${pip('Chance', j.chance, 60, 40)}
           ${pip('Quality', j.quality, 70, 45)}
-          ${pip('Odds', j.interviewOdds, 20, 8, '%')}
         </div>
         <div class="facts">${facts.join('')}</div>
         <div class="detail-actions">
@@ -552,9 +556,9 @@
       const applied = Object.values(marks).filter((m) => m.status === 'applied').length;
       const canadian = jobs.filter((j) => j.country === 'CA').length;
       const actionable = jobs.filter((j) => j.term === '2027' || j.term === 'exempt' || j.term === 'unstated').length;
-      const avgFit = mean(jobs.map((j) => j.compatibility).filter((v) => typeof v === 'number'));
+      const avgChance = mean(jobs.map((j) => j.chance).filter((v) => typeof v === 'number'));
       const total = jobs.length || 1;
-      // Each tile carries a small gauge showing its share, except avg-fit which is
+      // Each tile carries a small gauge showing its share, except avg-chance which is
       // already a 0–100 reading. Applied is measured against what's actionable — the
       // only postings worth applying to — not the whole board.
       const fresh = jobs.filter(isNew).length;
@@ -564,7 +568,7 @@
         { n: canadian, l: 'Canadian', g: canadian / total },
         { n: actionable, l: 'Actionable', g: actionable / total },
         { n: applied, l: 'Applied', g: actionable ? applied / actionable : 0, accent: true, filter: 'applied' },
-        { n: avgFit ?? 0, l: 'Avg fit', g: (avgFit ?? 0) / 100, suffix: '' },
+        { n: avgChance ?? 0, l: 'Avg chance', g: (avgChance ?? 0) / 100, suffix: '' },
       ];
       $('readout').innerHTML = tiles.map((t) =>
         `<div class="tile${t.accent ? ' accent' : ''}${t.fresh ? ' fresh' : ''}"${t.filter ? ` data-status="${t.filter}" role="button" tabindex="0" title="Show your applied jobs" style="cursor:pointer"` : ''}>
@@ -622,7 +626,7 @@
         else if (status === 'todo') { if (st(j)) return false; }
         else if (hideDone && st(j)) return false;
         // A floor of 0 must not filter out an unscored posting.
-        if (minFit && !(j.compatibility >= minFit)) return false;
+        if (minFit && !(j.chance >= minFit)) return false;
         if (minQual && !(j.quality >= minQual)) return false;
         if (q && !`${j.title} ${j.company} ${j.location}`.toLowerCase().includes(q)) return false;
         return true;
@@ -652,9 +656,8 @@
             <td class="title"><span class="caret">▸</span>${isNew(j) ? '<span class="newpill">NEW</span>' : ''}${esc(j.title)}</td>
             <td class="company">${esc(j.company)}</td>
             <td class="city">${esc(CITY_LABEL[j.city] || j.city || '—')}</td>
-            ${scoreCell(j.compatibility, 'score')}
+            ${scoreCell(j.chance, 'score')}
             ${scoreCell(j.quality, 'score')}
-            ${scoreCell(j.interviewOdds, 'odds')}
             <td>${tag(j.term, TERM_LABEL, TERM_KIND)}</td>
             <td>${tag(j.sponsorship, SPON_LABEL, SPON_KIND)}</td>
             <td class="platform">${esc(j.platform)}</td>
@@ -761,7 +764,7 @@
       document.querySelectorAll('th[data-sort]').forEach((th) => {
         th.addEventListener('click', () => {
           const k = th.dataset.sort;
-          const DESC_FIRST = ['compatibility', 'quality', 'interviewOdds', 'firstSeenAt'];
+          const DESC_FIRST = ['chance', 'quality', 'firstSeenAt'];
           if (sortKey === k) sortDir *= -1;
           else { sortKey = k; sortDir = DESC_FIRST.includes(k) ? -1 : 1; }
           render();
