@@ -30,6 +30,16 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // in the catch-all bucket. Suburb names unique to Quebec are matched bare; names that
 // also exist elsewhere are qualified with a province, because nothing is tried before
 // this and a false positive puts a Kirkland, WA role on a Montreal board.
+// Upstate New York. "United States - New York - Albany" was a real posting on this
+// board, and there "New York" is the *state* — Albany is a three-hour drive from the
+// city. A posting naming an upstate city and nothing else is not a New York City role.
+export const NY_UPSTATE = /\b(?:albany|buffalo|rochester|syracuse|ithaca|binghamton|poughkeepsie|schenectady|utica|armonk)\b/i;
+
+// The city proper, named unambiguously. Multi-site postings are common in this data
+// ("Chicago, IL ; New York, NY ; Palo Alto, CA"), so an upstate mention only
+// disqualifies when no such token is also present.
+export const NYC_PROPER = /\bnew york city\b|\bnew york,?\s*ny\b|\bnyc\b|\bbrooklyn\b|\bmanhattan\b(?!\s+beach)/i;
+
 export const CITIES = [
   {
     key: 'montreal',
@@ -37,6 +47,27 @@ export const CITIES = [
     country: 'CA',
     indeedDomain: 'ca.indeed.com',
     match: /montr[eé]al|\b(?:longueuil|dorval|brossard|pointe[\s-]claire|lachine|outremont|pierrefonds|dollard[\s-]des[\s-]ormeaux|c[oô]te[\s-]saint[\s-]luc|saint[\s-]l[eé]onard|boucherville|terrebonne|repentigny|vaudreuil|saint[\s-]lambert|saint[\s-]bruno|candiac|kirkland, ?(?:qc|qu[eé]bec)|laval, ?(?:qc|qu[eé]bec)|verdun, ?(?:qc|qu[eé]bec)|anjou, ?(?:qc|qu[eé]bec)|lasalle, ?(?:qc|qu[eé]bec)|westmount, ?(?:qc|qu[eé]bec)|saint[\s-]laurent, ?(?:qc|qu[eé]bec)|mont[\s-]royal, ?(?:qc|qu[eé]bec))\b/i,
+  },
+  // New York, added 2026-08-26 — the first US city back on the board since the
+  // Canada-only narrowing. Sponsorship is deliberately NOT scored (see src/score.js):
+  // these are shown regardless of what they say about work authorization.
+  //
+  // Both guards below came from replaying this matcher over the 386 US rows the board
+  // carried before they were dropped, not from imagination:
+  //
+  //   "Manhattan Beach, CA"               bare `manhattan` is a Los Angeles suburb
+  //   "United States - New York - Albany" "New York" is the state, not the city
+  //
+  // Everything else in that sample is a genuine hit, including the multi-site postings
+  // ("Berlin ; New York ; London"), which are kept for the same reason
+  // "Markham ; Montreal" is kept: the role is takeable from the city we care about.
+  {
+    key: 'nyc',
+    name: 'New York, NY',
+    country: 'US',
+    indeedDomain: 'www.indeed.com',
+    match: /\bnew york\b|\bnyc\b|\bbrooklyn\b|\bmanhattan\b(?!\s+beach)/i,
+    exclude: (text) => NY_UPSTATE.test(text) && !NYC_PROPER.test(text),
   },
 ];
 
@@ -360,11 +391,10 @@ export const SPONSORSHIP_VERDICT = {
 
 // ---- scoring inputs -------------------------------------------------------
 //
-// Three scores are attached to every posting (see src/score.js):
+// Two scores are attached to every posting (see src/score.js):
 //
-//   compatibility — how well *this* candidate fits *this* posting
-//   quality       — how good the internship is, candidate-independent
-//   interviewOdds — a heuristic prior, NOT a calibrated probability
+//   chance  — how likely the application lands: fit, less how contested the role is
+//   quality — how good the internship is, candidate-independent
 //
 // The lexicons below are the evidence those scores are computed from. They are
 // meant to be edited: a skill this candidate doesn't have is noise, and a
@@ -501,7 +531,7 @@ export const PAY_CURVE = [
 // transparency law, so silence is neutral-minus rather than a penalty.
 export const PAY_UNSTATED_SCORE = 55;
 
-// Company prestige. Raises `quality` and lowers `interviewOdds` — the same name
+// Company prestige. Raises `quality` and raises `difficulty` — the same name
 // that makes an internship worth having makes it harder to get.
 //
 // This is an editable opinion, not a ranking. Names are normalized by
@@ -525,12 +555,6 @@ export const STRONG_TIER_COMPANIES = new Set([
   'shopifyplus', 'sonder', 'cohereai', 'element', 'ideogram', 'together', 'togetherai',
 ]);
 
-// Interview-odds model. Read src/score.js before trusting any of these numbers —
-// they are a documented guess, tuned to feel right, calibrated against nothing.
-export const ODDS_BASE_RATE = 0.06; // P(application → first-round interview), prior
-export const ODDS_FLOOR = 0.01;
-export const ODDS_CEILING = 0.6;
-
 export const PROFILE_PATH = path.join(ROOT, 'assets', 'profile.json');
 
 // Used when assets/profile.json is missing or unreadable. A generic CS student.
@@ -540,7 +564,7 @@ export const DEFAULT_PROFILE = {
   preferredFamilies: ['swe', 'fullstack', 'backend', 'frontend', 'infra', 'ml', 'data', 'mobile', 'security', 'embedded'],
 };
 
-// The candidate model that `compatibility` scores against. Unknown skill keys
+// The candidate model that `fit` (the first half of `chance`) scores against. Unknown skill keys
 // are dropped (and reported by validateConfig) rather than silently ignored —
 // a typo'd skill would otherwise quietly depress every score.
 function loadProfile() {
@@ -774,10 +798,21 @@ export const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 export const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
 
 // A notification interrupts you, so it holds a higher bar than the board. Only
-// genuinely-new postings that clear this fit AND aren't for the wrong hiring cycle
-// get pinged; a run that turns up only weak or off-cycle matches stays silent. The
-// board still shows everything — this only governs the ping. Raise to be pinged less.
-export const NOTIFY_MIN_FIT = parseInt(process.env.NOTIFY_MIN_FIT || '65', 10);
+// genuinely-new postings that clear this `chance` AND aren't for the wrong hiring
+// cycle get pinged; a run that turns up only weak or off-cycle matches stays silent.
+// The board still shows everything — this only governs the ping. Raise to be pinged
+// less.
+//
+// 55, not the 65 this held when it was read against `compatibility`. `chance`
+// subtracts difficulty from fit and never adds to it, so carrying the old number
+// across would silently have tightened the bar. Measured against the live 45-row
+// board, where the old rule pinged 17 postings:
+//
+//   chance >= 65 -> 8    chance >= 55 -> 16    chance >= 45 -> 24
+//
+// 55 holds the ping at the volume he already lives with. The old env var is still
+// honoured so an override set in the Action keeps working.
+export const NOTIFY_MIN_CHANCE = parseInt(process.env.NOTIFY_MIN_CHANCE || process.env.NOTIFY_MIN_FIT || '55', 10);
 export const NOTIFY_MAX_ITEMS = parseInt(process.env.NOTIFY_MAX_ITEMS || '6', 10);
 
 // Optional "Open board →" link on the notification. Empty → no link.

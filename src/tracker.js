@@ -128,9 +128,8 @@ export function loadTracker() {
         // on them directly. Absent on records written before scoring existed —
         // the dashboard renders those as "—" rather than as a zero.
         ...(job.scores && {
-          compatibility: job.scores.compatibility,
+          chance: job.scores.chance,
           quality: job.scores.quality,
-          interviewOdds: job.scores.interviewOdds,
           scoreConfidence: job.scores.confidence,
           scoreSignals: job.scores.signals,
         }),

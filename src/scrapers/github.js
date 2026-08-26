@@ -56,15 +56,21 @@ export function isGraduateTitle(title) {
 }
 
 // Places a posting, and is the board's hard geographic filter: null means the posting
-// is dropped entirely. Two things survive — the Montreal metro, and remote-in-Canada.
+// is dropped entirely. Three things survive — the Montreal metro, New York, and
+// remote-in-Canada.
 //
-// Order matters. Montreal is tried first, so a posting listing both Montreal and
-// somewhere else ("Markham ; Montreal") is kept and filed under Montreal: that role
-// is takeable from here. Only once Montreal is ruled out does naming somewhere else
+// Order matters, and CITIES order is the priority order. Montreal is tried first, so a
+// posting listing both Montreal and somewhere else ("Markham ; Montreal", and now
+// "New York, NY ; Montreal") is kept and filed under Montreal: that role is takeable
+// from home. Only once every named city is ruled out does naming somewhere else
 // specific become disqualifying.
+//
+// A city may also carry an `exclude` predicate for the case where its own name is
+// ambiguous — New York uses one because "New York" is also a state. It runs against
+// the same text and vetoes the match.
 export function matchCity(locations) {
   const text = (Array.isArray(locations) ? locations.join(' ; ') : locations || '').toString();
-  const hub = CITIES.find((c) => c.match.test(text));
+  const hub = CITIES.find((c) => c.match.test(text) && !c.exclude?.(text));
   if (hub) return hub;
   // Remote within Canada is workable from Montreal, but only when the posting is not
   // somewhere in particular: "Remote - Canada" qualifies, "Remote - Canada - ON" and

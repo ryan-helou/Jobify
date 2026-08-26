@@ -195,7 +195,7 @@ async function main() {
     if (added.length) {
       // Newest and best-fitting first, so the notification leads with what's worth
       // opening. Everything appears on the board regardless; this is just the ping.
-      const best = [...added].sort((a, b) => (b.compatibility ?? -1) - (a.compatibility ?? -1));
+      const best = [...added].sort((a, b) => (b.chance ?? -1) - (a.chance ?? -1));
       await notifyNewPostings(best, total);
     }
   } finally {

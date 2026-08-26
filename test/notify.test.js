@@ -5,32 +5,32 @@ import { formatNewPostings } from '../src/notify.js';
 
 const job = (over = {}) => ({
   title: 'SWE Intern', company: 'Acme', city: 'toronto', term: 'unstated',
-  compatibility: 80, applyUrl: 'https://x.com/1', ...over,
+  chance: 80, applyUrl: 'https://x.com/1', ...over,
 });
 
-test('stays silent when nothing clears the fit bar — the anti-spam rule', () => {
-  const weak = [job({ compatibility: 40 }), job({ compatibility: 55 })];
-  assert.equal(formatNewPostings(weak, { total: 100, minFit: 65 }), null);
+test('stays silent when nothing clears the chance bar — the anti-spam rule', () => {
+  const weak = [job({ chance: 40 }), job({ chance: 55 })];
+  assert.equal(formatNewPostings(weak, { total: 100, minChance: 65 }), null);
 });
 
-test('stays silent for wrong-cycle postings even at high fit', () => {
-  assert.equal(formatNewPostings([job({ compatibility: 90, term: 'other-cycle' })], { total: 100 }), null);
+test('stays silent for wrong-cycle postings even at high chance', () => {
+  assert.equal(formatNewPostings([job({ chance: 90, term: 'other-cycle' })], { total: 100 }), null);
 });
 
-test('announces only the postings above the bar, best fit first', () => {
+test('announces only the postings above the bar, best chance first', () => {
   const msg = formatNewPostings(
-    [job({ compatibility: 55 }), job({ compatibility: 88, title: 'A' }), job({ compatibility: 70, title: 'B' })],
-    { total: 200, minFit: 65 }
+    [job({ chance: 55 }), job({ chance: 88, title: 'A' }), job({ chance: 70, title: 'B' })],
+    { total: 200, minChance: 65 }
   );
-  assert.equal(msg.count, 2, 'the fit-55 posting is excluded from the count');
+  assert.equal(msg.count, 2, 'the chance-55 posting is excluded from the count');
   // A (88) leads B (70).
   assert.ok(msg.telegram.indexOf('>A<') < msg.telegram.indexOf('>B<'));
   assert.match(msg.telegram, /2 new roles worth a look/);
 });
 
 test('caps the list and reports the remainder', () => {
-  const many = Array.from({ length: 10 }, (_, i) => job({ compatibility: 90 - i, title: `Role${i}` }));
-  const msg = formatNewPostings(many, { total: 300, minFit: 65, limit: 6 });
+  const many = Array.from({ length: 10 }, (_, i) => job({ chance: 90 - i, title: `Role${i}` }));
+  const msg = formatNewPostings(many, { total: 300, minChance: 65, limit: 6 });
   assert.equal(msg.count, 10);
   assert.match(msg.telegram, /\+4 more/);
   assert.equal((msg.telegram.match(/<a href/g) || []).length, 6, 'only 6 links listed');
@@ -44,17 +44,20 @@ test('adds an Open board link only when a dashboard URL is set', () => {
 });
 
 test('escapes HTML in titles so a stray < cannot break the message', () => {
-  const msg = formatNewPostings([job({ title: 'C++ <Systems> Intern', compatibility: 80 })], { total: 1 });
+  const msg = formatNewPostings([job({ title: 'C++ <Systems> Intern', chance: 80 })], { total: 1 });
   assert.match(msg.telegram, /C\+\+ &lt;Systems&gt; Intern/);
 });
 
-test('each role carries location, term and visa on a second line', () => {
-  const us = formatNewPostings([{ title: 'SWE Intern', company: 'Acme', city: 'nyc', location: 'New York, NY', country: 'US', term: '2027', sponsorship: 'silent', compatibility: 82, applyUrl: 'https://x/1' }], { total: 1 });
-  assert.match(us.telegram, /New York, NY · Summer 2027 · sponsorship not stated/);
+test('each role carries location, quality, term and visa on a second line', () => {
+  const us = formatNewPostings([{ title: 'SWE Intern', company: 'Acme', city: 'nyc', location: 'New York, NY', country: 'US', term: '2027', sponsorship: 'silent', chance: 82, quality: 71, applyUrl: 'https://x/1' }], { total: 1 });
+  assert.match(us.telegram, /New York, NY · quality 71 · Summer 2027 · sponsorship not stated/);
 
-  const usSponsors = formatNewPostings([{ title: 'X', company: 'B', city: 'sf', location: 'SF, CA', country: 'US', term: 'unstated', sponsorship: 'offers', compatibility: 80, applyUrl: 'https://x/2' }], { total: 1 });
+  const usSponsors = formatNewPostings([{ title: 'X', company: 'B', city: 'nyc', location: 'Brooklyn, NY', country: 'US', term: 'unstated', sponsorship: 'offers', chance: 80, quality: 60, applyUrl: 'https://x/2' }], { total: 1 });
   assert.match(usSponsors.telegram, /term not stated · sponsors visa/);
 
-  const ca = formatNewPostings([{ title: 'Co-op', company: 'C', city: 'canada', location: 'Halifax, NS ; Remote', country: 'CA', term: 'unstated', sponsorship: 'n/a', compatibility: 78, applyUrl: 'https://x/3' }], { total: 1 });
-  assert.match(ca.telegram, /Halifax, NS · term not stated · no visa needed/);
+  // A Canadian posting says nothing about visas rather than repeating "no visa
+  // needed" on every line — it is only worth the characters where it can bite.
+  const ca = formatNewPostings([{ title: 'Co-op', company: 'C', city: 'remote', location: 'Remote - Canada', country: 'CA', term: 'unstated', sponsorship: 'n/a', chance: 78, quality: 64, applyUrl: 'https://x/3' }], { total: 1 });
+  assert.match(ca.telegram, /Remote - Canada · quality 64 · term not stated/);
+  assert.doesNotMatch(ca.telegram, /visa/);
 });

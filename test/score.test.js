@@ -93,7 +93,10 @@ test('skill fit shrinks toward the prior when a posting names few technologies',
   // evidence of a bad fit — and must not score the same as no evidence at all.
   const none = scoreJob(job({ description: 'Join our wonderful team.' }), PROFILE);
   const twoMissed = scoreJob(job({ description: 'You will write Verilog and RTOS firmware.' }), PROFILE);
-  assert.ok(twoMissed.compatibility < none.compatibility, `${twoMissed.compatibility} should be under ${none.compatibility}`);
+  assert.ok(
+    twoMissed.signals.fit < none.signals.fit,
+    `${twoMissed.signals.fit} should be under ${none.signals.fit}`
+  );
 });
 
 // ---- role families --------------------------------------------------------
@@ -123,12 +126,12 @@ test('companyTier recognizes known names through their legal suffix', () => {
   assert.equal(companyTier(''), 'unknown');
 });
 
-// ---- compatibility --------------------------------------------------------
+// ---- fit ------------------------------------------------------------------
 
-test('compatibility rises with skill overlap', () => {
+test('fit rises with skill overlap', () => {
   const mine = scoreJob(job({ description: 'Build with React, TypeScript, Node and SQL.' }), PROFILE);
   const theirs = scoreJob(job({ description: 'Write Verilog and RTOS firmware for embedded C/C++.' }), PROFILE);
-  assert.ok(mine.compatibility > theirs.compatibility, `${mine.compatibility} should beat ${theirs.compatibility}`);
+  assert.ok(mine.signals.fit > theirs.signals.fit, `${mine.signals.fit} should beat ${theirs.signals.fit}`);
   assert.deepEqual(mine.signals.matchedSkills.sort(), ['node', 'react', 'sql', 'typescript']);
 });
 
@@ -140,35 +143,38 @@ test('a terse posting gets a neutral skill prior, not a zero', () => {
     job({ description: 'Requires Rust, Verilog, RTOS firmware, embedded C/C++, Kotlin, Scala and Azure.' }),
     PROFILE
   );
-  assert.ok(terse.compatibility > hostile.compatibility);
-  assert.ok(terse.compatibility >= 50, `terse posting scored ${terse.compatibility}, expected a neutral-ish prior`);
+  assert.ok(terse.signals.fit > hostile.signals.fit);
+  assert.ok(terse.signals.fit >= 50, `terse posting scored ${terse.signals.fit}, expected a neutral-ish prior`);
 });
 
-test('compatibility ignores city — that is the apply queue\'s job, not a measure of fit', () => {
+test('fit ignores city — that is the apply queue\'s job, not a measure of fit', () => {
   // City is already a hard filter (matchCity) and the primary sort key. Folding
   // it in here only compressed the range: every posting that survives scraping
   // is in a target city, so the term was near-max for all of them.
   const desc = 'React and TypeScript.';
   const mtl = scoreJob(job({ city: 'montreal', country: 'CA', description: desc }), PROFILE);
   const tor = scoreJob(job({ city: 'toronto', country: 'CA', description: desc }), PROFILE);
-  assert.equal(mtl.compatibility, tor.compatibility);
+  assert.equal(mtl.signals.fit, tor.signals.fit);
 });
 
-test('a US posting that refuses sponsorship has its compatibility collapsed', () => {
+test('sponsorship is reported but never scored — a New York role is not demoted for it', () => {
   const base = { city: 'nyc', country: 'US', location: 'New York, NY', description: 'React, TypeScript, Node.' };
   const offers = scoreJob(job({ ...base, sponsorship: 'Offers Sponsorship' }), PROFILE);
   const denies = scoreJob(job({ ...base, sponsorship: 'Does Not Offer Sponsorship' }), PROFILE);
-  // A multiplier, not a fixed penalty: you cannot take the job at all, so the
-  // score should collapse rather than lose a handful of points.
-  assert.ok(denies.compatibility < offers.compatibility * 0.5, `${denies.compatibility} vs ${offers.compatibility}`);
+  // This asserts the reversal of an earlier rule, deliberately. Ryan added New York
+  // on 2026-08-26 with "no need for sponsorship" — show them all and let him judge.
+  // A multiplier that quietly halved the ones refusing to sponsor would be the exact
+  // opposite of that. src/board.js still resolves and displays the verdict.
+  assert.equal(denies.chance, offers.chance);
+  assert.equal(denies.signals.fit, offers.signals.fit);
 });
 
 test('an off-cycle posting cannot score as a good fit however well the skills match', () => {
   const desc = 'React, TypeScript, Node and SQL — a perfect match.';
   const right = scoreJob(job({ description: desc, term: '2027' }), PROFILE);
   const wrong = scoreJob(job({ description: desc, term: 'other-cycle' }), PROFILE);
-  assert.ok(wrong.compatibility < 40, `off-cycle posting scored ${wrong.compatibility}`);
-  assert.ok(right.compatibility > 85);
+  assert.ok(wrong.signals.fit < 40, `off-cycle posting scored ${wrong.signals.fit}`);
+  assert.ok(right.signals.fit > 85);
 });
 
 test('the score range is not compressed by terms that are constant across postings', () => {
@@ -179,8 +185,8 @@ test('the score range is not compressed by terms that are constant across postin
     PROFILE
   );
   const good = scoreJob(job({ description: 'React, TypeScript, Node and SQL.' }), PROFILE);
-  assert.ok(bad.compatibility < 45, `mismatched role scored ${bad.compatibility}, expected a low fit`);
-  assert.ok(good.compatibility - bad.compatibility > 40, 'good and bad fits should be far apart');
+  assert.ok(bad.signals.fit < 45, `mismatched role scored ${bad.signals.fit}, expected a low fit`);
+  assert.ok(good.signals.fit - bad.signals.fit > 40, 'good and bad fits should be far apart');
 });
 
 // ---- quality --------------------------------------------------------------
@@ -225,29 +231,55 @@ test('a prestigious employer raises quality', () => {
     scoreJob(job({ company: 'Unknown Co', description: desc }), PROFILE).quality);
 });
 
-// ---- interview odds -------------------------------------------------------
+// ---- difficulty and chance ------------------------------------------------
 
-test('interview odds fall as competition rises', () => {
+test('difficulty rises with competition, and chance falls with it', () => {
   // Same posting, different employer. The name that makes an internship worth
   // having is the name that makes it hard to get.
   const desc = 'Build with React, TypeScript and Node.';
   const top = scoreJob(job({ company: 'Google', description: desc }), PROFILE);
   const unknown = scoreJob(job({ company: 'Unknown Co', description: desc }), PROFILE);
-  assert.ok(unknown.interviewOdds > top.interviewOdds, `${unknown.interviewOdds} vs ${top.interviewOdds}`);
+  assert.ok(top.signals.difficulty > unknown.signals.difficulty, 'Google should be the harder room');
+  assert.ok(unknown.chance > top.chance, `${unknown.chance} vs ${top.chance}`);
+  assert.equal(top.signals.fit, unknown.signals.fit, 'the work is identical — only the queue differs');
   assert.ok(top.quality > unknown.quality, 'but the prestigious one is the better internship');
 });
 
-test('interview odds rise with compatibility', () => {
+test('chance rises with fit', () => {
   const good = scoreJob(job({ description: 'React, TypeScript, Node, SQL, Docker, Git.' }), PROFILE);
   const poor = scoreJob(job({ description: 'Verilog, RTOS, embedded C/C++, Kotlin, Scala, Azure.' }), PROFILE);
-  assert.ok(good.interviewOdds > poor.interviewOdds);
+  assert.ok(good.chance > poor.chance);
 });
 
-test('interview odds stay inside their stated bounds', () => {
-  for (const j of [job(), job({ company: 'Google' }), job({ city: 'sf', country: 'US', term: 'unstated' })]) {
-    const { interviewOdds } = scoreJob(j, PROFILE);
-    assert.ok(interviewOdds >= 1 && interviewOdds <= 60, `odds out of range: ${interviewOdds}`);
+test('chance never exceeds fit — difficulty only ever subtracts', () => {
+  // The invariant the two-number model rests on. Being a perfect match for a role
+  // a thousand other people also match is not a good chance.
+  const jobs = [
+    job(),
+    job({ company: 'Google', description: 'React, TypeScript, Node, SQL, Docker, Git at $60/hr.' }),
+    job({ company: 'Unknown Co', source: 'indeed', term: 'unstated' }),
+    job({ city: 'nyc', country: 'US', location: 'New York, NY', term: 'unstated' }),
+    job({ title: 'Software Engineer, New Grad' }),
+  ];
+  for (const j of jobs) {
+    const s = scoreJob(j, PROFILE);
+    assert.ok(s.chance <= s.signals.fit, `chance ${s.chance} exceeded fit ${s.signals.fit}`);
+    assert.ok(s.chance >= 0 && s.chance <= 100, `chance out of range: ${s.chance}`);
+    assert.ok(s.signals.difficulty >= 0 && s.signals.difficulty <= 100);
   }
+});
+
+test('difficulty is pulled toward neutral when there is no description to judge from', () => {
+  // Every term in difficulty comes from a company name, a source and a quality
+  // score that may itself rest on nothing. Say so, rather than asserting it.
+  const desc = 'Interns are mentored, ship to production, and receive a return offer. $60/hr.';
+  const known = scoreJob(job({ company: 'Google', description: desc }), PROFILE);
+  const blind = scoreJob(job({ company: 'Google', description: '' }), PROFILE);
+  assert.equal(blind.confidence, 'low');
+  assert.ok(
+    blind.signals.difficulty < known.signals.difficulty,
+    `blind ${blind.signals.difficulty} should sit nearer neutral than ${known.signals.difficulty}`
+  );
 });
 
 // ---- robustness -----------------------------------------------------------
@@ -260,7 +292,7 @@ test('scoring is pure — same input, same numbers', () => {
 test('a posting with no description still scores, at low confidence', () => {
   const s = scoreJob(job({ description: '' }), PROFILE);
   assert.equal(s.confidence, 'low');
-  assert.ok(s.compatibility > 0 && s.compatibility <= 100);
+  assert.ok(s.chance > 0 && s.chance <= 100);
   assert.ok(s.quality > 0 && s.quality <= 100);
   assert.equal(s.signals.pay, null);
 });
@@ -287,8 +319,8 @@ test('Ashby structured compensation is used when the prose has none', () => {
 test('explainScore names the evidence behind the numbers', () => {
   const s = scoreJob(job({ company: 'Stripe', description: 'React and TypeScript, $50/hr.' }), PROFILE);
   const text = explainScore(s);
-  assert.match(text, /fit \d+/);
+  assert.match(text, /chance \d+/);
   assert.match(text, /quality \d+/);
-  assert.match(text, /~\d+% interview/);
+  assert.match(text, /fit \d+ vs difficulty \d+/);
   assert.match(text, /top-tier/);
 });
