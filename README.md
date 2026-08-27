@@ -55,7 +55,15 @@ Read the board as three tiers: `2027` is your confident queue, `unstated` is wor
 - **Filters live in the URL**, so any view can be linked or bookmarked — and the sort does too. Only non-default values are written, so a clean board has a clean URL.
 - **`/` focuses the search box, `Escape` leaves it.** The filter bar is sticky on desktop, because a filter you have to scroll back up to reach is a filter you stop using; it goes static on narrow screens, where a pinned filter stack would eat the viewport.
 
-Full controls for city, term, sponsorship, platform, source, status, minimum chance and minimum quality sit below the quick views.
+Full controls for city, term, sponsorship, résumé, platform, source, status, minimum chance and minimum quality sit below the quick views.
+
+## 📄 Which résumé to send
+
+Five résumés live in `assets/` — `base`, `backend`, `frontend`, `ai`, `game` — and every posting on the board carries the one to attach, as a column you can filter and sort on. `src/resume.js` decides, from two sources weighed against each other: the **title**, which is reliable when it says something and useless when it doesn't (half the market posts "Software Engineer Intern"), and the **body**, which is noisier — a posting names Docker because the company uses Docker, not because you'll write Dockerfiles. So body signals are counted once per field rather than once per occurrence, and the body only overrides the title when it wins decisively *and* says so more than once. A lone "familiarity with HTML/CSS a plus" on a Go backend role does not earn the frontend résumé.
+
+**`base` is the right answer for a generic posting, not a failure to decide** — the board shows it in a quieter style than a variant the posting actually argued for, and every row carries the evidence behind its pick. Filtering by résumé is also the cheapest way to batch an afternoon of applications: take all the `backend` rows at once.
+
+The router had been written, tested, and then left dead when the applier was retired — it was the half worth keeping.
 
 Two rules hold the interface together. The accent colour means *a human should look here* and is spent nowhere else. And facts the machine wrote — scores, timestamps, statuses, board names — are set in mono, while words a person wrote are set in sans; you can tell them apart without reading them.
 

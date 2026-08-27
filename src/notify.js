@@ -84,7 +84,16 @@ function visaNote(r) {
 // rather than next to the headline number because the headline answers "should I
 // bother", and quality only matters once the answer is yes.
 const metaOf = (r) =>
-  [locOf(r), r.quality != null ? `quality ${r.quality}` : null, TERM_SHORT[r.term] || r.term, visaNote(r)]
+  [
+    locOf(r),
+    r.quality != null ? `quality ${r.quality}` : null,
+    // The last decision between reading the ping and applying: which of the five
+    // résumés to attach. Only worth the characters when the posting actually argued
+    // for one — "base by default" is a fine answer on the board but it is not news.
+    r.resume && r.resume.decidedBy !== 'default' ? `résumé: ${r.resume.variant}` : null,
+    TERM_SHORT[r.term] || r.term,
+    visaNote(r),
+  ]
     .filter(Boolean)
     .join(' · ');
 

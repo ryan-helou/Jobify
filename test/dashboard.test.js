@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { TERM_VALUES, SPONSORSHIP_VALUES, CITIES, REMOTE_FALLBACK } from '../src/config.js';
+import { TERM_VALUES, SPONSORSHIP_VALUES, CITIES, REMOTE_FALLBACK, RESUME_VARIANTS } from '../src/config.js';
 import { classifyTerm } from '../src/term.js';
 import { sponsorshipOf } from '../src/board.js';
 
@@ -61,6 +61,15 @@ test('every city the scrapers target has a display label', () => {
   // The remote bucket is a resolved label, not a CITIES member, but it still
   // reaches the board and needs a display name.
   assert.ok(labels[REMOTE_FALLBACK.key], `no dashboard label for the "${REMOTE_FALLBACK.key}" bucket`);
+});
+
+// The résumé column renders a variant name straight out of the router. Export a sixth
+// résumé from config without teaching the dashboard and every posting routed to it shows
+// a raw slug in the column that tells you which PDF to attach — the one column where
+// being wrong costs an application.
+test('the dashboard knows every résumé variant the router can pick', () => {
+  const labels = vocabulary().resumes;
+  for (const v of RESUME_VARIANTS) assert.ok(labels[v], `no dashboard label for résumé variant "${v}"`);
 });
 
 // A wrong colspan collapses the "no results" row and silently breaks the empty state.

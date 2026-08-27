@@ -335,6 +335,7 @@
         <select id="city" aria-label="City"><option value="">all cities</option></select>
         <select id="term" aria-label="Hiring term" title="2027 = confirmed Summer 2027 · unstated = season not stated (most postings; worth a skim, not a reject) · other-cycle = different season, skip"><option value="">any term</option></select>
         <select id="sponsorship" aria-label="Sponsorship"><option value="">any sponsorship</option></select>
+        <select id="resume" aria-label="Résumé"><option value="">any résumé</option></select>
         <select id="platform" aria-label="Platform"><option value="">any platform</option></select>
         <select id="source" aria-label="Source"><option value="">any source</option></select>
         <select id="status" aria-label="Applied status" title="Filter by what you've marked. 'applied' shows the jobs you've applied to — even with 'hide worked' on.">
@@ -371,6 +372,7 @@
             <th data-sort="quality" title="How good the internship looks: pay, return offer, mentorship, real production work, company tier.">Qual</th>
             <th data-sort="term" title="Which hiring cycle the posting is for. 2027: it names Summer 2027 explicitly — your confident queue. unstated: no season+year phrase, which is most postings — NOT 'not 2027', just unproven, so worth a skim (Canadian co-ops rarely write the season). other-cycle: a different season/year — skip.">Term</th>
             <th data-sort="sponsorship">Visa</th>
+            <th data-sort="resume" title="Which of your five résumés to attach. Decided from the posting's title, then its body, then the company — the title wins unless the body disagrees decisively. 'Base' is the right answer for a generic posting, not a failure to decide. Open a row for the evidence.">Résumé</th>
             <th data-sort="platform">Apply via</th>
             <th data-sort="pay">Pay</th>
             <th data-sort="firstSeenAt">Seen</th>
@@ -403,7 +405,7 @@
   -->
   <script type="application/json" id="board-vocabulary">
   {
-    "columns": 12,
+    "columns": 13,
     "terms": {
       "2027":        { "label": "Summer 2027",       "kind": "good" },
       "exempt":      { "label": "Cycle-scoped feed", "kind": "good" },
@@ -418,6 +420,9 @@
     },
     "cities": {
       "montreal": "Montreal", "nyc": "New York", "remote": "Remote (Canada)"
+    },
+    "resumes": {
+      "base": "Base", "backend": "Backend", "frontend": "Frontend", "ai": "AI/ML", "game": "Game"
     }
   }
   </script>
@@ -436,6 +441,7 @@
 
     const VOCAB = JSON.parse(document.getElementById('board-vocabulary').textContent);
     const COLSPAN = VOCAB.columns;
+    const RESUME_LABEL = VOCAB.resumes;
     const mapOf = (group, field) => Object.fromEntries(Object.entries(group).map(([k, v]) => [k, v[field]]));
     const TERM_LABEL = mapOf(VOCAB.terms, 'label');
     const TERM_KIND = mapOf(VOCAB.terms, 'kind');
@@ -546,6 +552,9 @@
       if (s.fit != null && s.difficulty != null) {
         why.push(`<div class="wrow"><span class="wk">Chance</span><span class="wv">fit <b>${esc(s.fit)}</b> less difficulty <b>${esc(s.difficulty)}</b></span></div>`);
       }
+      if (j.resume) {
+        why.push(`<div class="wrow"><span class="wk">Send this résumé</span><span class="wv"><b>${esc(RESUME_LABEL[j.resume.variant] || j.resume.variant)}</b> — ${esc(j.resume.why || '')}</span></div>`);
+      }
       if (s.levelReason) why.push(`<div class="wrow"><span class="wk">Heads up</span><span class="wv warn-line">⚠ ${esc(s.levelReason)}</span></div>`);
       if (s.matchedSkills?.length) why.push(`<div class="wrow"><span class="wk">Your skills matched</span><span class="wv">${esc(s.matchedSkills.join(', '))}</span></div>`);
       if (s.requiredSkills?.length) why.push(`<div class="wrow"><span class="wk">Posting asks for</span><span class="wv">${esc(s.requiredSkills.join(', '))}</span></div>`);
@@ -636,7 +645,7 @@
     // against the OTHER active filters. That is the difference between a filter you
     // explore and one you guess at: you can see that "Workday (26)" is worth opening
     // and that a value showing (0) is a dead end before you spend a click on it.
-    const BASE_OPTION = { city: 'all cities', term: 'any term', sponsorship: 'any sponsorship', platform: 'any platform', source: 'any source' };
+    const BASE_OPTION = { city: 'all cities', term: 'any term', sponsorship: 'any sponsorship', platform: 'any platform', source: 'any source', resume: 'any résumé' };
     function fillFilter(id, values, labelFn, extras = []) {
       const sel = $(id);
       const current = filters[id] ?? sel.value;
@@ -655,6 +664,7 @@
         [{ value: 'all-ca', label: 'All Canada' }, { value: 'all-us', label: 'All USA' }]);
       fillFilter('term', new Set(jobs.map((j) => j.term)), (t) => TERM_LABEL[t] || t);
       fillFilter('sponsorship', new Set(jobs.map((j) => j.sponsorship)), (s) => SPON_LABEL[s] || s);
+      fillFilter('resume', new Set(jobs.map((j) => j.resume?.variant)), (v) => RESUME_LABEL[v] || v);
       fillFilter('platform', new Set(jobs.map((j) => j.platform)));
       fillFilter('source', new Set(jobs.map((j) => j.source)));
     }
@@ -673,6 +683,7 @@
       term: (j, f) => !f.term || j.term === f.term,
       sponsorship: (j, f) => !f.sponsorship || j.sponsorship === f.sponsorship,
       platform: (j, f) => !f.platform || j.platform === f.platform,
+      resume: (j, f) => !f.resume || j.resume?.variant === f.resume,
       source: (j, f) => !f.source || j.source === f.source,
       paidOnly: (j, f) => !f.paidOnly || !!j.pay,
       freshOnly: (j, f) => !f.freshOnly || isNew(j),
@@ -686,7 +697,7 @@
     };
 
     const DEFAULTS = {
-      q: '', city: '', term: '', sponsorship: '', platform: '', source: '', status: '',
+      q: '', city: '', term: '', sponsorship: '', platform: '', source: '', status: '', resume: '',
       minFit: 0, minQual: 0, paidOnly: false, freshOnly: false, hideDone: true,
     };
     let filters = { ...DEFAULTS };
@@ -707,7 +718,7 @@
 
     // ---- state <-> controls <-> URL ----------------------------------------
     const TOGGLES = ['paidOnly', 'freshOnly', 'hideDone'];
-    const SELECTS = ['city', 'term', 'sponsorship', 'platform', 'source', 'status'];
+    const SELECTS = ['city', 'term', 'sponsorship', 'platform', 'source', 'status', 'resume'];
 
     function readControls() {
       filters = {
@@ -784,6 +795,7 @@
       term: (v) => ['term', TERM_LABEL[v] || v],
       sponsorship: (v) => ['visa', SPON_LABEL[v] || v],
       platform: (v) => ['via', v],
+      resume: (v) => ['résumé', RESUME_LABEL[v] || v],
       source: (v) => ['source', v],
       status: (v) => ['status', v === 'todo' ? 'not applied' : v],
       minFit: (v) => ['chance', `≥ ${v}`],
@@ -817,8 +829,9 @@
     function currentRows() {
       const rows = jobs.filter((j) => matches(j, filters));
 
+      const sortVal = (r) => (sortKey === 'resume' ? r.resume?.variant : r[sortKey]);
       rows.sort((a, b) => {
-        const av = a[sortKey], bv = b[sortKey];
+        const av = sortVal(a), bv = sortVal(b);
         // Unscored rows sort last in both directions rather than pretending to be zero.
         const aM = av == null || av === '', bM = bv == null || bv === '';
         if (aM || bM) return aM && bM ? 0 : aM ? 1 : -1;
@@ -826,6 +839,16 @@
         return String(av).localeCompare(String(bv)) * sortDir;
       });
       return rows;
+    }
+
+    // 'base' by default is a real answer — a generic posting deserves the generic
+    // résumé — but it is a quieter one than a variant the posting argued for, so it
+    // is not dressed up to look equally decided.
+    function resumeTag(j) {
+      const r = j.resume;
+      if (!r) return '—';
+      const decided = r.decidedBy !== 'default';
+      return `<span class="tag ${decided ? 'info' : 'flat'}" title="${esc(r.why || '')}">${esc(RESUME_LABEL[r.variant] || r.variant)}</span>`;
     }
 
     function render() {
@@ -852,6 +875,7 @@
             ${scoreCell(j.quality, 'score')}
             <td>${tag(j.term, TERM_LABEL, TERM_KIND)}</td>
             <td>${tag(j.sponsorship, SPON_LABEL, SPON_KIND)}</td>
+            <td class="resume">${resumeTag(j)}</td>
             <td class="platform">${esc(j.platform)}</td>
             <td class="pay">${esc(j.pay || '—')}</td>
             <td class="seen">${esc(fmtDate(j.firstSeenAt))}</td>
@@ -885,8 +909,8 @@
       const rows = currentRows();
       // `fit` and `difficulty` ride along beside `chance`, because a spreadsheet is
       // exactly where you want to see which half of the number moved.
-      const cols = ['title', 'company', 'location', 'city', 'chance', 'quality', 'fit', 'difficulty', 'term', 'sponsorship', 'platform', 'pay', 'applyUrl'];
-      const value = (r, c) => (c === 'fit' || c === 'difficulty' ? r.scoreSignals?.[c] : r[c]);
+      const cols = ['title', 'company', 'location', 'city', 'chance', 'quality', 'fit', 'difficulty', 'resume', 'term', 'sponsorship', 'platform', 'pay', 'applyUrl'];
+      const value = (r, c) => (c === 'fit' || c === 'difficulty' ? r.scoreSignals?.[c] : c === 'resume' ? r.resume?.variant : r[c]);
       const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
       const csv = [cols.join(','), ...rows.map((r) => cols.map((c) => cell(value(r, c))).join(','))].join('\n');
       const a = document.createElement('a');
