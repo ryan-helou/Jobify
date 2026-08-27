@@ -3,6 +3,7 @@ import { BOARD_PATH, LEDGER_EXCERPT_CHARS, ALLOWED_CITY_KEYS } from './config.js
 import { canonicalKey, identityKey, excerptOf } from './tracker.js';
 import { feedSponsorshipVerdict, sponsorshipStance } from './visa.js';
 import { contestFor } from './score.js';
+import { chooseResume } from './resume.js';
 
 // board.json is a catalogue of every posting we have ever seen, not a log of what we
 // applied to. That difference is the whole point of this file.
@@ -64,6 +65,26 @@ export function sponsorshipOf(job, description) {
   return sponsorshipStance(description || job.description || '');
 }
 
+/**
+ * Which of the five résumés to send, as a board column.
+ *
+ * src/resume.js has been able to answer this since the applier existed, and has
+ * been dead code since the applier was retired — the router was the half worth
+ * keeping. It is a *column*, not a gate: it never filters a posting, it just
+ * tells you which PDF to attach, which is the last question left between reading
+ * a row and applying to it.
+ *
+ * Only three fields are stored. board.json is committed every two hours, so the
+ * full per-variant score table is churn nobody reads; `why` is kept because
+ * "backend, but the body leaned frontend" is the part worth seeing on a
+ * near-miss, and `decidedBy` because "the posting said so" and "nothing said
+ * anything, so base" deserve to look different.
+ */
+function resumeFor(job, description) {
+  const r = chooseResume({ title: job.title, company: job.company, description });
+  return { variant: r.variant, decidedBy: r.decidedBy, why: r.reason };
+}
+
 /** A board row. Pure: same posting in, same row out. */
 export function rowFor(job, now) {
   const description = job.description || '';
@@ -83,6 +104,7 @@ export function rowFor(job, now) {
     pay: s.signals?.pay || null,
     chance: s.chance ?? null,
     quality: s.quality ?? null,
+    resume: resumeFor(job, description),
     scoreConfidence: s.confidence || null,
     scoreSignals: s.signals || null,
     excerpt: excerptOf(description, LEDGER_EXCERPT_CHARS),
@@ -145,7 +167,7 @@ export function loadBoard() {
   try {
     const data = JSON.parse(fs.readFileSync(BOARD_PATH, 'utf8'));
     if (!Array.isArray(data.jobs)) return [];
-    return data.jobs.filter((r) => ALLOWED_CITY_KEYS.has(r.city)).map(migrateScores);
+    return data.jobs.filter((r) => ALLOWED_CITY_KEYS.has(r.city)).map(migrateScores).map(migrateResume);
   } catch {
     return [];
   }
@@ -164,6 +186,20 @@ export function loadBoard() {
  * confidence), so a migrated row lands on precisely the number a rescrape would give
  * it. Rows that never scored at all are left alone rather than invented.
  */
+/**
+ * Attaches a résumé pick to a row stored before the column existed.
+ *
+ * Descriptions are not persisted, so this reads the stored `excerpt` instead —
+ * weaker evidence than the ingest path had, and `decidedBy` will say so. Almost
+ * every row is re-scraped each run and re-decided properly from the full text;
+ * this exists so a posting that has come down still shows an answer rather than
+ * a blank cell.
+ */
+export function migrateResume(row) {
+  if (!row || row.resume) return row;
+  return { ...row, resume: resumeFor(row, row.excerpt || '') };
+}
+
 export function migrateScores(row) {
   if (!row || row.chance != null || row.compatibility == null) return row;
   const signals = row.scoreSignals || {};

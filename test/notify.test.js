@@ -61,3 +61,21 @@ test('each role carries location, quality, term and visa on a second line', () =
   assert.match(ca.telegram, /Remote - Canada · quality 64 · term not stated/);
   assert.doesNotMatch(ca.telegram, /visa/);
 });
+
+// The ping is where the résumé matters most: it is the last thing between reading the
+// message and opening the form. A posting that argued for a variant says so; one that
+// merely defaulted to base does not, because that is not news.
+test('a ping names the résumé only when the posting argued for one', () => {
+  const row = (over) => ({ title: 'X', company: 'C', city: 'nyc', location: 'New York, NY',
+    country: 'US', term: 'unstated', sponsorship: 'silent', chance: 80, quality: 60,
+    applyUrl: 'https://x/1', ...over });
+
+  const decided = formatNewPostings([row({ resume: { variant: 'backend', decidedBy: 'evidence', why: 'Go, Postgres' } })], { total: 1 });
+  assert.match(decided.telegram, /résumé: backend/);
+
+  const defaulted = formatNewPostings([row({ resume: { variant: 'base', decidedBy: 'default', why: 'nothing specific' } })], { total: 1 });
+  assert.doesNotMatch(defaulted.telegram, /résumé/);
+
+  // A row stored before the column existed must not crash the notifier.
+  assert.doesNotMatch(formatNewPostings([row({})], { total: 1 }).telegram, /résumé/);
+});
