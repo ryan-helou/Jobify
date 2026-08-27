@@ -883,9 +883,12 @@
 
     function exportCsv() {
       const rows = currentRows();
-      const cols = ['title', 'company', 'location', 'city', 'compatibility', 'quality', 'interviewOdds', 'term', 'sponsorship', 'platform', 'pay', 'applyUrl'];
+      // `fit` and `difficulty` ride along beside `chance`, because a spreadsheet is
+      // exactly where you want to see which half of the number moved.
+      const cols = ['title', 'company', 'location', 'city', 'chance', 'quality', 'fit', 'difficulty', 'term', 'sponsorship', 'platform', 'pay', 'applyUrl'];
+      const value = (r, c) => (c === 'fit' || c === 'difficulty' ? r.scoreSignals?.[c] : r[c]);
       const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-      const csv = [cols.join(','), ...rows.map((r) => cols.map((c) => cell(r[c])).join(','))].join('\n');
+      const csv = [cols.join(','), ...rows.map((r) => cols.map((c) => cell(value(r, c))).join(','))].join('\n');
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
       a.download = 'jobify-board.csv';
