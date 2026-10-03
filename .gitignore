@@ -6,3 +6,10 @@ test-results/
 *.log
 .DS_Store
 assets/APPLICATION-KIT.md
+
+# Résumés and application records. Stripped from history before this repo was made
+# public (2026-10-03) — the PDFs carry a phone number and email, and a public repo is
+# scraped within minutes. They stay on disk; they must never re-enter git.
+assets/*.pdf
+applied_jobs.json
+applied.json
