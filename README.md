@@ -1,6 +1,12 @@
+<div align="center">
+
 # Jobify
 
-A personal job board that collects software internship postings in Montreal and New York and ranks them, so finding the right ones takes minutes instead of hours.
+**A personal job board that collects software internship postings in Montreal and New York and ranks them, so finding the right ones takes minutes instead of hours.**
+
+</div>
+
+<br>
 
 Internship postings are scattered across hundreds of company career pages and community lists. Jobify checks those places automatically several times a day, removes duplicates, and keeps only roles in Montreal (including nearby suburbs), New York, or remote within Canada. It then gives each posting two scores: how good a fit it is for me, and how good the internship itself looks (pay, mentorship, real work). It does not apply to anything; it just builds the list, and a person does the applying.
 
