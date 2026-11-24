@@ -4,6 +4,8 @@
 
 **A personal job board that collects software internship postings in Montreal and New York and ranks them, so finding the right ones takes minutes instead of hours.**
 
+<!-- facts --><img alt="Refreshes: 12 times a day" src="https://img.shields.io/badge/Refreshes-12_times_a_day-24292f?style=for-the-badge"> <img alt="Hunting for: Summer 2027" src="https://img.shields.io/badge/Hunting_for-Summer_2027-24292f?style=for-the-badge"> <img alt="Alerts via: Slack or Telegram" src="https://img.shields.io/badge/Alerts_via-Slack_or_Telegram-24292f?style=for-the-badge">
+
 </div>
 
 <br>
