@@ -13,3 +13,4 @@ assets/APPLICATION-KIT.md
 assets/*.pdf
 applied_jobs.json
 applied.json
+.claude/
