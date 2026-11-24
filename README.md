@@ -4,7 +4,7 @@
 
 **A personal job board that collects software internship postings in Montreal and New York and ranks them, so finding the right ones takes minutes instead of hours.**
 
-<!-- facts --><img alt="Refreshed: 12 times a day" src="https://img.shields.io/badge/Refreshed-12_times_a_day-24292f?style=for-the-badge"> <img alt="Alerts via: Slack or Telegram" src="https://img.shields.io/badge/Alerts_via-Slack_or_Telegram-24292f?style=for-the-badge"> <img alt="Search ended: with an EY internship" src="https://img.shields.io/badge/Search_ended-with_an_EY_internship-24292f?style=for-the-badge">
+<!-- facts --><img alt="Refreshed: 12 times a day" src="https://img.shields.io/badge/Refreshed-12_times_a_day-24292f?style=for-the-badge"> <img alt="Alerts via: Slack or Telegram" src="https://img.shields.io/badge/Alerts_via-Slack_or_Telegram-24292f?style=for-the-badge">
 
 </div>
 
@@ -12,7 +12,7 @@
 
 Internship postings are scattered across hundreds of company career pages and community lists. Jobify checks those places automatically several times a day, removes duplicates, and keeps only roles in Montreal (including nearby suburbs), New York, or remote within Canada. It then gives each posting two scores: how good a fit it is for me, and how good the internship itself looks (pay, mentorship, real work). It does not apply to anything; it just builds the list, and a person does the applying.
 
-It was built for my own Summer 2027 internship search. The search ended with an internship at EY.
+It was built for my own Summer 2027 internship search.
 
 ## What you can do with it
 
